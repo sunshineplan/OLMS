@@ -1,0 +1,10 @@
+[Unit]
+Description=uWSGI instance to serve OLMS
+After=network.target
+
+[Service]
+Environment=GIN_MODE=release
+ExecStart=/var/www/olms-go/olms-go
+
+[Install]
+WantedBy=multi-user.target
