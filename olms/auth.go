@@ -1,4 +1,4 @@
-package main
+package olms
 
 import (
 	"log"
@@ -8,34 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
-
-func authRequired(c *gin.Context) {
-	session := sessions.Default(c)
-	userID := session.Get("userID")
-	if userID == nil {
-		c.AbortWithStatus(401)
-	}
-}
-
-func adminRequired(c *gin.Context) {
-	session := sessions.Default(c)
-	user, err := getEmpl(session.Get("userID"))
-	if err != nil {
-		c.AbortWithStatus(401)
-	} else if !user.Admin {
-		c.AbortWithStatus(403)
-	}
-}
-
-func superRequired(c *gin.Context) {
-	session := sessions.Default(c)
-	userID := session.Get("userID")
-	if userID == nil {
-		c.AbortWithStatus(401)
-	} else if userID != 0 {
-		c.AbortWithStatus(403)
-	}
-}
 
 func login(c *gin.Context) {
 	session := sessions.Default(c)
@@ -53,7 +25,7 @@ func login(c *gin.Context) {
 	if err := db.QueryRow("SELECT id, realname, password FROM user WHERE username = ?",
 		username).Scan(&id, realname, &pw); err != nil {
 		if strings.Contains(err.Error(), "doesn't exist") {
-			restore("")
+			Restore("")
 			c.HTML(200, "login.html", gin.H{"error": "Detected first time running. Initialized the database."})
 			return
 		}

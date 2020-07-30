@@ -1,9 +1,10 @@
-package main
+package olms
 
 import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/sunshineplan/utils/mail"
@@ -11,7 +12,13 @@ import (
 
 var mailSetting mail.Setting
 
-func backup() {
+var (
+	joinPath = filepath.Join
+	dir      = filepath.Dir
+)
+
+// Backup database
+func Backup() {
 	log.Println("Start!")
 	file := dump()
 	defer os.Remove(file)
@@ -26,16 +33,17 @@ func backup() {
 	log.Println("Done!")
 }
 
-func restore(file string) {
+// Restore database
+func Restore(file string) {
 	log.Println("Start!")
 	if file == "" {
-		file = joinPath(dir(self), "scripts/schema.sql")
+		file = joinPath(dir(Self), "scripts/schema.sql")
 	} else {
 		if _, err := os.Stat(file); err != nil {
 			log.Fatalf("File not found: %v", err)
 		}
 	}
-	dropAll := joinPath(dir(self), "scripts/drop_all.sql")
+	dropAll := joinPath(dir(Self), "scripts/drop_all.sql")
 	execScript(dropAll)
 	execScript(file)
 	log.Println("Done!")

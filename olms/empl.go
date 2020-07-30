@@ -1,4 +1,4 @@
-package main
+package olms
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,76 +18,8 @@ type empl struct {
 	Permission string
 }
 
-func getEmpl(id interface{}) (empl, error) {
-	var empl empl
-	db, err := getDB()
-	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
-		return empl, err
-	}
-	defer db.Close()
-	if err := db.QueryRow("SELECT id, realname, dept_id, dept_name, admin, permission FROM employee WHERE id = ?",
-		id).Scan(&empl.ID, &empl.Realname, &empl.DeptID, &empl.DeptName, &empl.Admin, &empl.Permission); err != nil {
-		if strings.Contains(err.Error(), "no rows") {
-			log.Printf("No results: %v", err)
-		} else {
-			log.Printf("Failed to query employee: %v", err)
-		}
-		return empl, err
-	}
-	return empl, nil
-}
-
-func checkPermission(id string, c *gin.Context) bool {
-	session := sessions.Default(c)
-	user, err := getEmpl(session.Get("userID"))
-	if err != nil {
-		return false
-	}
-	for _, i := range strings.Split(user.Permission, ",") {
-		if id == i {
-			return true
-		}
-	}
-	return false
-}
-
-func getDeptEmpls(c *gin.Context) {
-	db, err := getDB()
-	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
-		c.String(503, "")
-		return
-	}
-	defer db.Close()
-
-	deptID := c.Query("dept")
-	if !checkPermission(deptID, c) {
-		c.String(403, "")
-		return
-	}
-	var empls []empl
-	rows, err := db.Query("SELECT id, realname FROM user where dept_id = ? ORDER BY realname", deptID)
-	if err != nil {
-		log.Printf("Failed to get employees: %v", err)
-		c.String(500, "")
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var empl empl
-		if err := rows.Scan(&empl.ID, &empl.Realname); err != nil {
-			log.Printf("Failed to scan employee: %v", err)
-			c.String(500, "")
-			return
-		}
-		empls = append(empls, empl)
-	}
-	c.JSON(200, empls)
-}
-
-func getEmpls(c *gin.Context) {
-	// do something ...
+func showEmpl(c *gin.Context) {
+	c.HTML(200, "showEmpl.html", nil)
 }
 
 func addEmpl(c *gin.Context) {

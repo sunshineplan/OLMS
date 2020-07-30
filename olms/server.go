@@ -1,4 +1,4 @@
-package main
+package olms
 
 import (
 	"crypto/rand"
@@ -18,11 +18,11 @@ import (
 
 func loadTemplates() multitemplate.Renderer {
 	r := multitemplate.NewRenderer()
-	r.AddFromFiles("base.html", joinPath(dir(self), "templates/base.html"), joinPath(dir(self), "templates/root.html"))
-	r.AddFromFiles("login.html", joinPath(dir(self), "templates/base.html"), joinPath(dir(self), "templates/auth/login.html"))
-	r.AddFromFiles("setting.html", joinPath(dir(self), "templates/auth/setting.html"))
+	r.AddFromFiles("base.html", joinPath(dir(Self), "templates/base.html"), joinPath(dir(Self), "templates/root.html"))
+	r.AddFromFiles("login.html", joinPath(dir(Self), "templates/base.html"), joinPath(dir(Self), "templates/auth/login.html"))
+	r.AddFromFiles("setting.html", joinPath(dir(Self), "templates/auth/setting.html"))
 
-	includes, err := filepath.Glob(joinPath(dir(self), "templates/bookmark/*"))
+	includes, err := filepath.Glob(joinPath(dir(Self), "templates/bookmark/*"))
 	if err != nil {
 		log.Fatalf("Failed to glob bookmark templates: %v", err)
 	}
@@ -33,8 +33,9 @@ func loadTemplates() multitemplate.Renderer {
 	return r
 }
 
-func run() {
-	f, err := os.OpenFile(*logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
+// Run server
+func Run() {
+	f, err := os.OpenFile(LogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
 	if err != nil {
 		log.Fatalf("Failed to open log file: %v", err)
 	}
@@ -49,7 +50,7 @@ func run() {
 
 	router := gin.Default()
 	router.Use(sessions.Sessions("session", sessions.NewCookieStore(secret)))
-	router.StaticFS("/static", http.Dir(joinPath(dir(self), "static")))
+	router.StaticFS("/static", http.Dir(joinPath(dir(Self), "static")))
 	router.HTMLRender = loadTemplates()
 	router.GET("/", func(c *gin.Context) {
 		session := sessions.Default(c)
@@ -100,15 +101,15 @@ func run() {
 	base.POST("/empl/edit/:id", doEditEmpl)
 	base.POST("/empl/delete/:id", doDeleteEmpl)
 
-	if *unix != "" && OS == "linux" {
-		if _, err := os.Stat(*unix); err == nil {
-			err = os.Remove(*unix)
+	if UNIX != "" && OS == "linux" {
+		if _, err := os.Stat(UNIX); err == nil {
+			err = os.Remove(UNIX)
 			if err != nil {
 				log.Fatalf("Failed to remove socket file: %v", err)
 			}
 		}
 
-		listener, err := net.Listen("unix", *unix)
+		listener, err := net.Listen("UNIX", UNIX)
 		if err != nil {
 			log.Fatalf("Failed to listen socket file: %v", err)
 		}
@@ -122,8 +123,8 @@ func run() {
 			if err := listener.Close(); err != nil {
 				log.Printf("Failed to close listener: %v", err)
 			}
-			if _, err := os.Stat(*unix); err == nil {
-				err = os.Remove(*unix)
+			if _, err := os.Stat(UNIX); err == nil {
+				err = os.Remove(UNIX)
 				if err != nil {
 					log.Printf("Failed to remove socket file: %v", err)
 				}
@@ -131,13 +132,13 @@ func run() {
 			close(idleConnsClosed)
 		}()
 
-		if err = os.Chmod(*unix, 0666); err != nil {
+		if err = os.Chmod(UNIX, 0666); err != nil {
 			log.Fatalf("Failed to chmod socket file: %v", err)
 		}
 
 		http.Serve(listener, router)
 		<-idleConnsClosed
 	} else {
-		router.Run(*host + ":" + *port)
+		router.Run(Host + ":" + Port)
 	}
 }

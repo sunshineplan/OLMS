@@ -1,11 +1,10 @@
-package main
+package olms
 
 import (
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,63 +13,8 @@ type dept struct {
 	Name string
 }
 
-func getDept(id interface{}) (dept, error) {
-	var dept dept
-	db, err := getDB()
-	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
-		return dept, err
-	}
-	defer db.Close()
-	if err := db.QueryRow("SELECT * FROM department WHERE id = ?", id).Scan(&dept.ID, &dept.Name); err != nil {
-		if strings.Contains(err.Error(), "no rows") {
-			log.Printf("No results: %v", err)
-		} else {
-			log.Printf("Failed to query dept: %v", err)
-		}
-		return dept, err
-	}
-	return dept, nil
-}
-
-func getDepts(c *gin.Context) {
-	db, err := getDB()
-	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
-		c.String(503, "")
-		return
-	}
-	defer db.Close()
-	session := sessions.Default(c)
-	user, err := getEmpl(session.Get("userID"))
-	if err != nil {
-		log.Printf("Failed to get user: %v", err)
-		c.String(503, "")
-		return
-	}
-
-	var depts []dept
-	rows, err := db.Query("SELECT * FROM department WHERE id IN (?) ORDER BY dept_name", user.Permission)
-	if err != nil {
-		log.Printf("Failed to get departments: %v", err)
-		c.String(500, "")
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var dept dept
-		if err := rows.Scan(&dept.ID, &dept.Name); err != nil {
-			log.Printf("Failed to scan department: %v", err)
-			c.String(500, "")
-			return
-		}
-		depts = append(depts, dept)
-	}
-	c.JSON(200, depts)
-}
-
 func showDept(c *gin.Context) {
-	c.HTML(200, "index.html", nil)
+	c.HTML(200, "showDept.html", nil)
 }
 
 func addDept(c *gin.Context) {

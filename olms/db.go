@@ -1,4 +1,4 @@
-package main
+package olms
 
 import (
 	"bytes"
@@ -6,11 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os/exec"
-
-	_ "github.com/mattn/go-sqlite3"
 )
-
-var sqlite string
 
 func getDB() (*sql.DB, error) {
 	return sql.Open("sqlite3", sqlite)
