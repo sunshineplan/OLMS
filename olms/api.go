@@ -90,8 +90,6 @@ func getEmpls(c *gin.Context) {
 	stmt += " ORDER BY dept_name, realname"
 	if page, err := strconv.Atoi(c.Query("page")); err != nil {
 		stmt += fmt.Sprintf(" LIMIT %d, %d", (page-1)*perPage, perPage)
-	} else {
-		stmt += fmt.Sprintf(" LIMIT %d", perPage)
 	}
 	var empls []empl
 	rows, err := db.Query(fmt.Sprintf(stmt, "id, realname, dept_name"))
@@ -114,5 +112,5 @@ func getEmpls(c *gin.Context) {
 		c.String(500, "")
 		return
 	}
-	c.JSON(200, empls)
+	c.JSON(200, gin.H{"empls": empls, "records": records})
 }
