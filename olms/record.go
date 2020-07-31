@@ -168,11 +168,12 @@ func doAddRecord(c *gin.Context) {
 	describe := c.PostForm("describe")
 
 	session := sessions.Default(c)
-	user, _, _ := getEmpls(session.Get("userID"), nil, nil, nil)
+	users, _, _ := getEmpls(session.Get("userID"), nil, nil, nil)
 	userID := c.PostForm("empl")
+	ip := c.ClientIP()
 	if userID == "" {
 		if _, err := db.Exec("INSERT INTO record (date, type, duration, describe, dept_id, user_id, createdby) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			date, Type, duration, describe, user[0].DeptID, user[0].ID, user[0].ID); err != nil {
+			date, Type, duration, describe, users[0].DeptID, users[0].ID, fmt.Sprintf("%d-%s", users[0].ID, ip)); err != nil {
 			log.Printf("Failed to add record: %v", err)
 			c.String(500, "")
 			return
@@ -186,7 +187,7 @@ func doAddRecord(c *gin.Context) {
 		return
 	}
 	if _, err := db.Exec("INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		deptID, userID, date, Type, duration, describe, 1, user[0].ID, user[0].ID); err != nil {
+		deptID, userID, date, Type, duration, describe, 1, fmt.Sprintf("%d-%s", users[0].ID, ip), fmt.Sprintf("%d-%s", users[0].ID, ip)); err != nil {
 		log.Printf("Failed to add record: %v", err)
 		c.String(500, "")
 		return
@@ -350,7 +351,8 @@ func doVerifyRecord(c *gin.Context) {
 		c.String(500, "")
 		return
 	}
-	if _, err := db.Exec("UPDATE record SET status = ?, verifiedby = ? WHERE id = ?", status, users[0].ID, id); err != nil {
+	ip := c.ClientIP()
+	if _, err := db.Exec("UPDATE record SET status = ?, verifiedby = ? WHERE id = ?", status, fmt.Sprintf("%d-%s", users[0].ID, ip), id); err != nil {
 		log.Printf("Failed to verify record: %v", err)
 		c.String(500, "")
 		return
