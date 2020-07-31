@@ -14,8 +14,68 @@ type empl struct {
 	Realname   string
 	DeptID     int
 	DeptName   string
-	Admin      bool
+	Role       bool
 	Permission string
+}
+
+func getEmpls(id interface{}, deptIDs []interface{}, role, page interface{}) (empls []empl, total int, err error) {
+	db, err := getDB()
+	if err != nil {
+		log.Printf("Failed to connect to database: %v", err)
+		return
+	}
+	defer db.Close()
+
+	stmt := "SELECT %s FROM employee WHERE"
+	var args []interface{}
+	bc := make(chan bool, 1)
+	if id != nil {
+		stmt += " id = ?"
+		args = append(args, id)
+		bc <- true
+	} else {
+		marks := make([]string, len(deptIDs))
+		for i := range marks {
+			marks[i] = "?"
+		}
+		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
+		args = append(args, deptIDs...)
+		if a, ok := role.(bool); ok {
+			stmt += " AND role = ?"
+			args = append(args, a)
+		}
+		go func() {
+			if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)")).Scan(&total); err != nil {
+				log.Printf("Failed to get total records: %v", err)
+				bc <- false
+			}
+			bc <- true
+		}()
+
+		stmt += " ORDER BY dept_name, realname"
+		if p, ok := page.(int); ok {
+			stmt += fmt.Sprintf(" LIMIT ?, ?")
+			args = append(args, (p-1)*perPage, perPage)
+		}
+	}
+	rows, err := db.Query(fmt.Sprintf(stmt, "id, realname, dept_id, dept_name, permission"), args...)
+	if err != nil {
+		log.Printf("Failed to get employees: %v", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var empl empl
+		if err = rows.Scan(&empl.ID, &empl.Realname, &empl.DeptID, &empl.DeptName, &empl.Permission); err != nil {
+			log.Printf("Failed to scan employee: %v", err)
+			return
+		}
+		empls = append(empls, empl)
+	}
+	if v := <-bc; !v {
+		err = fmt.Errorf("Failed to get total records")
+	}
+	return
 }
 
 func showEmpl(c *gin.Context) {
@@ -36,7 +96,7 @@ func doAddEmpl(c *gin.Context) {
 	defer db.Close()
 
 	deptID := c.PostForm("dept")
-	if deptID != "" && !checkPermission(deptID, c) {
+	if deptID != "" && !checkPermission(c, deptID) {
 		c.String(403, "")
 		return
 	}
@@ -67,17 +127,17 @@ func doAddEmpl(c *gin.Context) {
 
 func editEmpl(c *gin.Context) {
 	id := c.Param("id")
-	empl, err := getEmpl(id)
+	empls, _, err := getEmpls(id, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get empl: %v", err)
 		c.String(400, "")
 		return
 	}
-	if !checkPermission(strconv.Itoa(empl.DeptID), c) {
+	if !checkPermission(c, strconv.Itoa(empls[0].DeptID)) {
 		c.String(403, "")
 		return
 	}
-	c.HTML(200, "addDept.html", gin.H{"empl": empl})
+	c.HTML(200, "addDept.html", gin.H{"empl": empls[0]})
 }
 
 func doEditEmpl(c *gin.Context) {
@@ -90,7 +150,7 @@ func doEditEmpl(c *gin.Context) {
 	defer db.Close()
 
 	deptID := c.PostForm("dept")
-	if deptID != "" && !checkPermission(deptID, c) {
+	if deptID != "" && !checkPermission(c, deptID) {
 		c.String(403, "")
 		return
 	}
@@ -123,13 +183,13 @@ func doEditEmpl(c *gin.Context) {
 
 func doDeleteEmpl(c *gin.Context) {
 	id := c.Param("id")
-	empl, err := getEmpl(id)
+	empls, _, err := getEmpls(id, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get empl: %v", err)
 		c.String(400, "")
 		return
 	}
-	if !checkPermission(strconv.Itoa(empl.DeptID), c) {
+	if !checkPermission(c, strconv.Itoa(empls[0].DeptID)) {
 		c.String(403, "")
 		return
 	}

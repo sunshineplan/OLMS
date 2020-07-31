@@ -9,6 +9,34 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func authRequired(c *gin.Context) {
+	session := sessions.Default(c)
+	userID := session.Get("userID")
+	if userID == nil {
+		c.AbortWithStatus(401)
+	}
+}
+
+func adminRequired(c *gin.Context) {
+	session := sessions.Default(c)
+	user, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
+	if err != nil {
+		c.AbortWithStatus(401)
+	} else if !user[0].Role {
+		c.AbortWithStatus(403)
+	}
+}
+
+func superRequired(c *gin.Context) {
+	session := sessions.Default(c)
+	userID := session.Get("userID")
+	if userID == nil {
+		c.AbortWithStatus(401)
+	} else if userID != 0 {
+		c.AbortWithStatus(403)
+	}
+}
+
 func login(c *gin.Context) {
 	session := sessions.Default(c)
 	username := strings.TrimSpace(strings.ToLower(c.PostForm("username")))

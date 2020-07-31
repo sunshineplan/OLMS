@@ -3,8 +3,8 @@ package olms
 import (
 	"log"
 	"os"
-	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/contrib/sessions"
@@ -38,87 +38,33 @@ func init() {
 	if err != nil {
 		log.Fatalf("Failed to get Self path: %v", err)
 	}
-	os.MkdirAll(filepath.Join(filepath.Dir(Self), "instance"), 0755)
-	sqlite = filepath.Join(filepath.Dir(Self), "instance", "olms.db")
-	sqlitePy = filepath.Join(filepath.Dir(Self), "scripts/sqlite.py")
+	os.MkdirAll(joinPath(dir(Self), "instance"), 0755)
+	sqlite = joinPath(dir(Self), "instance", "olms.db")
+	sqlitePy = joinPath(dir(Self), "scripts/sqlite.py")
 }
 
-func authRequired(c *gin.Context) {
+func checkPermission(c *gin.Context, ids ...string) bool {
 	session := sessions.Default(c)
-	userID := session.Get("userID")
-	if userID == nil {
-		c.AbortWithStatus(401)
-	}
-}
-
-func adminRequired(c *gin.Context) {
-	session := sessions.Default(c)
-	user, err := getEmpl(session.Get("userID"))
-	if err != nil {
-		c.AbortWithStatus(401)
-	} else if !user.Admin {
-		c.AbortWithStatus(403)
-	}
-}
-
-func superRequired(c *gin.Context) {
-	session := sessions.Default(c)
-	userID := session.Get("userID")
-	if userID == nil {
-		c.AbortWithStatus(401)
-	} else if userID != 0 {
-		c.AbortWithStatus(403)
-	}
-}
-
-func getDept(id interface{}) (dept, error) {
-	var dept dept
-	db, err := getDB()
-	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
-		return dept, err
-	}
-	defer db.Close()
-	if err := db.QueryRow("SELECT * FROM department WHERE id = ?", id).Scan(&dept.ID, &dept.Name); err != nil {
-		if strings.Contains(err.Error(), "no rows") {
-			log.Printf("No results: %v", err)
-		} else {
-			log.Printf("Failed to query dept: %v", err)
-		}
-		return dept, err
-	}
-	return dept, nil
-}
-
-func getEmpl(id interface{}) (empl, error) {
-	var empl empl
-	db, err := getDB()
-	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
-		return empl, err
-	}
-	defer db.Close()
-	if err := db.QueryRow("SELECT id, realname, dept_id, dept_name, admin, permission FROM employee WHERE id = ?",
-		id).Scan(&empl.ID, &empl.Realname, &empl.DeptID, &empl.DeptName, &empl.Admin, &empl.Permission); err != nil {
-		if strings.Contains(err.Error(), "no rows") {
-			log.Printf("No results: %v", err)
-		} else {
-			log.Printf("Failed to query employee: %v", err)
-		}
-		return empl, err
-	}
-	return empl, nil
-}
-
-func checkPermission(id string, c *gin.Context) bool {
-	session := sessions.Default(c)
-	user, err := getEmpl(session.Get("userID"))
+	users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
 	if err != nil {
 		return false
 	}
-	for _, i := range strings.Split(user.Permission, ",") {
-		if id == i {
-			return true
+	switch len(ids) {
+	case 1:
+		for _, i := range strings.Split(users[0].Permission, ",") {
+			if ids[0] == i {
+				return true
+			}
+		}
+	case 2:
+		empls, _, err := getEmpls(ids[1], nil, nil, nil)
+		if err != nil {
+			return false
+		}
+		for _, i := range strings.Split(users[0].Permission, ",") {
+			if ids[0] == i && strconv.Itoa(empls[0].DeptID) == i {
+				return true
+			}
 		}
 	}
 	return false

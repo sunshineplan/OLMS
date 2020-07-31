@@ -86,13 +86,13 @@ func Run() {
 
 	base := router.Group("/")
 	base.Use(authRequired)
-	base.GET("/dept", getDepts)
+	base.GET("/dept", get)
 	base.GET("/dept/add", addDept)
 	base.POST("/dept/add", doAddDept)
 	base.GET("/dept/edit/:id", editDept)
 	base.POST("/dept/edit/:id", doEditDept)
 	base.POST("/dept/delete/:id", doDeleteDept)
-	base.GET("/empl/get", getEmpls)
+	base.GET("/empl/get", get)
 	base.GET("/empl/add", func(c *gin.Context) {
 		c.HTML(200, "category.html", gin.H{"id": 0})
 	})

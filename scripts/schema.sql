@@ -6,7 +6,7 @@ CREATE TABLE user (
   password TEXT NOT NULL DEFAULT '123456',
   realname TEXT NOT NULL,
   dept_id INTEGER NOT NULL,
-  admin BOOLEAN NOT NULL DEFAULT 0,
+  role BOOLEAN NOT NULL DEFAULT 0,
   permission TEXT NOT NULL DEFAULT '',
   FOREIGN KEY (dept_id) REFERENCES department (id)
 );
@@ -33,7 +33,7 @@ CREATE TABLE record (
 );
 
 CREATE VIEW employee AS
-  SELECT u.id, realname, dept_id, dept_name, admin, permission
+  SELECT u.id, realname, dept_id, dept_name, role, permission
   FROM user u
   JOIN department d ON d.id = dept_id
   ORDER BY dept_name, realname;

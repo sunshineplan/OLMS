@@ -13,6 +13,36 @@ type dept struct {
 	Name string
 }
 
+func getDepts(ids []interface{}) ([]dept, error) {
+	db, err := getDB()
+	if err != nil {
+		log.Printf("Failed to connect to database: %v", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	marks := make([]string, len(ids))
+	for i := range marks {
+		marks[i] = "?"
+	}
+	var depts []dept
+	rows, err := db.Query("SELECT * FROM department WHERE id IN ("+strings.Join(marks, ", ")+") ORDER BY dept_name", ids...)
+	if err != nil {
+		log.Printf("Failed to get departments: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var dept dept
+		if err := rows.Scan(&dept.ID, &dept.Name); err != nil {
+			log.Printf("Failed to scan department: %v", err)
+			return nil, err
+		}
+		depts = append(depts, dept)
+	}
+	return depts, nil
+}
+
 func showDept(c *gin.Context) {
 	c.HTML(200, "showDept.html", nil)
 }
@@ -53,13 +83,13 @@ func doAddDept(c *gin.Context) {
 }
 
 func editDept(c *gin.Context) {
-	dept, err := getDept(c.Param("id"))
+	depts, err := getDepts([]interface{}{c.Param("id")})
 	if err != nil {
 		log.Printf("Failed to get dept id: %v", err)
 		c.String(400, "")
 		return
 	}
-	c.HTML(200, "addDept.html", gin.H{"dept": dept})
+	c.HTML(200, "addDept.html", gin.H{"dept": depts[0]})
 }
 
 func doEditDept(c *gin.Context) {
@@ -91,7 +121,7 @@ func doEditDept(c *gin.Context) {
 
 func doDeleteDept(c *gin.Context) {
 	id := c.Param("id")
-	if _, err := getDept(id); err != nil {
+	if _, err := getDepts([]interface{}{id}); err != nil {
 		log.Printf("Failed to get dept id: %v", err)
 		c.String(400, "")
 		return
