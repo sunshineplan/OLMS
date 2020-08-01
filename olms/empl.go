@@ -18,7 +18,7 @@ type empl struct {
 	Permission string
 }
 
-func getEmpls(id interface{}, deptIDs []interface{}, role, page interface{}) (empls []empl, total int, err error) {
+func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls []empl, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -39,7 +39,9 @@ func getEmpls(id interface{}, deptIDs []interface{}, role, page interface{}) (em
 			marks[i] = "?"
 		}
 		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
-		args = append(args, deptIDs...)
+		for _, i := range deptIDs {
+			args = append(args, i)
+		}
 		if a, ok := role.(bool); ok {
 			stmt += " AND role = ?"
 			args = append(args, a)
@@ -78,8 +80,8 @@ func getEmpls(id interface{}, deptIDs []interface{}, role, page interface{}) (em
 	return
 }
 
-func showEmpl(c *gin.Context) {
-	c.HTML(200, "showEmpl.html", nil)
+func showEmpls(c *gin.Context) {
+	c.HTML(200, "showEmpls.html", nil)
 }
 
 func addEmpl(c *gin.Context) {

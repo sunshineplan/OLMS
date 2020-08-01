@@ -1,6 +1,3 @@
-server  = $server
-header  = $header
-value   = $value
 unix    = $unix
 host    = $host
 port    = $port

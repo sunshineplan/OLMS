@@ -25,7 +25,7 @@ type record struct {
 	Created  time.Time
 }
 
-func getRecords(id interface{}, deptIDs []interface{}, year, month, Type, status string, page interface{}) (records []record, total int, err error) {
+func getRecords(id interface{}, deptIDs []string, year, month, Type, status string, page interface{}) (records []record, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -63,7 +63,9 @@ func getRecords(id interface{}, deptIDs []interface{}, year, month, Type, status
 			marks[i] = "?"
 		}
 		stmt += " record.dept_id IN (" + strings.Join(marks, ", ") + ")"
-		args = append(args, deptIDs...)
+		for _, i := range deptIDs {
+			args = append(args, i)
+		}
 	}
 
 	var limit string
@@ -122,6 +124,10 @@ func checkRecord(c *gin.Context, record record, super bool) bool {
 	return false
 }
 
+func showRecords(c *gin.Context) {
+	c.HTML(200, "showRecords.html", nil)
+}
+
 func addRecord(c *gin.Context) {
 	c.HTML(200, "addRecord.html", nil)
 }
@@ -168,7 +174,12 @@ func doAddRecord(c *gin.Context) {
 	describe := c.PostForm("describe")
 
 	session := sessions.Default(c)
-	users, _, _ := getEmpls(session.Get("userID"), nil, nil, nil)
+	users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
+	if err != nil {
+		log.Printf("Failed to get user: %v", err)
+		c.String(500, "")
+		return
+	}
 	userID := c.PostForm("empl")
 	ip := c.ClientIP()
 	if userID == "" {

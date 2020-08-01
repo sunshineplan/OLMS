@@ -62,7 +62,7 @@ func checkPermission(c *gin.Context, ids ...string) bool {
 			return false
 		}
 		for _, i := range strings.Split(users[0].Permission, ",") {
-			if ids[0] == i && strconv.Itoa(empls[0].DeptID) == i {
+			if (ids[0] == "" || ids[0] == i) && strconv.Itoa(empls[0].DeptID) == i {
 				return true
 			}
 		}

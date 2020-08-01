@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type stat struct {
@@ -15,7 +17,7 @@ type stat struct {
 	Summary  int
 }
 
-func getStats(id interface{}, deptIDs []interface{}, period, year, month string, page interface{}) (stats []stat, total int, err error) {
+func getStats(id interface{}, deptIDs []string, period, year, month string, page interface{}) (stats []stat, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -52,7 +54,9 @@ func getStats(id interface{}, deptIDs []interface{}, period, year, month string,
 			marks[i] = "?"
 		}
 		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
-		args = append(args, deptIDs...)
+		for _, i := range deptIDs {
+			args = append(args, i)
+		}
 	}
 
 	bc := make(chan bool, 1)
@@ -87,4 +91,8 @@ func getStats(id interface{}, deptIDs []interface{}, period, year, month string,
 		err = fmt.Errorf("Failed to get total records")
 	}
 	return
+}
+
+func showStats(c *gin.Context) {
+	c.HTML(200, "showStats.html", nil)
 }
