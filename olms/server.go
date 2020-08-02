@@ -18,15 +18,30 @@ import (
 
 func loadTemplates() multitemplate.Renderer {
 	r := multitemplate.NewRenderer()
-	r.AddFromFiles("base.html", joinPath(dir(Self), "templates/base.html"), joinPath(dir(Self), "templates/root.html"))
+	r.AddFromFiles("index.html", joinPath(dir(Self), "templates/base.html"), joinPath(dir(Self), "templates/index.html"))
 	r.AddFromFiles("login.html", joinPath(dir(Self), "templates/base.html"), joinPath(dir(Self), "templates/auth/login.html"))
 	r.AddFromFiles("setting.html", joinPath(dir(Self), "templates/auth/setting.html"))
 
-	includes, err := filepath.Glob(joinPath(dir(Self), "templates/bookmark/*"))
+	dept, err := filepath.Glob(joinPath(dir(Self), "templates/dept/*"))
 	if err != nil {
-		log.Fatalf("Failed to glob bookmark templates: %v", err)
+		log.Fatalf("Failed to glob dept templates: %v", err)
 	}
-
+	empl, err := filepath.Glob(joinPath(dir(Self), "templates/empl/*"))
+	if err != nil {
+		log.Fatalf("Failed to glob empl templates: %v", err)
+	}
+	record, err := filepath.Glob(joinPath(dir(Self), "templates/record/*"))
+	if err != nil {
+		log.Fatalf("Failed to glob record templates: %v", err)
+	}
+	stat, err := filepath.Glob(joinPath(dir(Self), "templates/stat/*"))
+	if err != nil {
+		log.Fatalf("Failed to glob stat templates: %v", err)
+	}
+	var includes []string
+	for _, i := range [][]string{dept, empl, record, stat} {
+		includes = append(includes, i...)
+	}
 	for _, include := range includes {
 		r.AddFromFiles(filepath.Base(include), include)
 	}
@@ -54,15 +69,18 @@ func Run() {
 	router.HTMLRender = loadTemplates()
 	router.GET("/", func(c *gin.Context) {
 		session := sessions.Default(c)
-		name := session.Get("name")
-		if name == nil {
+		userID := session.Get("userID")
+		if userID == nil {
 			c.Redirect(302, "/auth/login")
 			return
 		}
-		c.HTML(200, "index.html", gin.H{"user": name})
+		users, _, err := getEmpls(userID, nil, nil, nil)
+		if err != nil {
+			c.String(500, "")
+			return
+		}
+		c.HTML(200, "index.html", gin.H{"user": users[0]})
 	})
-	router.POST("/get", authRequired, get)
-	router.POST("/export", authRequired, exportCSV)
 
 	auth := router.Group("/auth")
 	auth.GET("/login", func(c *gin.Context) {
@@ -86,17 +104,40 @@ func Run() {
 	})
 	auth.POST("/setting", authRequired, setting)
 
+	api := router.Group("/")
+	api.Use(authRequired)
+	api.POST("/get", get)
+	api.POST("/export", exportCSV)
+
 	record := router.Group("/")
 	record.Use(authRequired)
 	record.GET("/", func(c *gin.Context) {
-		c.HTML(200, "showRecords.html", nil)
+		c.HTML(200, "showRecords.html", gin.H{"mode": "empl"})
+	})
+	record.GET("/record/dept", func(c *gin.Context) {
+		c.HTML(200, "showRecords.html", gin.H{"mode": "dept"})
 	})
 	record.GET("/add", func(c *gin.Context) {
-		c.HTML(200, "addRecord.html", nil)
+		c.HTML(200, "record.html", gin.H{"mode": "empl", "id": 0})
+	})
+	record.GET("/record/dept/add", func(c *gin.Context) {
+		c.HTML(200, "record.html", gin.H{"mode": "dept", "id": 0})
 	})
 	record.POST("/add", doAddRecord)
-	record.GET("/edit/:id", editRecord)
+	record.GET("/edit/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		c.HTML(200, "record.html", gin.H{"mode": "empl", "id": id})
+	})
+	record.GET("/record/dept/edit/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		c.HTML(200, "record.html", gin.H{"mode": "dept", "id": id})
+	})
 	record.POST("/edit/:id", doEditRecord)
+	record.GET("/verify/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		c.HTML(200, "verifyRecord.html", gin.H{"id": id})
+	})
+	record.POST("/verify/:id", doVerifyRecord)
 	record.POST("/delete/:id", doDeleteRecord)
 
 	router.GET("/stats", authRequired, func(c *gin.Context) {
@@ -105,13 +146,18 @@ func Run() {
 
 	empl := router.Group("/empl")
 	empl.GET("/", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "showEmpls.html", nil)
+		session := sessions.Default(c)
+		id := session.Get("userID")
+		c.HTML(200, "showEmpls.html", gin.H{"id": id})
 	})
 	empl.GET("/add", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "addEmpl.html", nil)
+		c.HTML(200, "addEmpl.html", gin.H{"id": 0})
 	})
 	empl.POST("/add", adminRequired, doAddEmpl)
-	empl.GET("/edit/:id", superRequired, editEmpl)
+	empl.GET("/edit/:id", superRequired, func(c *gin.Context) {
+		id := c.Param("id")
+		c.HTML(200, "empl.html", gin.H{"id": id})
+	})
 	empl.POST("/edit/:id", superRequired, doEditEmpl)
 	empl.POST("/delete/:id", superRequired, doDeleteEmpl)
 
@@ -121,10 +167,13 @@ func Run() {
 		c.HTML(200, "showDepts.html", nil)
 	})
 	dept.GET("/add", func(c *gin.Context) {
-		c.HTML(200, "addDept.html", nil)
+		c.HTML(200, "dept.html", gin.H{"id": 0})
 	})
 	dept.POST("/add", doAddDept)
-	dept.GET("/edit/:id", editDept)
+	dept.GET("/edit/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		c.HTML(200, "dept.html", gin.H{"id": id})
+	})
 	dept.POST("/edit/:id", doEditDept)
 	dept.POST("/delete/:id", doDeleteDept)
 

@@ -119,21 +119,6 @@ func doAddEmpl(c *gin.Context) {
 	c.JSON(200, gin.H{"status": 0, "message": message})
 }
 
-func editEmpl(c *gin.Context) {
-	id := c.Param("id")
-	empls, _, err := getEmpls(id, nil, nil, nil)
-	if err != nil {
-		log.Printf("Failed to get empl: %v", err)
-		c.String(400, "")
-		return
-	}
-	if !checkPermission(c, strconv.Itoa(empls[0].DeptID)) {
-		c.String(403, "")
-		return
-	}
-	c.HTML(200, "addDept.html", gin.H{"empl": empls[0]})
-}
-
 func doEditEmpl(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {

@@ -25,7 +25,7 @@ type record struct {
 	Created  time.Time
 }
 
-func getRecords(id interface{}, deptIDs []string, year, month, Type, status string, page interface{}) (records []record, total int, err error) {
+func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, status string, page interface{}) (records []record, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -36,52 +36,58 @@ func getRecords(id interface{}, deptIDs []string, year, month, Type, status stri
 	stmt := "SELECT %s FROM record JOIN employee ON user_id = employee.id WHERE "
 
 	var args []interface{}
-	if year != "" {
-		if month == "" {
-			stmt += "strftime('%Y', date) = ? AND "
-			args = append(args, year)
-		}
-	} else {
-		stmt += "strftime('%Y%m', date) = ? AND "
-		args = append(args, year+month)
-	}
-	if Type != "" {
-		stmt += "type = ? AND "
-		args = append(args, Type)
-	}
-	if status != "" {
-		stmt += "status = ? AND "
-		args = append(args, Type)
-	}
-
-	if id != nil {
-		stmt += " user_id = ?"
-		args = append(args, id)
-	} else {
-		marks := make([]string, len(deptIDs))
-		for i := range marks {
-			marks[i] = "?"
-		}
-		stmt += " record.dept_id IN (" + strings.Join(marks, ", ") + ")"
-		for _, i := range deptIDs {
-			args = append(args, i)
-		}
-	}
-
 	var limit string
 	bc := make(chan bool, 1)
-	if p, ok := page.(int); ok {
-		limit = fmt.Sprintf(" LIMIT ?, ?")
-		args = append(args, (p-1)*perPage, perPage)
-		go func() {
-			if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)")).Scan(&total); err != nil {
-				log.Printf("Failed to get total records: %v", err)
-				bc <- false
-			}
-			bc <- true
-		}()
-	} else {
+	if id != nil {
+		stmt += " id = ?"
+		args = append(args, id)
 		bc <- true
+	} else {
+		if year != "" {
+			if month == "" {
+				stmt += "strftime('%Y', date) = ? AND "
+				args = append(args, year)
+			}
+		} else {
+			stmt += "strftime('%Y%m', date) = ? AND "
+			args = append(args, year+month)
+		}
+		if Type != "" {
+			stmt += "type = ? AND "
+			args = append(args, Type)
+		}
+		if status != "" {
+			stmt += "status = ? AND "
+			args = append(args, Type)
+		}
+
+		if userID != nil {
+			stmt += " user_id = ?"
+			args = append(args, userID)
+		} else {
+			marks := make([]string, len(deptIDs))
+			for i := range marks {
+				marks[i] = "?"
+			}
+			stmt += " record.dept_id IN (" + strings.Join(marks, ", ") + ")"
+			for _, i := range deptIDs {
+				args = append(args, i)
+			}
+		}
+
+		if p, ok := page.(int); ok {
+			limit = fmt.Sprintf(" LIMIT ?, ?")
+			args = append(args, (p-1)*perPage, perPage)
+			go func() {
+				if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)")).Scan(&total); err != nil {
+					log.Printf("Failed to get total records: %v", err)
+					bc <- false
+				}
+				bc <- true
+			}()
+		} else {
+			bc <- true
+		}
 	}
 	rows, err := db.Query(fmt.Sprintf(stmt+" ORDER BY created DESC"+limit,
 		"record.id, employee.dept_id, dept_name, employee.user_id, realname, date, ABS(duration), type, status, describe, created"), args...)
@@ -198,21 +204,6 @@ func doAddRecord(c *gin.Context) {
 	c.JSON(200, gin.H{"status": 1})
 }
 
-func editRecord(c *gin.Context) {
-	id := c.Param("id")
-	records, _, err := getRecords(id, nil, "", "", "", "", nil)
-	if err != nil {
-		log.Printf("Failed to get record: %v", err)
-		c.String(400, "")
-		return
-	}
-	if !checkRecord(c, records[0], true) {
-		c.String(403, "")
-		return
-	}
-	c.HTML(200, "editRecord.html", gin.H{"record": records[0]})
-}
-
 func doEditRecord(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
@@ -255,7 +246,7 @@ func doEditRecord(c *gin.Context) {
 	describe := c.PostForm("describe")
 
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, "", "", "", "", nil)
+	records, _, err := getRecords(id, nil, nil, "", "", "", "", nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -297,7 +288,7 @@ func doEditRecord(c *gin.Context) {
 
 func verifyRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, "", "", "", "", nil)
+	records, _, err := getRecords(id, nil, nil, "", "", "", "", nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -312,7 +303,7 @@ func verifyRecord(c *gin.Context) {
 
 func doVerifyRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, "", "", "", "", nil)
+	records, _, err := getRecords(id, nil, nil, "", "", "", "", nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -365,7 +356,7 @@ func doVerifyRecord(c *gin.Context) {
 
 func doDeleteRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, "", "", "", "", nil)
+	records, _, err := getRecords(id, nil, nil, "", "", "", "", nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")

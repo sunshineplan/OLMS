@@ -1,0 +1,55 @@
+<header style='padding-left: 20px;'>
+  <div style='height: 50px;'>
+    <a class='h3 title'>Employees List</a>
+  </div>
+  <hr>
+  <div class='toolbar'>
+    <div class='form-inline'>
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='dept'>Department</label>
+        </div>
+        <select class='custom-select' name='dept' id='dept'>
+          <option value=''>All</option>
+        </select>
+      </div>
+      {{ if eq .id "0" }}
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='type'>Type</label>
+        </div>
+        <select class='custom-select' name='type' id='type'>
+          <option value=''>All</option>
+          <option value='0'>General Employee</option>
+          <option value='1'>Administrator</option>
+        </select>
+      </div>
+      {{ end }}
+      <div class='input-group'>
+        <a class='btn btn-primary btn-sm' onclick='filter()'>Filter</a>
+        <a class='btn btn-primary btn-sm' onclick='clear()'>Clear</a>
+      </div>
+    </div>
+  </div>
+  <a class='btn btn-primary' href='/empl/add'>Add</a>
+  <p>
+</header>
+<!--{{ pagination.info }}-->
+<div class='table-responsive'>
+  <table class='table table-hover table-sm'>
+    <thead>
+      <tr>
+        <th scope='col'>Username</th>
+        <th scope='col'>Realname</th>
+        <th scope='col'>Department</th>
+        {{ if eq .id "0" }}
+        <th scope='col'>Type</th>
+        <th scope='col'>Permission</th>
+        <th scope='col'>Operation</th>
+        {{ end }}
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<!--{{ pagination.nav }}-->

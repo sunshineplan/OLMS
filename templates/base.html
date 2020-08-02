@@ -1,39 +1,59 @@
 <!doctype html>
-<meta name='viewport' content='width=device-width, initial-scale=0.75'>
-<title>{{ template "title" . }} - My Bookmarks</title>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>{{ template "title" . }} - OLMS</title>
 <link rel='icon' href='/static/favicon.ico'>
 <script src='https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/jquery-ui-dist@1/jquery-ui.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/sweetalert2@9/dist/sweetalert2.all.min.js'></script>
 <script src='/static/script.js'></script>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css'>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/spinkit@2/spinkit.min.css'>
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/gh/google/material-design-icons@3/iconfont/material-icons.min.css'>
 <link rel='stylesheet' href='/static/style.css'>
 <nav class='navbar navbar-light topbar'>
-  <div class='d-flex' style='height: 100%;'>
+  <div class='d-flex' style='height: 100%;'></div>
     {{ if .user }}
     <a class='toggle'><i class='material-icons menu'>menu</i></a>
     {{ end }}
-    <a class='brand' href='/'>My Bookmarks</a>
+    <a class='brand' href='/'>Overtime and Leave Management System</a>
   </div>
   <div class='navbar-nav flex-row'>
     {{ if .user }}
     <a class='nav-link'>{{ .user }}</a>
     <a class='nav-link link' onclick='setting()'>Setting</a>
-    <a class='nav-link link' href='/auth/logout'>Log Out</a>
+    <a class='nav-link link' href='/auth/logout'>Logout</a>
     {{ else }}
-    <a class='nav-link'>Log In</a></li>
+    <a class='nav-link'>Login</a></li>
     {{ end }}
   </div>
 </nav>
 {{ if .user }}
 <nav class='nav flex-column navbar-light sidebar'>
-  <div class='category-menu'>
-    <button class='btn btn-primary btn-sm' onclick='category()'>Add Category</button>
-    <a class='navbar-brand category' id='-1'>All Bookmarks</a>
-    <ul class='navbar-nav' id='categories'></ul>
+  {{ if ne .user.ID 0 }}
+  <div>
+    <a class='navbar-brand'>Employee Panel</a>
+    <ul class='navbar-nav'>
+      <li><a class='nav-link' onclick="records('empl')">Employee Records</a></li>
+      <li><a class='nav-link' onclick="stats('empl')">Employee Statistics</a></li>
+    </ul>
   </div>
+  {{ end }}
+  {{ if eq .user.Type 0 }}
+  <div>
+    <a class='navbar-brand'>Department Panel</a>
+    <ul class='navbar-nav'>
+      <li><a class='nav-link' onclick="records('dept')">Department Records</a></li>
+      <li><a class='nav-link' onclick="stats('dept')">Department Statistics</a></li>
+    </ul>
+  </div>
+  <div>
+    <a class='navbar-brand'>Control Panel</a>
+    <ul class='navbar-nav'>
+      <li><a class='nav-link' onclick='empls()'>Manage Employee</a></li>
+      {{ if ne .user.ID 0 }}
+      <li><a class='nav-link' onclick='depts()'>Manage Department</a></li>
+      <li><a class='nav-link' onclick="records('dept')">Manage Records</a></li>
+      {{ end }}
+    </ul>
+  </div>
+  {{ end }}
 </nav>
 {{ end }}
 <div class='loading'>
@@ -48,27 +68,36 @@
 <div class='content' {{ if .user }}style='padding-left: 250px;' {{ end }}>
   {{ template "content" . }}
 </div>
-{{ if .user }}
 <script>
-  $(() => load(-1));
-  $(document).on('click', '.category', function () {
-    my_bookmarks($(this).prop('id'));
-    if ($(window).width() <= 900) {
-      $('.sidebar').toggle('slide');
-    };
+  $(function () {
+    $('form').submit(function() {
+      $(this).find(":selected[value='']").prop('disabled', true);
+    });
   });
-  $(document).keyup(event => {
-    if (event.key == 'ArrowUp') {
-      arrow('up');
-    } else if (event.key == 'ArrowDown') {
-      arrow('down');
-    };
-  });
-  $(document).on('keyup', '.content', event => {
-    if (event.key == 'Enter') {
-      $('#submit').click();
-    };
-  });
+  function show_empl(element, dept_id, value='') {
+    $.post('/manage/empl/get', {dept: dept_id}, function(json) {
+      $.each(json, function(id, realname){
+        $(element).append($('<option>').text(realname).prop('value', id));
+      });
+      $(element).val(value)
+    }, 'json').fail(function(jqXHR) {
+      if (jqXHR.status == 200) {
+        alert('Session timeout. Please re-login!');
+        $(location).attr('href', '/auth/login');
+      } else {
+        alert('Getting employee list failed.');
+      };
+    });
+  }
+  function init_selector(element, mode='init', text='All') {
+    if (mode == 'unselect') {
+      $(element).val('');
+    } else if (mode == 'clear') {
+      $(element).empty().append($('<option>').text(text).prop('value', '').prop('disabled', true));
+    } else if (mode == 'init') {
+      $(element).empty().append($('<option>').text(text).prop('value', ''));
+    }
+  }
   $('.toggle').click(() => {
     $('.sidebar').toggle('slide');
   });
@@ -78,4 +107,3 @@
     };
   });
 </script>
-{{ end }}

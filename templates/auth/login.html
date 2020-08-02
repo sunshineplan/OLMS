@@ -1,7 +1,7 @@
-{{ define "title" }}Log In{{ end }}
+{{ define "title" }}Login{{ end }}
 {{ define "content" }}
 <header>
-  <h3 class='d-flex justify-content-center align-items-center' style='height: 100%;'>Log In</h3>
+  <h3 class='d-flex justify-content-center align-items-center' style='height: 100%;'>Login</h3>
 </header>
 {{ if ne .error "" }}
 <div class='alert alert-danger login'>{{ .error }}</div>
@@ -20,6 +20,15 @@
     <label class='form-check-label' for='rememberme'>Remember Me</label>
   </div>
   <hr>
-  <input type='submit' id='submit' value='Log In' class='btn btn-primary login'>
+  <input type='submit' id='submit' value='Login' class='btn btn-primary login'>
 </form>
+<script>
+  $(function() {
+    username = localStorage.getItem('username');
+    if (username != null) $('#username').val(username);
+    $('#submit').click(function() {
+      if ($('#username').val() != 'admin') localStorage.setItem('username', $('#username').val());
+    });
+  });
+</script>
 {{ end }}

@@ -3,6 +3,7 @@ package olms
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/contrib/sessions"
@@ -21,6 +22,7 @@ func get(c *gin.Context) {
 	}
 	user := users[0]
 	query := c.PostForm("query")
+	id := c.PostForm("id")
 	userID := c.PostForm("user_id")
 	deptID := c.PostForm("dept_id")
 	period := c.PostForm("period")
@@ -40,7 +42,22 @@ func get(c *gin.Context) {
 		}
 		switch query {
 		case "records", "":
-			records, total, err := getRecords(user.ID, nil, year, month, Type, status, page)
+			var records []record
+			if id != "" {
+				records, total, err = getRecords(id, nil, nil, year, month, Type, status, page)
+				if err != nil {
+					log.Println(err)
+					c.String(500, "")
+					return
+				}
+				if records[0].UserID != user.ID {
+					c.String(403, "")
+					return
+				}
+				c.JSON(200, gin.H{"record": records[0]})
+				return
+			}
+			records, total, err = getRecords(nil, user.ID, nil, year, month, Type, status, page)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -66,9 +83,24 @@ func get(c *gin.Context) {
 		switch query {
 		case "records", "":
 			var records []record
-			if userID != "" {
+			if id != "" {
+				records, _, err = getRecords(id, nil, nil, year, month, Type, status, page)
+				if err != nil {
+					log.Println(err)
+					c.String(500, "")
+					return
+				}
+				for _, i := range strings.Split(user.Permission, ",") {
+					if strconv.Itoa(records[0].DeptID) == i {
+						c.JSON(200, gin.H{"record": records[0]})
+						return
+					}
+				}
+				c.String(403, "")
+				return
+			} else if userID != "" {
 				if checkPermission(c, "", userID) {
-					records, total, err = getRecords(userID, nil, year, month, Type, status, page)
+					records, total, err = getRecords(nil, userID, nil, year, month, Type, status, page)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -80,7 +112,7 @@ func get(c *gin.Context) {
 				}
 			} else if deptID != "" {
 				if checkPermission(c, deptID) {
-					records, total, err = getRecords(nil, []string{deptID}, year, month, Type, status, page)
+					records, total, err = getRecords(nil, nil, []string{deptID}, year, month, Type, status, page)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -91,7 +123,7 @@ func get(c *gin.Context) {
 					return
 				}
 			} else {
-				records, total, err = getRecords(nil, strings.Split(user.Permission, ","), year, month, Type, status, page)
+				records, total, err = getRecords(nil, nil, strings.Split(user.Permission, ","), year, month, Type, status, page)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -234,7 +266,7 @@ func exportCSV(c *gin.Context) {
 		}
 		switch query {
 		case "records", "":
-			records, _, err := getRecords(user.ID, nil, year, month, Type, status, nil)
+			records, _, err := getRecords(nil, user.ID, nil, year, month, Type, status, nil)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -274,7 +306,7 @@ func exportCSV(c *gin.Context) {
 			var records []record
 			if userID != "" {
 				if checkPermission(c, "", userID) {
-					records, _, err = getRecords(userID, nil, year, month, Type, status, nil)
+					records, _, err = getRecords(nil, userID, nil, year, month, Type, status, nil)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -291,7 +323,7 @@ func exportCSV(c *gin.Context) {
 				}
 			} else if deptID != "" {
 				if checkPermission(c, deptID) {
-					records, _, err = getRecords(nil, []string{deptID}, year, month, Type, status, nil)
+					records, _, err = getRecords(nil, nil, []string{deptID}, year, month, Type, status, nil)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -307,7 +339,7 @@ func exportCSV(c *gin.Context) {
 					return
 				}
 			} else {
-				records, _, err = getRecords(nil, strings.Split(user.Permission, ","), year, month, Type, status, nil)
+				records, _, err = getRecords(nil, nil, strings.Split(user.Permission, ","), year, month, Type, status, nil)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -369,7 +401,7 @@ func exportCSV(c *gin.Context) {
 				results = append(results, i.format())
 			}
 			sendCSV(c,
-				fmt.Sprintf("DeptStats-%s%s%s.csv", prefix, year, month),
+				fmt.Sprintf("DeptStats%s%s%s.csv", prefix, year, month),
 				[]string{"Period", "DeptName", "Name", "Overtime", "Leave", "Summary"},
 				results)
 		default:

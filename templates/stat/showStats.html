@@ -1,0 +1,137 @@
+<header style='padding-left: 20px;'>
+  <div style='height: 50px;'>
+    <a class='h3 title'></a>
+  </div>
+  <hr>
+  <div class='toolbar'>
+    {{ if eq .mode "dept" }}
+    <div class='form-inline'>
+      <script>
+        $(function () {
+          if ($('#dept').val() == '') {
+            $('#empl').prop('disabled', true);
+          } else {
+            init_selector('#empl');
+            show_empl('#empl', "{{ args['dept_id'] }}", "{{ args['empl_id'] }}");
+          };
+          $('#dept').on('change', function () {
+            init_selector('#empl');
+            if ($('#dept').val() == '') {
+              $('#empl').prop('disabled', true);
+            } else {
+              $('#empl').prop('disabled', false);
+              show_empl('#empl', $('#dept').val());
+            };
+          });
+        });
+      </script>
+      <div class='input-group input-group-sm' id='dept-selector'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='dept'>Department</label>
+        </div>
+        <select class='custom-select' name='dept' id='dept'>
+          <option value=''>All</option>
+        </select>
+      </div>
+      <div class='input-group input-group-sm' id='empl-selector'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='empl'>Name</label>
+        </div>
+        <select class='custom-select' name='empl' id='empl'>
+          <option value=''>All</option>
+        </select>
+      </div>
+    </div>
+    {{ end }}
+    <div class='form-inline'>
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='period'>Period</label>
+        </div>
+        <select class='custom-select' name='period' id='period'>
+          <option value='month'>Month</option>
+          <option value='year'>Year</option>
+        </select>
+      </div>
+      <script>
+        $(function () {
+          if ($('#period').val() == 'year') {
+            $('#month-selector').prop('hidden', true);
+          };
+          if ($('#year').val() == '') {
+            $('#month').prop('disabled', true);
+          };
+          $('#period').on('change', function () {
+            if ($('#period').val() == 'year') {
+              $('#month-selector').prop('hidden', true);
+              init_selector('#year', 'unselect');
+              init_selector('#month', 'unselect');
+            } else {
+              $('#month-selector').prop('hidden', false);
+              init_selector('#year', 'unselect');
+            };
+          });
+          $('#year').on('change', function () {
+            if ($('#year').val() == '') {
+              $('#month').prop('disabled', true);
+              init_selector('#month', 'unselect');
+            } else {
+              $('#month').prop('disabled', false);
+            };
+          });
+        });
+      </script>
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='year'>Year</label>
+        </div>
+        <select class='custom-select' name='year' id='year'>
+          <option value=''>All</option>
+        </select>
+      </div>
+      <div class='input-group input-group-sm' id='month-selector'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='month'>Month</label>
+        </div>
+        <select class='custom-select' name='month' id='month'>
+          <option value=''>All</option>
+          <option value='01'>1</option>
+          <option value='02'>2</option>
+          <option value='03'>3</option>
+          <option value='04'>4</option>
+          <option value='05'>5</option>
+          <option value='06'>6</option>
+          <option value='07'>7</option>
+          <option value='08'>8</option>
+          <option value='09'>9</option>
+          <option value='10'>10</option>
+          <option value='11'>11</option>
+          <option value='12'>12</option>
+        </select>
+      </div>
+      <div class='input-group'>
+        <a class='btn btn-primary btn-sm' onclick='filter()'>Filter</a>
+        <a class='btn btn-primary btn-sm' onclick='clear()'>Clear</a>
+        <a class='btn btn-info btn-sm' onclick='export({{ .mode }})'>
+      </div>
+    </div>
+  </div>
+</header>
+<div class='table-responsive'>
+  <table class='table table-hover table-sm'>
+    <thead>
+      <tr>
+        <th scope='col'>Period</th>
+        {{ if eq .mode "dept" }}
+        <th scope='col'>Department</th>
+        <th scope='col'>Realname</th>
+        {{ end }}
+        <th scope='col'>Overtime</th>
+        <th scope='col'>Leave</th>
+        <th scope='col'>Summary</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<!--{{ pagination.nav }}-->

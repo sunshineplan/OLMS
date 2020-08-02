@@ -78,16 +78,6 @@ func doAddDept(c *gin.Context) {
 	c.JSON(200, gin.H{"status": 0, "message": message})
 }
 
-func editDept(c *gin.Context) {
-	depts, err := getDepts([]string{c.Param("id")})
-	if err != nil {
-		log.Printf("Failed to get dept id: %v", err)
-		c.String(400, "")
-		return
-	}
-	c.HTML(200, "addDept.html", gin.H{"dept": depts[0]})
-}
-
 func doEditDept(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
