@@ -47,14 +47,6 @@ func getDepts(ids []string) ([]dept, error) {
 	return depts, nil
 }
 
-func showDepts(c *gin.Context) {
-	c.HTML(200, "showDepts.html", nil)
-}
-
-func addDept(c *gin.Context) {
-	c.HTML(200, "addDept.html", nil)
-}
-
 func doAddDept(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {

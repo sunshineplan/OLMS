@@ -80,14 +80,6 @@ func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls [
 	return
 }
 
-func showEmpls(c *gin.Context) {
-	c.HTML(200, "showEmpls.html", nil)
-}
-
-func addEmpl(c *gin.Context) {
-	c.HTML(200, "addEmpl.html", nil)
-}
-
 func doAddEmpl(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {

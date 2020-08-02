@@ -124,14 +124,6 @@ func checkRecord(c *gin.Context, record record, super bool) bool {
 	return false
 }
 
-func showRecords(c *gin.Context) {
-	c.HTML(200, "showRecords.html", nil)
-}
-
-func addRecord(c *gin.Context) {
-	c.HTML(200, "addRecord.html", nil)
-}
-
 func doAddRecord(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {

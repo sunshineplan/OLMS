@@ -54,13 +54,15 @@ func Run() {
 	router.HTMLRender = loadTemplates()
 	router.GET("/", func(c *gin.Context) {
 		session := sessions.Default(c)
-		username := session.Get("username")
-		if username == nil {
+		name := session.Get("name")
+		if name == nil {
 			c.Redirect(302, "/auth/login")
 			return
 		}
-		c.HTML(200, "base.html", gin.H{"user": username})
+		c.HTML(200, "index.html", gin.H{"user": name})
 	})
+	router.POST("/get", authRequired, get)
+	router.POST("/export", authRequired, exportCSV)
 
 	auth := router.Group("/auth")
 	auth.GET("/login", func(c *gin.Context) {
@@ -84,22 +86,47 @@ func Run() {
 	})
 	auth.POST("/setting", authRequired, setting)
 
-	base := router.Group("/")
-	base.Use(authRequired)
-	base.GET("/dept", get)
-	base.GET("/dept/add", addDept)
-	base.POST("/dept/add", doAddDept)
-	base.GET("/dept/edit/:id", editDept)
-	base.POST("/dept/edit/:id", doEditDept)
-	base.POST("/dept/delete/:id", doDeleteDept)
-	base.GET("/empl/get", get)
-	base.GET("/empl/add", func(c *gin.Context) {
-		c.HTML(200, "category.html", gin.H{"id": 0})
+	record := router.Group("/")
+	record.Use(authRequired)
+	record.GET("/", func(c *gin.Context) {
+		c.HTML(200, "showRecords.html", nil)
 	})
-	base.POST("/empl/add", doAddEmpl)
-	base.GET("/empl/edit/:id", editEmpl)
-	base.POST("/empl/edit/:id", doEditEmpl)
-	base.POST("/empl/delete/:id", doDeleteEmpl)
+	record.GET("/add", func(c *gin.Context) {
+		c.HTML(200, "addRecord.html", nil)
+	})
+	record.POST("/add", doAddRecord)
+	record.GET("/edit/:id", editRecord)
+	record.POST("/edit/:id", doEditRecord)
+	record.POST("/delete/:id", doDeleteRecord)
+
+	router.GET("/stats", authRequired, func(c *gin.Context) {
+		c.HTML(200, "showStats.html", nil)
+	})
+
+	empl := router.Group("/empl")
+	empl.GET("/", adminRequired, func(c *gin.Context) {
+		c.HTML(200, "showEmpls.html", nil)
+	})
+	empl.GET("/add", adminRequired, func(c *gin.Context) {
+		c.HTML(200, "addEmpl.html", nil)
+	})
+	empl.POST("/add", adminRequired, doAddEmpl)
+	empl.GET("/edit/:id", superRequired, editEmpl)
+	empl.POST("/edit/:id", superRequired, doEditEmpl)
+	empl.POST("/delete/:id", superRequired, doDeleteEmpl)
+
+	dept := router.Group("/dept")
+	dept.Use(superRequired)
+	dept.GET("/", func(c *gin.Context) {
+		c.HTML(200, "showDepts.html", nil)
+	})
+	dept.GET("/add", func(c *gin.Context) {
+		c.HTML(200, "addDept.html", nil)
+	})
+	dept.POST("/add", doAddDept)
+	dept.GET("/edit/:id", editDept)
+	dept.POST("/edit/:id", doEditDept)
+	dept.POST("/delete/:id", doDeleteDept)
 
 	if UNIX != "" && OS == "linux" {
 		if _, err := os.Stat(UNIX); err == nil {

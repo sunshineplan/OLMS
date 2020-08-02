@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
-	"github.com/gin-gonic/gin"
 )
 
 type stat struct {
@@ -91,8 +89,4 @@ func getStats(id interface{}, deptIDs []string, period, year, month string, page
 		err = fmt.Errorf("Failed to get total records")
 	}
 	return
-}
-
-func showStats(c *gin.Context) {
-	c.HTML(200, "showStats.html", nil)
 }
