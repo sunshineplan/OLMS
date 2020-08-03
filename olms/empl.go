@@ -101,10 +101,12 @@ func doAddEmpl(c *gin.Context) {
 		realname = username
 	}
 	var exist string
+	var code int
 	if username == "" {
 		message = "Username is required."
 	} else if err := db.QueryRow("SELECT id FROM user WHERE username = ?", username).Scan(&exist); err == nil {
 		message = fmt.Sprintf("Username %s is already existed.", username)
+		code = 1
 	} else if deptID == "" {
 		message = "Department is required."
 	} else {
@@ -116,7 +118,7 @@ func doAddEmpl(c *gin.Context) {
 		c.JSON(200, gin.H{"status": 1})
 		return
 	}
-	c.JSON(200, gin.H{"status": 0, "message": message})
+	c.JSON(200, gin.H{"status": 0, "message": message, "error": code})
 }
 
 func doEditEmpl(c *gin.Context) {

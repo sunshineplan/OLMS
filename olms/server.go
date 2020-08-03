@@ -135,7 +135,7 @@ func Run() {
 	record.POST("/edit/:id", doEditRecord)
 	record.GET("/verify/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		c.HTML(200, "verifyRecord.html", gin.H{"id": id})
+		c.HTML(200, "verify.html", gin.H{"id": id})
 	})
 	record.POST("/verify/:id", doVerifyRecord)
 	record.POST("/delete/:id", doDeleteRecord)

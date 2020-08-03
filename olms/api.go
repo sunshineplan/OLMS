@@ -63,7 +63,7 @@ func get(c *gin.Context) {
 				c.String(500, "")
 				return
 			}
-			c.JSON(200, gin.H{"total": total, "records": records})
+			c.JSON(200, gin.H{"total": total, "rows": records})
 		case "stats":
 			stats, total, err := getStats(user.ID, nil, period, year, month, page)
 			if err != nil {
@@ -71,7 +71,7 @@ func get(c *gin.Context) {
 				c.String(500, "")
 				return
 			}
-			c.JSON(200, gin.H{"total": total, "statistics": stats})
+			c.JSON(200, gin.H{"total": total, "rows": stats})
 		default:
 			c.String(400, "Unknown query")
 		}
@@ -130,7 +130,7 @@ func get(c *gin.Context) {
 					return
 				}
 			}
-			c.JSON(200, gin.H{"total": total, "records": records})
+			c.JSON(200, gin.H{"total": total, "rows": records})
 		case "stats":
 			var stats []stat
 			if userID != "" {
@@ -165,7 +165,7 @@ func get(c *gin.Context) {
 					return
 				}
 			}
-			c.JSON(200, gin.H{"total": total, "statistics": stats})
+			c.JSON(200, gin.H{"total": total, "rows": stats})
 		case "empls":
 			var empls []empl
 			if deptID != "" {
@@ -192,7 +192,7 @@ func get(c *gin.Context) {
 				i.Role = false
 				i.Permission = ""
 			}
-			c.JSON(200, gin.H{"total": total, "employees": empls})
+			c.JSON(200, gin.H{"total": total, "rows": empls})
 		case "depts":
 			depts, err := getDepts(strings.Split(user.Permission, ","))
 			if err != nil {
@@ -200,7 +200,7 @@ func get(c *gin.Context) {
 				c.String(500, "")
 				return
 			}
-			c.JSON(200, gin.H{"departments": depts})
+			c.JSON(200, gin.H{"rows": depts})
 		default:
 			c.String(400, "Unknown query")
 		}
@@ -227,7 +227,7 @@ func get(c *gin.Context) {
 					return
 				}
 			}
-			c.JSON(200, gin.H{"total": total, "employees": empls})
+			c.JSON(200, gin.H{"total": total, "rows": empls})
 		default:
 			c.String(400, "Unknown query")
 		}
