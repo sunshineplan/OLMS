@@ -30,8 +30,8 @@
   <div>
     <a class='navbar-brand'>Employee Panel</a>
     <ul class='navbar-nav'>
-      <li><a class='nav-link' onclick="records('empl')">Employee Records</a></li>
-      <li><a class='nav-link' onclick="stats('empl')">Employee Statistics</a></li>
+      <li><a class='nav-link' onclick="show('record')">Employee Records</a></li>
+      <li><a class='nav-link' onclick="show('stat')">Employee Statistics</a></li>
     </ul>
   </div>
   {{ end }}
@@ -39,17 +39,17 @@
   <div>
     <a class='navbar-brand'>Department Panel</a>
     <ul class='navbar-nav'>
-      <li><a class='nav-link' onclick="records('dept')">Department Records</a></li>
-      <li><a class='nav-link' onclick="stats('dept')">Department Statistics</a></li>
+      <li><a class='nav-link' onclick="showDept('record')">Department Records</a></li>
+      <li><a class='nav-link' onclick="showDept('stat')">Department Statistics</a></li>
     </ul>
   </div>
   <div>
     <a class='navbar-brand'>Control Panel</a>
     <ul class='navbar-nav'>
-      <li><a class='nav-link' onclick='empls()'>Manage Employee</a></li>
+      <li><a class='nav-link' onclick="showDept('empl')">Manage Employee</a></li>
       {{ if ne .user.ID 0 }}
-      <li><a class='nav-link' onclick='depts()'>Manage Department</a></li>
-      <li><a class='nav-link' onclick="records('dept')">Manage Records</a></li>
+      <li><a class='nav-link' onclick="showDept('dept')">Manage Department</a></li>
+      <li><a class='nav-link' onclick="showDept('record')">Manage Records</a></li>
       {{ end }}
     </ul>
   </div>

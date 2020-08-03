@@ -5,8 +5,8 @@ BootstrapButtons = Swal.mixin({
     buttonsStyling: false
 });
 
-function load(mode, obj) {
-    $.post('/get', $.param(obj) + '&query=' + mode, json => {
+function load(mode, query, obj) {
+    $.post('/get', $.param(obj) + '&mode=' + mode + '&query=' + query, json => {
         $('tbody').empty();
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr><tr>');
@@ -18,13 +18,34 @@ function load(mode, obj) {
     });
 };
 
-function show(mode) {
+function show(query) {
     var url;
-    if (mode == 'dept') url = '/dept';
-    else if (mode == 'empl') url = '/empl';
-    else if (mode == 'record') url = '/';
+    if (query == 'record') url = '/record';
+    else if (query == 'stat') url = '/stat';
     else return false;
-    window.location = url;
+    loading();
+    $.get(url).done(html => {
+        loading(false);
+        $('.content').html(html);
+        if (query == 'record') document.title = 'Employee Records - OLMS';
+        else document.title = 'Employee Statistics - OLMS';
+    }).done(load('', query)).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
+};
+
+function showDept(query) {
+    var url;
+    if (query == 'dept') url = '/dept';
+    else if (query == 'empl') url = '/empl';
+    else if (query == 'record') url = '/record/dept';
+    else if (query == 'stat') url = '/stat/dept';
+    else return false;
+    loading();
+    $.get(url).done(html => {
+        loading(false);
+        $('.content').html(html);
+        if (query == 'record') document.title = 'Department Records - OLMS';
+        else if (query == 'stat') document.title = 'Department Statistics - OLMS';
+    }).done(load('admin', query)).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
 function dept(id = 0) {
@@ -116,8 +137,8 @@ function doEmpl(id) {
 
 function doRecord(id) {
     var url;
-    if (id == 0) url = '/add';
-    else url = '/edit/' + id;
+    if (id == 0) url = '/record/add';
+    else url = '/record/edit/' + id;
     if (valid())
         $.post(url, $('input, select, textarea').serialize(), json => {
             $('.form').removeClass('was-validated');
@@ -137,7 +158,7 @@ function doDelete(mode, id) {
     var url;
     if (mode == 'dept') url = '/dept/delete/' + id;
     else if (mode == 'empl') url = '/empl/delete/' + id;
-    else if (mode == 'record') url = '/delete/' + id;
+    else if (mode == 'record') url = '/record/delete/' + id;
     else return false;
     Swal.fire({
         title: 'Are you sure?',

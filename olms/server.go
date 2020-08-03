@@ -109,18 +109,18 @@ func Run() {
 	api.POST("/get", get)
 	api.POST("/export", exportCSV)
 
-	record := router.Group("/")
+	record := router.Group("/record")
 	record.Use(authRequired)
 	record.GET("/", func(c *gin.Context) {
 		c.HTML(200, "showRecords.html", gin.H{"mode": "empl"})
 	})
-	record.GET("/record/dept", func(c *gin.Context) {
+	record.GET("/dept", adminRequired, func(c *gin.Context) {
 		c.HTML(200, "showRecords.html", gin.H{"mode": "dept"})
 	})
 	record.GET("/add", func(c *gin.Context) {
 		c.HTML(200, "record.html", gin.H{"mode": "empl", "id": 0})
 	})
-	record.GET("/record/dept/add", func(c *gin.Context) {
+	record.GET("/dept/add", adminRequired, func(c *gin.Context) {
 		c.HTML(200, "record.html", gin.H{"mode": "dept", "id": 0})
 	})
 	record.POST("/add", doAddRecord)
@@ -128,20 +128,24 @@ func Run() {
 		id := c.Param("id")
 		c.HTML(200, "record.html", gin.H{"mode": "empl", "id": id})
 	})
-	record.GET("/record/dept/edit/:id", func(c *gin.Context) {
+	record.GET("/dept/edit/:id", superRequired, func(c *gin.Context) {
 		id := c.Param("id")
 		c.HTML(200, "record.html", gin.H{"mode": "dept", "id": id})
 	})
 	record.POST("/edit/:id", doEditRecord)
-	record.GET("/verify/:id", func(c *gin.Context) {
+	record.GET("/verify/:id", adminRequired, func(c *gin.Context) {
 		id := c.Param("id")
 		c.HTML(200, "verify.html", gin.H{"id": id})
 	})
-	record.POST("/verify/:id", doVerifyRecord)
+	record.POST("/verify/:id", adminRequired, doVerifyRecord)
 	record.POST("/delete/:id", doDeleteRecord)
 
-	router.GET("/stats", authRequired, func(c *gin.Context) {
-		c.HTML(200, "showStats.html", nil)
+	stat := router.Group("/stat")
+	stat.GET("/", authRequired, func(c *gin.Context) {
+		c.HTML(200, "showStats.html", gin.H{"mode": "empl"})
+	})
+	stat.GET("/dept", adminRequired, func(c *gin.Context) {
+		c.HTML(200, "showStats.html", gin.H{"mode": "dept"})
 	})
 
 	empl := router.Group("/empl")
