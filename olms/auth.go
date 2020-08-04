@@ -19,9 +19,14 @@ func authRequired(c *gin.Context) {
 
 func adminRequired(c *gin.Context) {
 	session := sessions.Default(c)
-	user, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
-	if err != nil {
+	userID := session.Get("userID")
+	if userID == nil {
 		c.AbortWithStatus(401)
+		return
+	}
+	user, _, err := getEmpls(userID, nil, nil, nil)
+	if err != nil {
+		c.AbortWithStatus(500)
 	} else if !user[0].Role {
 		c.AbortWithStatus(403)
 	}
@@ -32,7 +37,7 @@ func superRequired(c *gin.Context) {
 	userID := session.Get("userID")
 	if userID == nil {
 		c.AbortWithStatus(401)
-	} else if userID != 0 {
+	} else if userID != "0" {
 		c.AbortWithStatus(403)
 	}
 }
@@ -51,8 +56,8 @@ func login(c *gin.Context) {
 	defer db.Close()
 	var id, realname, pw, message string
 	if err := db.QueryRow("SELECT id, realname, password FROM user WHERE username = ?",
-		username).Scan(&id, realname, &pw); err != nil {
-		if strings.Contains(err.Error(), "doesn't exist") {
+		username).Scan(&id, &realname, &pw); err != nil {
+		if strings.Contains(err.Error(), "no such table") {
 			Restore("")
 			c.HTML(200, "login.html", gin.H{"error": "Detected first time running. Initialized the database."})
 			return

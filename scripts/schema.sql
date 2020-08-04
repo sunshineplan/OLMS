@@ -35,7 +35,7 @@ CREATE TABLE record (
 CREATE VIEW employee AS
   SELECT u.id, realname, dept_id, dept_name, role, permission
   FROM user u
-  JOIN department d ON d.id = dept_id
+  LEFT JOIN department d ON d.id = dept_id
   ORDER BY dept_name, realname;
 
 CREATE VIEW statistics AS
@@ -44,12 +44,12 @@ CREATE VIEW statistics AS
   sum(CASE WHEN r.type = 0 THEN 0 - duration ELSE 0 END) leave,
   sum(duration) summary
   FROM record r
-  JOIN department d ON d.id = r.dept_id
   JOIN employee e ON e.id = user_id
   WHERE status = 1
   GROUP BY period, r.dept_id, user_id
   ORDER BY period DESC, dept_name, realname;
 
-INSERT INTO user (id, username, realname, type, dept_id)
-  VALUES (0, 'admin', 'admin', 1, 0);
-  
+INSERT INTO user (id, username, realname, dept_id, role)
+  VALUES (0, 'admin', 'admin', 0, 1);
+INSERT INTO department (id, dept_name)
+  VALUES (0, 'admin');

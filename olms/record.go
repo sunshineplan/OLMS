@@ -90,7 +90,7 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 		}
 	}
 	rows, err := db.Query(fmt.Sprintf(stmt+" ORDER BY created DESC"+limit,
-		"record.id, employee.dept_id, dept_name, employee.user_id, realname, date, ABS(duration), type, status, describe, created"), args...)
+		"record.id, employee.dept_id, dept_name, employee.id, realname, date, ABS(duration), type, status, describe, created"), args...)
 	if err != nil {
 		log.Printf("Failed to get records: %v", err)
 		return

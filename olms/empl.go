@@ -47,7 +47,7 @@ func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls [
 			args = append(args, a)
 		}
 		go func() {
-			if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)")).Scan(&total); err != nil {
+			if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)"), args...).Scan(&total); err != nil {
 				log.Printf("Failed to get total records: %v", err)
 				bc <- false
 			}
@@ -60,7 +60,7 @@ func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls [
 			args = append(args, (p-1)*perPage, perPage)
 		}
 	}
-	rows, err := db.Query(fmt.Sprintf(stmt, "id, realname, dept_id, dept_name, permission"), args...)
+	rows, err := db.Query(fmt.Sprintf(stmt, "id, realname, dept_id, dept_name, role, permission"), args...)
 	if err != nil {
 		log.Printf("Failed to get employees: %v", err)
 		return
@@ -68,7 +68,7 @@ func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls [
 	defer rows.Close()
 	for rows.Next() {
 		var empl empl
-		if err = rows.Scan(&empl.ID, &empl.Realname, &empl.DeptID, &empl.DeptName, &empl.Permission); err != nil {
+		if err = rows.Scan(&empl.ID, &empl.Realname, &empl.DeptID, &empl.DeptName, &empl.Role, &empl.Permission); err != nil {
 			log.Printf("Failed to scan employee: %v", err)
 			return
 		}

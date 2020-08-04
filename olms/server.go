@@ -54,7 +54,7 @@ func Run() {
 	if err != nil {
 		log.Fatalf("Failed to open log file: %v", err)
 	}
-	gin.DefaultWriter = io.MultiWriter(f)
+	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
 	log.SetOutput(gin.DefaultWriter)
 
 	secret := make([]byte, 16)
@@ -76,6 +76,7 @@ func Run() {
 		}
 		users, _, err := getEmpls(userID, nil, nil, nil)
 		if err != nil {
+			log.Printf("Failed to get users: %v", err)
 			c.String(500, "")
 			return
 		}
@@ -155,7 +156,7 @@ func Run() {
 		c.HTML(200, "showEmpls.html", gin.H{"id": id})
 	})
 	empl.GET("/add", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "addEmpl.html", gin.H{"id": 0})
+		c.HTML(200, "empl.html", gin.H{"id": 0})
 	})
 	empl.POST("/add", adminRequired, doAddEmpl)
 	empl.GET("/edit/:id", superRequired, func(c *gin.Context) {

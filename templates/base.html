@@ -3,7 +3,9 @@
 <title>{{ template "title" . }} - OLMS</title>
 <link rel='icon' href='/static/favicon.ico'>
 <script src='https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9/dist/sweetalert2.all.min.js"></script>
 <script src='/static/script.js'></script>
+<script src='/static/olms.js'></script>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css'>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/spinkit@2/spinkit.min.css'>
 <link rel='stylesheet' href='/static/style.css'>
@@ -16,7 +18,7 @@
   </div>
   <div class='navbar-nav flex-row'>
     {{ if .user }}
-    <a class='nav-link'>{{ .user }}</a>
+    <a class='nav-link'>{{ .user.Realname }}</a>
     <a class='nav-link link' onclick='setting()'>Setting</a>
     <a class='nav-link link' href='/auth/logout'>Logout</a>
     {{ else }}
@@ -30,26 +32,26 @@
   <div>
     <a class='navbar-brand'>Employee Panel</a>
     <ul class='navbar-nav'>
-      <li><a class='nav-link' onclick="show('record')">Employee Records</a></li>
-      <li><a class='nav-link' onclick="show('stat')">Employee Statistics</a></li>
+      <li><a class='nav-link' onclick="show('records')">Employee Records</a></li>
+      <li><a class='nav-link' onclick="show('stats')">Employee Statistics</a></li>
     </ul>
   </div>
   {{ end }}
-  {{ if eq .user.Type 0 }}
+  {{ if eq .user.Role true }}
   <div>
     <a class='navbar-brand'>Department Panel</a>
     <ul class='navbar-nav'>
-      <li><a class='nav-link' onclick="showDept('record')">Department Records</a></li>
-      <li><a class='nav-link' onclick="showDept('stat')">Department Statistics</a></li>
+      <li><a class='nav-link' onclick="showDept('records')">Department Records</a></li>
+      <li><a class='nav-link' onclick="showDept('stats')">Department Statistics</a></li>
     </ul>
   </div>
   <div>
     <a class='navbar-brand'>Control Panel</a>
     <ul class='navbar-nav'>
-      <li><a class='nav-link' onclick="showDept('empl')">Manage Employee</a></li>
-      {{ if ne .user.ID 0 }}
-      <li><a class='nav-link' onclick="showDept('dept')">Manage Department</a></li>
-      <li><a class='nav-link' onclick="showDept('record')">Manage Records</a></li>
+      <li><a class='nav-link' onclick="showDept('empls')">Manage Employee</a></li>
+      {{ if eq .user.ID 0 }}
+      <li><a class='nav-link' onclick="showDept('depts')">Manage Department</a></li>
+      <li><a class='nav-link' onclick="showDept('records')">Manage Records</a></li>
       {{ end }}
     </ul>
   </div>

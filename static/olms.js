@@ -5,17 +5,25 @@ BootstrapButtons = Swal.mixin({
     buttonsStyling: false
 });
 
-function load(mode, query, obj) {
-    $.post('/get', $.param(obj) + '&mode=' + mode + '&query=' + query, json => {
+function load(mode, query) {
+    var data = {};
+    $('select').serializeArray().forEach(i => data[i.name] = i.value);
+    $.post('/get', $.param(data) + '&mode=' + mode + '&query=' + query, json => {
         $('tbody').empty();
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr><tr>');
             $.each(item, (k, v) => {
                 $tr.append('<td>' + v + '</td>');
-            })
+            });
             $tr.appendTo('tbody');
         });
     });
+};
+
+function download(mode, query) {
+    var data = {}
+    $('select').serializeArray().forEach(i => data[i.name] = i.value);
+    $.post('/export', $.param(data) + '&mode=' + mode + '&query=' + query);
 };
 
 function show(query) {
@@ -27,72 +35,111 @@ function show(query) {
     $.get(url).done(html => {
         loading(false);
         $('.content').html(html);
-        if (query == 'record') document.title = 'Employee Records - OLMS';
-        else document.title = 'Employee Statistics - OLMS';
+        if (query == 'record') {
+            document.title = 'Employee Records - OLMS';
+            $('.title').text('Employee Records');
+        } else {
+            document.title = 'Employee Statistics - OLMS';
+            $('.title').text('Employee Statistics');
+        };
     }).done(load('', query)).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
 function showDept(query) {
     var url;
-    if (query == 'dept') url = '/dept';
-    else if (query == 'empl') url = '/empl';
-    else if (query == 'record') url = '/record/dept';
-    else if (query == 'stat') url = '/stat/dept';
+    if (query == 'depts') url = '/dept';
+    else if (query == 'empls') url = '/empl';
+    else if (query == 'records') url = '/record/dept';
+    else if (query == 'stats') url = '/stat/dept';
     else return false;
     loading();
-    $.get(url).done(html => {
+    $.get(url, html => {
         loading(false);
         $('.content').html(html);
-        if (query == 'record') document.title = 'Department Records - OLMS';
-        else if (query == 'stat') document.title = 'Department Statistics - OLMS';
+        if (query == 'records') {
+            document.title = 'Department Records - OLMS';
+            $('.title').text('Department Records');
+        } else if (query == 'stats') {
+            document.title = 'Department Statistics - OLMS';
+            $('.title').text('Department Statistics');
+        };
     }).done(load('admin', query)).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
 function dept(id = 0) {
-    if (id == 0) {
-        document.title = 'Add Department - OLMS';
-    } else {
-        document.title = 'Edit Department - OLMS';
-        loading();
-        $.post('get', 'mode=admin&query=dept&id=' + id, json => {
+    var url;
+    if (id == 0) url = '/dept/add';
+    else url = '/dept/edit/' + id;
+    loading();
+    $.get(url, html => $('.content').html(html)).done(() => {
+        if (id == 0) {
+            document.title = 'Add Department - OLMS';
+            $('.title').text('Add Department');
             loading(false);
-            $.each(json, (k, v) => {
-                $("#" + k).val(v);
-            })
-            $('#dept').focus();
-        });
-    };
+        } else {
+            document.title = 'Edit Department - OLMS';
+            $('.title').text('Edit Department');
+            $.post('get', 'mode=admin&query=dept&id=' + id, json => {
+                loading(false);
+                $.each(json, (k, v) => {
+                    $("#" + k).val(v);
+                })
+                $('#dept').focus();
+            });
+        };
+    }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
 function empl(id = 0) {
-    if (id == 0) {
-        document.title = 'Add Employee - OLMS';
-    } else {
-        document.title = 'Edit Employee - OLMS';
-        loading();
-        $.post('get', 'mode=admin&query=empl&id=' + id, json => {
+    var url;
+    if (id == 0) url = '/empl/add';
+    else url = '/empl/edit/' + id;
+    loading();
+    $.get(url, html => $('.content').html(html)).done(() => {
+        if (id == 0) {
+            document.title = 'Add Employee - OLMS';
+            $('.title').text('Add Employee');
             loading(false);
-            $.each(json, (k, v) => {
-                $("#" + k).val(v);
-            })
-            $('#username').focus();
-        });
-    };
+        } else {
+            document.title = 'Edit Employee - OLMS';
+            $('.title').text('Edit Employee');
+            $.post('get', 'mode=admin&query=empl&id=' + id, json => {
+                loading(false);
+                $.each(json, (k, v) => {
+                    $("#" + k).val(v);
+                })
+                $('#username').focus();
+            });
+        };
+    }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
-function record(id = 0) {
+function record(mode, id = 0) {
+    var url;
     if (id == 0) {
-        document.title = 'Add Record - OLMS';
+        if (mode == 'dept') url = '/record/dept/add';
+        else url = '/record/add';
     } else {
-        document.title = 'Edit Record - OLMS';
-        loading();
-        $.post('get', 'id=' + id, json => {
+        if (mode == 'dept') url = '/record/dept/edit/' + id;
+        else url = '/record/edit/' + id;
+    }
+    loading();
+    $.get(url, html => $('.content').html(html)).done(() => {
+        if (id == 0) {
+            document.title = 'Add Record - OLMS';
+            $('.title').text('Add Record');
             loading(false);
-            $.each(json, (k, v) => {
-                $("#" + k).val(v);
-            })
-        }, 'json');
-    };
+        } else {
+            document.title = 'Edit Record - OLMS';
+            $('.title').text('Edit Record');
+            $.post('get', 'id=' + id + '&mode=' + mode, json => {
+                loading(false);
+                $.each(json, (k, v) => {
+                    $("#" + k).val(v);
+                })
+            }, 'json');
+        };
+    }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
 function setting() {

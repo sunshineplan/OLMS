@@ -6,25 +6,6 @@
   <div class='toolbar'>
     {{ if eq .mode "dept" }}
     <div class='form-inline'>
-      <script>
-        $(function () {
-          if ($('#dept').val() == '') {
-            $('#empl').prop('disabled', true);
-          } else {
-            init_selector('#empl');
-            show_empl('#empl', "{{ args['dept_id'] }}", "{{ args['empl_id'] }}");
-          };
-          $('#dept').on('change', function () {
-            init_selector('#empl');
-            if ($('#dept').val() == '') {
-              $('#empl').prop('disabled', true);
-            } else {
-              $('#empl').prop('disabled', false);
-              show_empl('#empl', $('#dept').val());
-            };
-          });
-        });
-      </script>
       <div class='input-group input-group-sm' id='dept-selector'>
         <div class='input-group-prepend'>
           <label class='input-group-text' for='dept'>Department</label>
@@ -110,9 +91,9 @@
         </select>
       </div>
       <div class='input-group'>
-        <a class='btn btn-primary btn-sm' onclick='filter()'>Filter</a>
+        <a class='btn btn-primary btn-sm' onclick="load('{{ .mode }}', 'stats')">Filter</a>
         <a class='btn btn-primary btn-sm' onclick='clear()'>Clear</a>
-        <a class='btn btn-info btn-sm' onclick='export({{ .mode }})'>
+        <a class='btn btn-info btn-sm' onclick="download('{{ .mode }}', 'stats')">Export</a>
       </div>
     </div>
   </div>
@@ -134,4 +115,4 @@
     <tbody></tbody>
   </table>
 </div>
-<!--{{ pagination.nav }}-->
+<!-- pagination.nav -->
