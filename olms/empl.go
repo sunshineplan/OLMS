@@ -11,6 +11,7 @@ import (
 
 type empl struct {
 	ID         int
+	Username   string
 	Realname   string
 	DeptID     int
 	DeptName   string
@@ -60,7 +61,7 @@ func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls [
 			args = append(args, (p-1)*perPage, perPage)
 		}
 	}
-	rows, err := db.Query(fmt.Sprintf(stmt, "id, realname, dept_id, dept_name, role, permission"), args...)
+	rows, err := db.Query(fmt.Sprintf(stmt, "id, username, realname, dept_id, dept_name, role, permission"), args...)
 	if err != nil {
 		log.Printf("Failed to get employees: %v", err)
 		return
@@ -68,7 +69,7 @@ func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls [
 	defer rows.Close()
 	for rows.Next() {
 		var empl empl
-		if err = rows.Scan(&empl.ID, &empl.Realname, &empl.DeptID, &empl.DeptName, &empl.Role, &empl.Permission); err != nil {
+		if err = rows.Scan(&empl.ID, &empl.Username, &empl.Realname, &empl.DeptID, &empl.DeptName, &empl.Role, &empl.Permission); err != nil {
 			log.Printf("Failed to scan employee: %v", err)
 			return
 		}
@@ -94,13 +95,12 @@ func doAddEmpl(c *gin.Context) {
 		c.String(403, "")
 		return
 	}
-	var message string
 	username := strings.TrimSpace(c.PostForm("username"))
 	realname := strings.TrimSpace(c.PostForm("realname"))
 	if realname == "" {
 		realname = username
 	}
-	var exist string
+	var exist, message string
 	var code int
 	if username == "" {
 		message = "Username is required."
@@ -110,7 +110,7 @@ func doAddEmpl(c *gin.Context) {
 	} else if deptID == "" {
 		message = "Department is required."
 	} else {
-		if _, err = db.Exec("INSERT INTO user (username, realname, dept_id)' VALUES (?, ?, ?, ?, ?)", username, realname, deptID); err != nil {
+		if _, err = db.Exec("INSERT INTO user (username, realname, dept_id) VALUES (?, ?, ?)", username, realname, deptID); err != nil {
 			log.Printf("Failed to add user: %v", err)
 			c.String(500, "")
 			return
@@ -135,14 +135,13 @@ func doEditEmpl(c *gin.Context) {
 		c.String(403, "")
 		return
 	}
-	var message string
 	id := c.Param("id")
 	username := strings.TrimSpace(c.PostForm("username"))
 	realname := strings.TrimSpace(c.PostForm("realname"))
 	if realname == "" {
 		realname = username
 	}
-	var exist string
+	var exist, message string
 	if username == "" {
 		message = "Username is required."
 	} else if err := db.QueryRow("SELECT id FROM user WHERE username = ? AND id != ?", username, id).Scan(&exist); err == nil {
@@ -150,8 +149,8 @@ func doEditEmpl(c *gin.Context) {
 	} else if deptID == "" {
 		message = "Department is required."
 	} else {
-		if _, err = db.Exec("UPDATE user SET username = ?, realname = ?, dept_id = ?, type = ?, permission = ? WHERE id = ?",
-			username, realname, deptID, id); err != nil {
+		if _, err = db.Exec("UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ?, permission = ? WHERE id = ?",
+			username, realname, deptID, role, permission, id); err != nil {
 			log.Printf("Failed to edit user: %v", err)
 			c.String(500, "")
 			return

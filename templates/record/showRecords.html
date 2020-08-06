@@ -2,7 +2,6 @@
   <div style='height: 50px;'>
     <a class='h3 title'></a>
   </div>
-  <hr>
   <div class='toolbar'>
     {{ if eq .mode "dept" }}
     <div class='form-inline'>
@@ -97,9 +96,9 @@
     </div>
   </div>
   {{ if eq .mode "dept" }}
-  <a class='btn btn-primary' href='/record/dept/add'>New</a>
+  <a class='btn btn-primary' onclick="record('depts')">New</a>
   {{ else }}
-  <a class='btn btn-primary' href='/add'>New</a>
+  <a class='btn btn-primary' onclick='record()'>New</a>
   {{ end }}
   <p>
 </header>

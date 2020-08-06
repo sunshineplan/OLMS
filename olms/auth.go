@@ -20,15 +20,17 @@ func authRequired(c *gin.Context) {
 func adminRequired(c *gin.Context) {
 	session := sessions.Default(c)
 	userID := session.Get("userID")
-	if userID == nil {
+	switch userID {
+	case nil:
 		c.AbortWithStatus(401)
-		return
-	}
-	user, _, err := getEmpls(userID, nil, nil, nil)
-	if err != nil {
-		c.AbortWithStatus(500)
-	} else if !user[0].Role {
-		c.AbortWithStatus(403)
+	case "0":
+	default:
+		user, _, err := getEmpls(userID, nil, nil, nil)
+		if err != nil {
+			c.AbortWithStatus(500)
+		} else if !user[0].Role {
+			c.AbortWithStatus(403)
+		}
 	}
 }
 

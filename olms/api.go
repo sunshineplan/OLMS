@@ -11,16 +11,35 @@ import (
 )
 
 func get(c *gin.Context) {
+	var user empl
 	var total int
 	var err error
 	session := sessions.Default(c)
-	users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
-	if err != nil {
-		log.Printf("Failed to get user: %v", err)
-		c.String(500, "")
-		return
+	switch userID := session.Get("userID"); userID {
+	case "0":
+		db, err := getDB()
+		if err != nil {
+			log.Printf("Failed to connect to database: %v", err)
+			c.String(503, "")
+			return
+		}
+		defer db.Close()
+		var permission []byte
+		if err := db.QueryRow("SELECT group_concat(id) FROM department").Scan(&permission); err != nil {
+			log.Printf("Failed to get admin permission: %v", err)
+			c.String(500, "")
+			return
+		}
+		user = empl{ID: 0, Role: true, Permission: string(permission)}
+	default:
+		users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
+		if err != nil {
+			log.Printf("Failed to get user: %v", err)
+			c.String(500, "")
+			return
+		}
+		user = users[0]
 	}
-	user := users[0]
 	query := c.PostForm("query")
 	id := c.PostForm("id")
 	userID := c.PostForm("user_id")
@@ -237,17 +256,36 @@ func get(c *gin.Context) {
 }
 
 func exportCSV(c *gin.Context) {
+	var user empl
 	var prefix string
 	var results []map[string]interface{}
 	var err error
 	session := sessions.Default(c)
-	users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
-	if err != nil {
-		log.Printf("Failed to get user: %v", err)
-		c.String(500, "")
-		return
+	switch userID := session.Get("userID"); userID {
+	case "0":
+		db, err := getDB()
+		if err != nil {
+			log.Printf("Failed to connect to database: %v", err)
+			c.String(503, "")
+			return
+		}
+		defer db.Close()
+		var permission []byte
+		if err := db.QueryRow("SELECT group_concat(id) FROM department").Scan(&permission); err != nil {
+			log.Printf("Failed to get admin permission: %v", err)
+			c.String(500, "")
+			return
+		}
+		user = empl{ID: 0, Role: true, Permission: string(permission)}
+	default:
+		users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
+		if err != nil {
+			log.Printf("Failed to get user: %v", err)
+			c.String(500, "")
+			return
+		}
+		user = users[0]
 	}
-	user := users[0]
 	query := c.PostForm("query")
 	userID := c.PostForm("user_id")
 	deptID := c.PostForm("dept_id")

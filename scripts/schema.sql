@@ -33,9 +33,9 @@ CREATE TABLE record (
 );
 
 CREATE VIEW employee AS
-  SELECT u.id, realname, dept_id, dept_name, role, permission
+  SELECT u.id, username, realname, dept_id, dept_name, role, permission
   FROM user u
-  LEFT JOIN department d ON d.id = dept_id
+  JOIN department d ON d.id = dept_id
   ORDER BY dept_name, realname;
 
 CREATE VIEW statistics AS
@@ -51,5 +51,3 @@ CREATE VIEW statistics AS
 
 INSERT INTO user (id, username, realname, dept_id, role)
   VALUES (0, 'admin', 'admin', 0, 1);
-INSERT INTO department (id, dept_name)
-  VALUES (0, 'admin');

@@ -39,7 +39,7 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 	var limit string
 	bc := make(chan bool, 1)
 	if id != nil {
-		stmt += " id = ?"
+		stmt += " record.id = ?"
 		args = append(args, id)
 		bc <- true
 	} else {
@@ -47,10 +47,10 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 			if month == "" {
 				stmt += "strftime('%Y', date) = ? AND "
 				args = append(args, year)
+			} else {
+				stmt += "strftime('%Y%m', date) = ? AND "
+				args = append(args, year+month)
 			}
-		} else {
-			stmt += "strftime('%Y%m', date) = ? AND "
-			args = append(args, year+month)
 		}
 		if Type != "" {
 			stmt += "type = ? AND "
@@ -112,12 +112,16 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 
 func checkRecord(c *gin.Context, record record, super bool) bool {
 	session := sessions.Default(c)
-	users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
+	userID := session.Get("userID")
+	if userID == "0" {
+		return true
+	}
+	users, _, err := getEmpls(userID, nil, nil, nil)
 	if err != nil {
 		return false
 	}
 	if super {
-		if record.UserID == users[0].ID || users[0].ID == 0 {
+		if record.UserID == users[0].ID {
 			return true
 		}
 		return false
@@ -171,18 +175,26 @@ func doAddRecord(c *gin.Context) {
 	}
 	describe := c.PostForm("describe")
 
+	var user empl
 	session := sessions.Default(c)
-	users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
-	if err != nil {
-		log.Printf("Failed to get user: %v", err)
-		c.String(500, "")
-		return
+	switch userID := session.Get("userID"); userID {
+	case "0":
+		user = empl{ID: 0}
+	default:
+		users, _, err := getEmpls(userID, nil, nil, nil)
+		if err != nil {
+			log.Printf("Failed to get user: %v", err)
+			c.String(500, "")
+			return
+		}
+		user = users[0]
 	}
+
 	userID := c.PostForm("empl")
 	ip := c.ClientIP()
 	if userID == "" {
 		if _, err := db.Exec("INSERT INTO record (date, type, duration, describe, dept_id, user_id, createdby) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			date, Type, duration, describe, users[0].DeptID, users[0].ID, fmt.Sprintf("%d-%s", users[0].ID, ip)); err != nil {
+			date, Type, duration, describe, user.DeptID, user.ID, fmt.Sprintf("%d-%s", user.ID, ip)); err != nil {
 			log.Printf("Failed to add record: %v", err)
 			c.String(500, "")
 			return
@@ -196,7 +208,7 @@ func doAddRecord(c *gin.Context) {
 		return
 	}
 	if _, err := db.Exec("INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		deptID, userID, date, Type, duration, describe, 1, fmt.Sprintf("%d-%s", users[0].ID, ip), fmt.Sprintf("%d-%s", users[0].ID, ip)); err != nil {
+		deptID, userID, date, Type, duration, describe, 1, fmt.Sprintf("%d-%s", user.ID, ip), fmt.Sprintf("%d-%s", user.ID, ip)); err != nil {
 		log.Printf("Failed to add record: %v", err)
 		c.String(500, "")
 		return
@@ -338,15 +350,22 @@ func doVerifyRecord(c *gin.Context) {
 	}
 	defer db.Close()
 
+	var user empl
 	session := sessions.Default(c)
-	users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
-	if err != nil {
-		log.Printf("Failed to get user: %v", err)
-		c.String(500, "")
-		return
+	switch userID := session.Get("userID"); userID {
+	case "0":
+		user = empl{ID: 0}
+	default:
+		users, _, err := getEmpls(userID, nil, nil, nil)
+		if err != nil {
+			log.Printf("Failed to get user: %v", err)
+			c.String(500, "")
+			return
+		}
+		user = users[0]
 	}
 	ip := c.ClientIP()
-	if _, err := db.Exec("UPDATE record SET status = ?, verifiedby = ? WHERE id = ?", status, fmt.Sprintf("%d-%s", users[0].ID, ip), id); err != nil {
+	if _, err := db.Exec("UPDATE record SET status = ?, verifiedby = ? WHERE id = ?", status, fmt.Sprintf("%d-%s", user.ID, ip), id); err != nil {
 		log.Printf("Failed to verify record: %v", err)
 		c.String(500, "")
 		return

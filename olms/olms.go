@@ -45,7 +45,11 @@ func init() {
 
 func checkPermission(c *gin.Context, ids ...string) bool {
 	session := sessions.Default(c)
-	users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
+	userID := session.Get("userID")
+	if userID == "0" {
+		return true
+	}
+	users, _, err := getEmpls(userID, nil, nil, nil)
 	if err != nil {
 		return false
 	}
