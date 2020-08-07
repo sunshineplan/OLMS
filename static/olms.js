@@ -17,20 +17,6 @@ function clearParams() {
     $('select option:selected').prop('selected', false);
 }
 
-function load(mode, query) {
-    $.post('/get', getParams(mode, query), json => {
-        $('tbody').empty();
-        $.each(json.rows, (i, item) => {
-            var $tr = $('<tr></tr>');
-            $.each(item, (k, v) => {
-                $tr.append('<td>' + v + '</td>');
-            });
-            $tr.appendTo('tbody');
-        });
-    });
-    getDepts('#dept')
-};
-
 function loadDepts(mode) {
     $.post('/get', getParams(mode, 'depts'), json => {
         $('tbody').empty();
@@ -59,7 +45,6 @@ function loadEmpls(mode) {
             $tr.appendTo('tbody');
         });
     });
-    getDepts('#dept')
 };
 
 function loadRecords(mode) {
@@ -83,6 +68,19 @@ function loadRecords(mode) {
             else if (item.Status == 2) $tr.append("<td><a class='text-danger'>Rejected</a></td>");
             if (mode == 'admin') $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='verify(" + item.ID + ")'>Verify</a></td>");
             else $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='record(\"" + mode + "\"," + item.ID + ")'>Edit</a></td>");
+            $tr.appendTo('tbody');
+        });
+    });
+};
+
+function loadStats(mode) {
+    $.post('/get', getParams(mode, 'stats'), json => {
+        $('tbody').empty();
+        $.each(json.rows, (i, item) => {
+            var $tr = $('<tr></tr>');
+            $.each(item, (k, v) => {
+                $tr.append('<td>' + v + '</td>');
+            });
             $tr.appendTo('tbody');
         });
     });
@@ -120,34 +118,45 @@ function getYears(mode, userID, deptID) {
     });
 };
 
-function download(mode, query) {
-    $.post('/export', getParams(mode, query));
+function exportCSV(mode, query) {
+    if (mode == 'super') mode = 'admin'
+    $.post('/export', getParams(mode, query), (data, textStatus, jqXHR) => {
+        var blob = new Blob([data]);
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = jqXHR.getResponseHeader('Content-Disposition').split('filename=')[1].replace(/"/g, '');
+        link.click();
+    });
 };
 
 function show(query) {
     var url;
-    if (query == 'record') url = '/record';
-    else if (query == 'stat') url = '/stat';
+    if (query == 'records') url = '/record';
+    else if (query == 'stats') url = '/stat';
     else return false;
     loading();
     $.get(url).done(html => {
         loading(false);
         $('.content').html(html);
-        if (query == 'record') {
+        if (query == 'records') {
             document.title = 'Employee Records - OLMS';
             $('.title').text('Employee Records');
         } else {
             document.title = 'Employee Statistics - OLMS';
             $('.title').text('Employee Statistics');
         };
-    }).done(load('', query)).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
+    }).done(() => {
+        if (query == 'records') loadRecords('');
+        else loadStats('');
+        getYears();
+    }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
 function showAdmin(query) {
     var url;
-    if (query == 'empls') url = '/empl';
-    else if (query == 'records') url = '/record/admin';
+    if (query == 'records') url = '/record/admin';
     else if (query == 'stats') url = '/stat/admin';
+    else if (query == 'empls') url = '/empl';
     else return false;
     loading();
     $.get(url, html => {
@@ -162,9 +171,18 @@ function showAdmin(query) {
         }
         else if (query == 'empls') document.title = 'Employees List - OLMS';
     }).done(() => {
-        if (query == 'empls') loadEmpls('admin');
-        else if (query == 'records') loadRecords('admin');
-        else load('admin', query);
+        if (query == 'records') {
+            loadRecords('admin');
+            getEmpls('#empl');
+            getYears('admin');
+        }
+        else if (query == 'stats') {
+            loadStats('admin');
+            getEmpls('#empl');
+            getYears('admin');
+        }
+        else if (query == 'empls') loadEmpls('admin');
+        getDepts('#dept');
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
@@ -285,6 +303,7 @@ function record(mode = '', id = 0) {
             if (json.record.Type) $('#Type').val('1');
             else $('#Type').val('0');
         }, 'json');
+        else getEmpls('#Empl')
         loading(false);
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
@@ -345,10 +364,11 @@ function doEmpl(id) {
         }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
-function doRecord(id) {
+function doRecord(mode, id) {
     var url;
     if (id == 0) url = '/record/add';
-    else url = '/record/edit/' + id;
+    else if (mode == '') url = '/record/edit/' + id;
+    else url = '/record/super/edit/' + id;
     if (valid())
         $.post(url, $('input, select, textarea').serialize(), json => {
             $('.form').removeClass('was-validated');
@@ -356,12 +376,14 @@ function doRecord(id) {
                 BootstrapButtons.fire('Error', json.message, 'error').then(() => {
                     $('#duration').val('');
                 });
-            else show('record');
+            else if (mode == '') show('records');
+            else if (mode == 'admin') showAdmin('records');
+            else showSuper('records');
         }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
 function doVerify(id, status) {
-    $.post('/verify/' + id, 'status=' + status, () => show('record')).fail(xhr => { if (xhr.status == 401) window.location = '/auth/login'; });
+    $.post('/verify/' + id, 'status=' + status, () => showAdmin('records')).fail(xhr => { if (xhr.status == 401) window.location = '/auth/login'; });
 };
 
 function doDelete(mode, id) {

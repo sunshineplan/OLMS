@@ -45,11 +45,10 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 	} else {
 		if year != "" {
 			if month == "" {
-				//stmt += "strftime('%Y', date) = ? AND "
-				//args = append(args, year)
-				stmt += fmt.Sprintf("strftime('%%Y', date) = '%s' AND ", year)
+				stmt += "strftime('%%Y', date) = ? AND "
+				args = append(args, year)
 			} else {
-				stmt += "strftime('%Y%m', date) = ? AND "
+				stmt += "strftime('%%Y%%m', date) = ? AND "
 				args = append(args, year+month)
 			}
 		}
@@ -90,7 +89,6 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 			bc <- true
 		}
 	}
-	fmt.Println(stmt, args) // test
 	rows, err := db.Query(fmt.Sprintf(stmt+" ORDER BY created DESC"+limit,
 		"record.id, employee.dept_id, dept_name, employee.id, realname, date, ABS(duration), type, status, describe, created"), args...)
 	if err != nil {
@@ -109,7 +107,6 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 	if v := <-bc; !v {
 		err = fmt.Errorf("Failed to get total records")
 	}
-	fmt.Println(records) // test
 	return
 }
 
@@ -245,12 +242,23 @@ func doAddRecord(c *gin.Context) {
 		return
 	}
 	deptID := c.PostForm("dept")
-	if deptID != "" && !checkPermission(c, deptID, userID) {
-		c.String(403, "")
+	if user.ID != 0 {
+		if deptID != "" && !checkPermission(c, deptID, userID) {
+			c.String(403, "")
+			return
+		}
+		if _, err := db.Exec("INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			deptID, userID, date, Type, duration, describe, 1, fmt.Sprintf("%d-%s", user.ID, ip), fmt.Sprintf("%d-%s", user.ID, ip)); err != nil {
+			log.Printf("Failed to add record: %v", err)
+			c.String(500, "")
+			return
+		}
+		c.JSON(200, gin.H{"status": 1})
 		return
 	}
+	status := c.PostForm("status")
 	if _, err := db.Exec("INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		deptID, userID, date, Type, duration, describe, 1, fmt.Sprintf("%d-%s", user.ID, ip), fmt.Sprintf("%d-%s", user.ID, ip)); err != nil {
+		deptID, userID, date, Type, duration, describe, status, fmt.Sprintf("%d-%s", 0, ip), fmt.Sprintf("%d-%s", 0, ip)); err != nil {
 		log.Printf("Failed to add record: %v", err)
 		c.String(500, "")
 		return

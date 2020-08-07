@@ -306,7 +306,16 @@ func get(c *gin.Context) {
 		switch query {
 		case "empls", "":
 			var empls []empl
-			if deptID != "" {
+			if id != "" {
+				empls, _, err = getEmpls(id, nil, nil, nil)
+				if err != nil {
+					log.Println(err)
+					c.String(500, "")
+					return
+				}
+				c.JSON(200, gin.H{"empl": empls[0]})
+				return
+			} else if deptID != "" {
 				empls, total, err = getEmpls(nil, []string{deptID}, role, page)
 				if err != nil {
 					log.Println(err)

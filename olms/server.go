@@ -72,7 +72,7 @@ func Run() {
 		case nil:
 			c.Redirect(302, "/auth/login")
 		case "0":
-			c.HTML(200, "index.html", gin.H{"user": empl{ID: 0, Realname: "admin", Role: true}})
+			c.HTML(200, "index.html", gin.H{"user": empl{ID: 0, Realname: "root", Role: true}})
 		default:
 			users, _, err := getEmpls(userID, nil, nil, nil)
 			if err != nil {
@@ -86,7 +86,7 @@ func Run() {
 
 	auth := router.Group("/auth")
 	auth.GET("/login", func(c *gin.Context) {
-		user := sessions.Default(c).Get("user_id")
+		user := sessions.Default(c).Get("userID")
 		if user != nil {
 			c.Redirect(302, "/")
 			return
