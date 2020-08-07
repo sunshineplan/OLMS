@@ -53,8 +53,8 @@
       <ul class='navbar-nav'>
         <li><a class='nav-link' onclick="showAdmin('empls')">Manage Employee</a></li>
         {{ if eq .user.ID 0 }}
-        <li><a class='nav-link' onclick="showAdmin('depts')">Manage Department</a></li>
-        <li><a class='nav-link' onclick="showAdmin('records')">Manage Records</a></li>
+        <li><a class='nav-link' onclick="showSuper('depts')">Manage Department</a></li>
+        <li><a class='nav-link' onclick="showSuper('records')">Manage Records</a></li>
         {{ end }}
       </ul>
     </div>
@@ -75,11 +75,6 @@
   {{ template "content" . }}
 </div>
 <script>
-  $(function () {
-    $('form').submit(function() {
-      $(this).find(":selected[value='']").prop('disabled', true);
-    });
-  });
   $('.toggle').click(() => {
     $('.sidebar').toggle('slide');
   });

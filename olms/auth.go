@@ -35,8 +35,7 @@ func adminRequired(c *gin.Context) {
 }
 
 func superRequired(c *gin.Context) {
-	session := sessions.Default(c)
-	userID := session.Get("userID")
+	userID := sessions.Default(c).Get("userID")
 	if userID == nil {
 		c.AbortWithStatus(401)
 	} else if userID != "0" {
@@ -84,7 +83,6 @@ func login(c *gin.Context) {
 		if message == "" {
 			session.Clear()
 			session.Set("userID", id)
-			session.Set("name", realname)
 
 			rememberme := c.PostForm("rememberme")
 			if rememberme == "on" {

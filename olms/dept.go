@@ -30,7 +30,7 @@ func getDepts(ids []string) ([]dept, error) {
 	for _, i := range ids {
 		args = append(args, i)
 	}
-	rows, err := db.Query("SELECT * FROM department WHERE id IN ("+strings.Join(marks, ", ")+") ORDER BY dept_name", args...)
+	rows, err := db.Query("SELECT * FROM department WHERE id IN ("+strings.Join(marks, ", ")+")", args...)
 	if err != nil {
 		log.Printf("Failed to get departments: %v", err)
 		return nil, err

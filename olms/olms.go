@@ -43,9 +43,16 @@ func init() {
 	sqlitePy = joinPath(dir(Self), "scripts/sqlite.py")
 }
 
+func checkSuper(c *gin.Context) bool {
+	userID := sessions.Default(c).Get("userID")
+	if userID == "0" {
+		return true
+	}
+	return false
+}
+
 func checkPermission(c *gin.Context, ids ...string) bool {
-	session := sessions.Default(c)
-	userID := session.Get("userID")
+	userID := sessions.Default(c).Get("userID")
 	if userID == "0" {
 		return true
 	}

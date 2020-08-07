@@ -3,7 +3,7 @@
 <hr>
 </header>
 <div class='form'>
-  {{ if eq .mode "dept" }}
+  {{ if ne .mode "" }}
   <script>
     $(function () {
       $('#dept').on('change', function () {
@@ -44,6 +44,16 @@
       <input class='form-control' type='number' min=1 name='duration' id='Duration' required>
     </div>
   </div>
+  {{ if eq .user "0" }}
+  <div class='form-group'>
+    <label for='status'>Status</label>
+    <select class='form-control' name='status' id='Status'>
+      <option value='0'>Unverified</option>
+      <option value='1'>Verified</option>
+      <option value='2'>Rejected</option>
+    </select>
+  </div>
+  {{ end }}
   <div class='form-group'>
     <label for='describe'>Describe</label>
     <textarea class='form-control' name='describe' id='Describe' rows='3'></textarea>

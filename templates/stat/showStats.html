@@ -3,7 +3,7 @@
     <a class='h3 title'></a>
   </div>
   <div class='toolbar'>
-    {{ if eq .mode "dept" }}
+    {{ if eq .mode "admin" }}
     <div class='form-inline'>
       <div class='input-group input-group-sm' id='dept-selector'>
         <div class='input-group-prepend'>
@@ -91,7 +91,7 @@
       </div>
       <div class='input-group'>
         <a class='btn btn-primary btn-sm' onclick="load('{{ .mode }}', 'stats')">Filter</a>
-        <a class='btn btn-primary btn-sm' onclick='clear()'>Clear</a>
+        <a class='btn btn-primary btn-sm' onclick='clearParams()'>Clear</a>
         <a class='btn btn-info btn-sm' onclick="download('{{ .mode }}', 'stats')">Export</a>
       </div>
     </div>
@@ -102,7 +102,7 @@
     <thead>
       <tr>
         <th scope='col'>Period</th>
-        {{ if eq .mode "dept" }}
+        {{ if eq .mode "admin" }}
         <th scope='col'>Department</th>
         <th scope='col'>Realname</th>
         {{ end }}

@@ -21,7 +21,7 @@
   </div>
   {{ if eq .user "0" }}
   <div class='form-group'>
-    <label for='role'>Type</label>
+    <label for='role'>Role</label>
     <select class='form-control' name='role' id='Role'>
       <option value='0'>General Employee</option>
       <option value='1'>Administrator</option>
@@ -29,8 +29,9 @@
   </div>
   <script>
     $(function () {
-      $('#Type').on('change', function () {
-        if ($('#Type').val() == 0) {
+      $('#Role').on('change', function () {
+        if ($('#Role').val() == 0) {
+          $('#permission-selector option:selected').prop('selected', false);
           $('#permission-selector').prop('hidden', true);
         } else {
           $('#permission-selector').prop('hidden', false);

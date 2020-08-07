@@ -45,8 +45,9 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 	} else {
 		if year != "" {
 			if month == "" {
-				stmt += "strftime('%Y', date) = ? AND "
-				args = append(args, year)
+				//stmt += "strftime('%Y', date) = ? AND "
+				//args = append(args, year)
+				stmt += fmt.Sprintf("strftime('%%Y', date) = '%s' AND ", year)
 			} else {
 				stmt += "strftime('%Y%m', date) = ? AND "
 				args = append(args, year+month)
@@ -89,6 +90,7 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 			bc <- true
 		}
 	}
+	fmt.Println(stmt, args) // test
 	rows, err := db.Query(fmt.Sprintf(stmt+" ORDER BY created DESC"+limit,
 		"record.id, employee.dept_id, dept_name, employee.id, realname, date, ABS(duration), type, status, describe, created"), args...)
 	if err != nil {
@@ -107,12 +109,53 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 	if v := <-bc; !v {
 		err = fmt.Errorf("Failed to get total records")
 	}
+	fmt.Println(records) // test
+	return
+}
+
+func getYears(userID interface{}, deptIDs []string) (years []string, err error) {
+	db, err := getDB()
+	if err != nil {
+		log.Printf("Failed to connect to database: %v", err)
+		return
+	}
+	defer db.Close()
+
+	stmt := "SELECT DISTINCT strftime('%Y', date) year FROM record WHERE"
+
+	var args []interface{}
+	if userID != nil {
+		stmt += " user_id = ?"
+		args = append(args, userID)
+	} else {
+		marks := make([]string, len(deptIDs))
+		for i := range marks {
+			marks[i] = "?"
+		}
+		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
+		for _, i := range deptIDs {
+			args = append(args, i)
+		}
+	}
+	rows, err := db.Query(stmt+" ORDER BY year DESC", args...)
+	if err != nil {
+		log.Printf("Failed to get years: %v", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var y string
+		if err = rows.Scan(&y); err != nil {
+			log.Printf("Failed to scan year: %v", err)
+			return
+		}
+		years = append(years, y)
+	}
 	return
 }
 
 func checkRecord(c *gin.Context, record record, super bool) bool {
-	session := sessions.Default(c)
-	userID := session.Get("userID")
+	userID := sessions.Default(c).Get("userID")
 	if userID == "0" {
 		return true
 	}
@@ -176,8 +219,7 @@ func doAddRecord(c *gin.Context) {
 	describe := c.PostForm("describe")
 
 	var user empl
-	session := sessions.Default(c)
-	switch userID := session.Get("userID"); userID {
+	switch userID := sessions.Default(c).Get("userID"); userID {
 	case "0":
 		user = empl{ID: 0}
 	default:
@@ -351,8 +393,7 @@ func doVerifyRecord(c *gin.Context) {
 	defer db.Close()
 
 	var user empl
-	session := sessions.Default(c)
-	switch userID := session.Get("userID"); userID {
+	switch userID := sessions.Default(c).Get("userID"); userID {
 	case "0":
 		user = empl{ID: 0}
 	default:
@@ -381,14 +422,20 @@ func doDeleteRecord(c *gin.Context) {
 		c.String(400, "")
 		return
 	}
-	session := sessions.Default(c)
-	users, _, err := getEmpls(session.Get("userID"), nil, nil, nil)
-	if err != nil {
-		log.Printf("Failed to get user: %v", err)
-		c.String(500, "")
-		return
+	var user empl
+	switch userID := sessions.Default(c).Get("userID"); userID {
+	case "0":
+		user = empl{ID: 0}
+	default:
+		users, _, err := getEmpls(userID, nil, nil, nil)
+		if err != nil {
+			log.Printf("Failed to get user: %v", err)
+			c.String(500, "")
+			return
+		}
+		user = users[0]
 	}
-	if users[0].ID != 0 && records[0].Status != 0 {
+	if user.ID != 0 && records[0].Status != 0 {
 		c.JSON(200, gin.H{"status": 0, "message": "You can only delete record which is not verified."})
 		return
 	}

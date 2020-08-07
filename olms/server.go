@@ -68,9 +68,7 @@ func Run() {
 	router.StaticFS("/static", http.Dir(joinPath(dir(Self), "static")))
 	router.HTMLRender = loadTemplates()
 	router.GET("/", func(c *gin.Context) {
-		session := sessions.Default(c)
-		userID := session.Get("userID")
-		switch userID {
+		switch userID := sessions.Default(c).Get("userID"); userID {
 		case nil:
 			c.Redirect(302, "/auth/login")
 		case "0":
@@ -88,8 +86,7 @@ func Run() {
 
 	auth := router.Group("/auth")
 	auth.GET("/login", func(c *gin.Context) {
-		session := sessions.Default(c)
-		user := session.Get("user_id")
+		user := sessions.Default(c).Get("user_id")
 		if user != nil {
 			c.Redirect(302, "/")
 			return
@@ -116,59 +113,52 @@ func Run() {
 	record := router.Group("/record")
 	record.Use(authRequired)
 	record.GET("", func(c *gin.Context) {
-		c.HTML(200, "showRecords.html", gin.H{"mode": "empl"})
+		c.HTML(200, "showRecords.html", gin.H{"mode": ""})
 	})
-	record.GET("/dept", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "showRecords.html", gin.H{"mode": "dept"})
+	record.GET("/admin", adminRequired, func(c *gin.Context) {
+		c.HTML(200, "showRecords.html", gin.H{"mode": "admin"})
+	})
+	record.GET("/super", superRequired, func(c *gin.Context) {
+		c.HTML(200, "showRecords.html", gin.H{"mode": "super"})
 	})
 	record.GET("/add", func(c *gin.Context) {
-		c.HTML(200, "record.html", gin.H{"mode": "empl", "id": "0"})
+		c.HTML(200, "record.html", gin.H{"mode": "", "id": "0", "user": "1"})
 	})
-	record.GET("/dept/add", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "record.html", gin.H{"mode": "dept", "id": "0"})
+	record.GET("/admin/add", adminRequired, func(c *gin.Context) {
+		c.HTML(200, "record.html", gin.H{"mode": "admin", "id": "0", "user": sessions.Default(c).Get("userID")})
 	})
 	record.POST("/add", doAddRecord)
 	record.GET("/edit/:id", func(c *gin.Context) {
-		id := c.Param("id")
-		c.HTML(200, "record.html", gin.H{"mode": "empl", "id": id})
+		c.HTML(200, "record.html", gin.H{"mode": "", "id": c.Param("id"), "user": "1"})
 	})
-	record.GET("/dept/edit/:id", superRequired, func(c *gin.Context) {
-		id := c.Param("id")
-		c.HTML(200, "record.html", gin.H{"mode": "dept", "id": id})
+	record.GET("/super/edit/:id", superRequired, func(c *gin.Context) {
+		c.HTML(200, "record.html", gin.H{"mode": "super", "id": c.Param("id"), "user": sessions.Default(c).Get("userID")})
 	})
 	record.POST("/edit/:id", doEditRecord)
 	record.GET("/verify/:id", adminRequired, func(c *gin.Context) {
-		id := c.Param("id")
-		c.HTML(200, "verify.html", gin.H{"id": id})
+		c.HTML(200, "verify.html", gin.H{"id": c.Param("id")})
 	})
 	record.POST("/verify/:id", adminRequired, doVerifyRecord)
 	record.POST("/delete/:id", doDeleteRecord)
 
 	stat := router.Group("/stat")
 	stat.GET("", authRequired, func(c *gin.Context) {
-		c.HTML(200, "showStats.html", gin.H{"mode": "empl"})
+		c.HTML(200, "showStats.html", gin.H{"mode": ""})
 	})
-	stat.GET("/dept", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "showStats.html", gin.H{"mode": "dept"})
+	stat.GET("/admin", adminRequired, func(c *gin.Context) {
+		c.HTML(200, "showStats.html", gin.H{"mode": "admin"})
 	})
 
 	empl := router.Group("/empl")
 	empl.GET("", adminRequired, func(c *gin.Context) {
-		session := sessions.Default(c)
-		id := session.Get("userID")
-		c.HTML(200, "showEmpls.html", gin.H{"id": id})
+		c.HTML(200, "showEmpls.html", gin.H{"user": sessions.Default(c).Get("userID")})
 	})
 	empl.GET("/add", adminRequired, func(c *gin.Context) {
-		session := sessions.Default(c)
-		userID := session.Get("userID")
-		c.HTML(200, "empl.html", gin.H{"id": "0", "user": userID})
+		c.HTML(200, "empl.html", gin.H{"id": "0", "user": sessions.Default(c).Get("userID")})
 	})
 	empl.POST("/add", adminRequired, doAddEmpl)
 	empl.GET("/edit/:id", superRequired, func(c *gin.Context) {
-		session := sessions.Default(c)
-		userID := session.Get("userID")
-		id := c.Param("id")
-		c.HTML(200, "empl.html", gin.H{"id": id, "user": userID})
+		c.HTML(200, "empl.html", gin.H{"id": c.Param("id"), "user": sessions.Default(c).Get("userID")})
 	})
 	empl.POST("/edit/:id", superRequired, doEditEmpl)
 	empl.POST("/delete/:id", superRequired, doDeleteEmpl)
@@ -183,8 +173,7 @@ func Run() {
 	})
 	dept.POST("/add", doAddDept)
 	dept.GET("/edit/:id", func(c *gin.Context) {
-		id := c.Param("id")
-		c.HTML(200, "dept.html", gin.H{"id": id})
+		c.HTML(200, "dept.html", gin.H{"id": c.Param("id")})
 	})
 	dept.POST("/edit/:id", doEditDept)
 	dept.POST("/delete/:id", doDeleteDept)

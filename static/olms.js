@@ -5,7 +5,7 @@ BootstrapButtons = Swal.mixin({
     buttonsStyling: false
 });
 
-function getParam(mode, query) {
+function getParams(mode, query) {
     var data = {}, param;
     $('select').serializeArray().forEach(i => { if (i.value != '') data[i.name] = i.value });
     if ($.isEmptyObject(data)) param = 'mode=' + mode + '&query=' + query;
@@ -13,9 +13,12 @@ function getParam(mode, query) {
     return param;
 }
 
+function clearParams() {
+    $('select option:selected').prop('selected', false);
+}
+
 function load(mode, query) {
-    var param = getParam(mode, query);
-    $.post('/get', param, json => {
+    $.post('/get', getParams(mode, query), json => {
         $('tbody').empty();
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr></tr>');
@@ -29,8 +32,7 @@ function load(mode, query) {
 };
 
 function loadDepts(mode) {
-    var param = getParam(mode, 'depts');
-    $.post('/get', param, json => {
+    $.post('/get', getParams(mode, 'depts'), json => {
         $('tbody').empty();
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr></tr>');
@@ -43,8 +45,7 @@ function loadDepts(mode) {
 };
 
 function loadEmpls(mode) {
-    var param = getParam(mode, 'empls');
-    $.post('/get', param, json => {
+    $.post('/get', getParams(mode, 'empls'), json => {
         $('tbody').empty();
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr></tr>');
@@ -62,7 +63,9 @@ function loadEmpls(mode) {
 };
 
 function loadRecords(mode) {
-    var param = getParam(mode, 'records');
+    var param
+    if (mode == 'super') param = getParams('admin', 'records');
+    else param = getParams(mode, 'records')
     $.post('/get', param, json => {
         $('tbody').empty();
         $.each(json.rows, (i, item) => {
@@ -79,11 +82,10 @@ function loadRecords(mode) {
             else if (item.Status == 1) $tr.append("<td><a class='text-success'>Verified</a></td>");
             else if (item.Status == 2) $tr.append("<td><a class='text-danger'>Rejected</a></td>");
             if (mode == 'admin') $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='verify(" + item.ID + ")'>Verify</a></td>");
-            else $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='record(" + item.ID + ")'>Edit</a></td>");
+            else $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='record(\"" + mode + "\"," + item.ID + ")'>Edit</a></td>");
             $tr.appendTo('tbody');
         });
     });
-    getDepts('#dept')
 };
 
 function getDepts(element) {
@@ -92,18 +94,34 @@ function getDepts(element) {
             $(element).append($('<option>').text(item.Name).prop('value', item.ID));
         });
     });
-}
+};
 
-function getEmpls(element) {
-    $.post('/get', 'mode=admin&query=empls', json => {
+function getEmpls(element, id) {
+    var param
+    if (id === undefined) param = 'mode=admin&query=empls'
+    else param = 'mode=admin&query=empls&dept=' + id
+    $.post('/get', param, json => {
         $.each(json.rows, (i, item) => {
             $(element).append($('<option>').text(item.Realname).prop('value', item.ID));
         });
     });
-}
+};
+
+function getYears(mode, userID, deptID) {
+    var param
+    if (userID !== undefined) param = 'mode=admin&query=years&empl=' + userID
+    else if (deptID !== undefined) param = 'mode=admin&query=years&dept=' + deptID
+    else if (mode === undefined) param = 'query=years'
+    else param = 'mode=admin&query=years'
+    $.post('/get', param, json => {
+        $.each(json.rows, (i, item) => {
+            $('#year').append($('<option>').text(item).prop('value', item));
+        });
+    });
+};
 
 function download(mode, query) {
-    $.post('/export', getParam(mode, query));
+    $.post('/export', getParams(mode, query));
 };
 
 function show(query) {
@@ -127,10 +145,9 @@ function show(query) {
 
 function showAdmin(query) {
     var url;
-    if (query == 'depts') url = '/dept';
-    else if (query == 'empls') url = '/empl';
-    else if (query == 'records') url = '/record/dept';
-    else if (query == 'stats') url = '/stat/dept';
+    if (query == 'empls') url = '/empl';
+    else if (query == 'records') url = '/record/admin';
+    else if (query == 'stats') url = '/stat/admin';
     else return false;
     loading();
     $.get(url, html => {
@@ -143,13 +160,35 @@ function showAdmin(query) {
             document.title = 'Department Statistics - OLMS';
             $('.title').text('Department Statistics');
         }
-        else if (query == 'depts') document.title = 'Departments List - OLMS';
         else if (query == 'empls') document.title = 'Employees List - OLMS';
     }).done(() => {
         if (query == 'empls') loadEmpls('admin');
-        else if (query == 'depts') loadDepts('admin');
         else if (query == 'records') loadRecords('admin');
         else load('admin', query);
+    }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
+};
+
+function showSuper(query) {
+    var url;
+    if (query == 'depts') url = '/dept';
+    else if (query == 'records') url = '/record/super';
+    else return false;
+    loading();
+    $.get(url, html => {
+        loading(false);
+        $('.content').html(html);
+        if (query == 'records') {
+            document.title = 'All Records - OLMS';
+            $('.title').text('All Records');
+        }
+        else document.title = 'Departments List - OLMS';
+    }).done(() => {
+        if (query == 'records') {
+            loadRecords('super');
+            getDepts('#dept');
+            getEmpls('#empl');
+            getYears('admin');
+        } else loadDepts('admin');
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
@@ -168,7 +207,7 @@ function dept(id = 0) {
             $('.title').text('Edit Department');
             $.post('get', 'mode=admin&query=depts&id=' + id, json => {
                 loading(false);
-                $.each(json.rows[0], (k, v) => {
+                $.each(json.dept, (k, v) => {
                     $('#' + k).val(v);
                 })
                 $('#dept').focus();
@@ -195,46 +234,57 @@ function empl(id = 0) {
         getDepts('#Dept, #Permission');
         if (id != 0) {
             $.post('get', 'mode=admin&query=empls&id=' + id, json => {
-                $.each(json.rows[0], (k, v) => {
+                $.each(json.empl, (k, v) => {
                     $('#' + k).val(v);
-                })
-                $('#Username').focus();
+                });
+                $('#Dept').val(json.empl.DeptID);
+                if (json.empl.Role) {
+                    $('#Role').val(1);
+                    $('#permission-selector').prop('hidden', false);
+                    $('#Permission').val(json.empl.Permission.split(','));
+                }
+                else $('#Role').val(0);
             });
-        }
+        };
         loading(false);
+        $('#Username').focus();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
-function record(mode, id = 0) {
+function record(mode = '', id = 0) {
     var url;
     if (id == 0) {
-        if (mode == 'depts') url = '/record/dept/add';
-        else url = '/record/add';
+        if (mode == '') url = '/record/add';
+        else url = '/record/admin/add';
     } else {
-        if (mode == 'depts') url = '/record/dept/edit/' + id;
-        else url = '/record/edit/' + id;
+        if (mode == '') url = '/record/edit/' + id;
+        else url = '/record/super/edit/' + id;
     }
     loading();
     $.get(url, html => $('.content').html(html)).done(() => {
+        if (mode != '') {
+            getDepts('#Dept');
+        }
         if (id == 0) {
             document.title = 'Add Record - OLMS';
             $('.title').text('Add Record');
         } else {
             document.title = 'Edit Record - OLMS';
             $('.title').text('Edit Record');
-            $.post('get', 'id=' + id + '&mode=' + mode, json => {
-                $.each(json.record, (k, v) => {
-                    $('#' + k).val(v);
-                });
-                $('#Date').val(json.record.Date.split('T')[0]);
-                if (json.record.Type) $('#Type').val('Overtime');
-                else $('#Type').val('Leave');
-            }, 'json');
         };
     }).done(() => {
-        if (mode == 'depts') {
-            getDepts('#dept');
-        }
+        if (mode != '') mode = 'admin';
+        if (id != 0) $.post('get', 'id=' + id + '&mode=' + mode, json => {
+            $.each(json.record, (k, v) => {
+                $('#' + k).val(v);
+            });
+            $('#Dept').val(json.record.DeptID);
+            getEmpls('#Empl', json.record.DeptID)
+            $('#Empl').val(json.record.UserID);
+            $('#Date').val(json.record.Date.split('T')[0]);
+            if (json.record.Type) $('#Type').val('1');
+            else $('#Type').val('0');
+        }, 'json');
         loading(false);
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
@@ -276,7 +326,7 @@ function doDept(id) {
                 BootstrapButtons.fire('Error', json.message, 'error').then(() => {
                     $('#dept').val('');
                 });
-            else showAdmin('depts');
+            else showSuper('depts');
         }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 

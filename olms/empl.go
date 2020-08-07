@@ -110,6 +110,21 @@ func doAddEmpl(c *gin.Context) {
 	} else if deptID == "" {
 		message = "Department is required."
 	} else {
+		if checkSuper(c) {
+			role := c.PostForm("role")
+			var permission []string
+			if role == "1" {
+				permission = c.PostFormArray("permission")
+			}
+			if _, err = db.Exec("INSERT INTO user (username, realname, dept_id, role, permission) VALUES (?, ?, ?, ?, ?)",
+				username, realname, deptID, role, strings.Join(permission, ",")); err != nil {
+				log.Printf("Failed to add user: %v", err)
+				c.String(500, "")
+				return
+			}
+			c.JSON(200, gin.H{"status": 1})
+			return
+		}
 		if _, err = db.Exec("INSERT INTO user (username, realname, dept_id) VALUES (?, ?, ?)", username, realname, deptID); err != nil {
 			log.Printf("Failed to add user: %v", err)
 			c.String(500, "")
@@ -141,6 +156,11 @@ func doEditEmpl(c *gin.Context) {
 	if realname == "" {
 		realname = username
 	}
+	role := c.PostForm("role")
+	var permission []string
+	if role == "1" {
+		permission = c.PostFormArray("permission")
+	}
 	var exist, message string
 	if username == "" {
 		message = "Username is required."
@@ -150,7 +170,7 @@ func doEditEmpl(c *gin.Context) {
 		message = "Department is required."
 	} else {
 		if _, err = db.Exec("UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ?, permission = ? WHERE id = ?",
-			username, realname, deptID, role, permission, id); err != nil {
+			username, realname, deptID, role, strings.Join(permission, ","), id); err != nil {
 			log.Printf("Failed to edit user: %v", err)
 			c.String(500, "")
 			return

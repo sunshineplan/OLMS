@@ -50,4 +50,4 @@ CREATE VIEW statistics AS
   ORDER BY period DESC, dept_name, realname;
 
 INSERT INTO user (id, username, realname, dept_id, role)
-  VALUES (0, 'admin', 'admin', 0, 1);
+  VALUES (0, 'root', 'root', 0, 1);

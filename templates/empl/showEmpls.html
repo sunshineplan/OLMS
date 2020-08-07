@@ -12,7 +12,7 @@
           <option value=''>All</option>
         </select>
       </div>
-      {{ if eq .id "0" }}
+      {{ if eq .user "0" }}
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
           <label class='input-group-text' for='type'>Type</label>
@@ -26,7 +26,7 @@
       {{ end }}
       <div class='input-group'>
         <a class='btn btn-primary btn-sm' onclick='filter()'>Filter</a>
-        <a class='btn btn-primary btn-sm' onclick='clear()'>Clear</a>
+        <a class='btn btn-primary btn-sm' onclick='clearParams()'>Clear</a>
       </div>
     </div>
   </div>
@@ -41,7 +41,7 @@
         <th scope='col'>Username</th>
         <th scope='col'>Realname</th>
         <th scope='col'>Department</th>
-        {{ if eq .id "0" }}
+        {{ if eq .user "0" }}
         <th scope='col'>Role</th>
         <th scope='col'>Permission</th>
         <th scope='col'>Operation</th>

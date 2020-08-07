@@ -1,19 +1,3 @@
-function show_empl(element, dept_id, value = '') {
-    $.post('/manage/empl/get', { dept: dept_id }, function (json) {
-        $.each(json, function (id, realname) {
-            $(element).append($('<option>').text(realname).prop('value', id));
-        });
-        $(element).val(value)
-    }, 'json').fail(function (jqXHR) {
-        if (jqXHR.status == 200) {
-            alert('Session timeout. Please re-login!');
-            $(location).attr('href', '/auth/login');
-        } else {
-            alert('Getting employee list failed.');
-        };
-    });
-}
-
 function init_selector(element, mode = 'init', text = 'All') {
     if (mode == 'unselect') {
         $(element).val('');
