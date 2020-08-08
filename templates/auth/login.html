@@ -22,11 +22,11 @@
   <input type='submit' id='submit' value='Login' class='btn btn-primary login'>
 </form>
 <script>
-  $(function() {
+  $(() => {
     username = localStorage.getItem('username');
     if (username != null) $('#username').val(username);
-    $('#submit').click(function() {
-      if ($('#username').val() != 'admin') localStorage.setItem('username', $('#username').val());
+    $('#submit').click(() => {
+      if ($('#username').val() != 'root') localStorage.setItem('username', $('#username').val());
     });
   });
 </script>

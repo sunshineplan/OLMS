@@ -4,14 +4,6 @@
 </header>
 <div class='form'>
   {{ if ne .mode "" }}
-  <script>
-    $(function () {
-      $('#dept').on('change', function () {
-        init_selector('#empl', 'clear', ' -- select an employee -- ');
-        getEmpls('#empl')
-      });
-    });
-  </script>
   <div class='form-row'>
     <div class='form-group'>
       <label for='dept'>Department</label>

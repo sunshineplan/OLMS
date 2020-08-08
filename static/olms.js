@@ -98,11 +98,13 @@ function getEmpls(element, id) {
     var param
     if (id === undefined) param = 'mode=admin&query=empls'
     else param = 'mode=admin&query=empls&dept=' + id
+    $(element).empty().append($('<option>').text('All').val(''));
     $.post('/get', param, json => {
         $.each(json.rows, (i, item) => {
             $(element).append($('<option>').text(item.Realname).prop('value', item.ID));
         });
     });
+    $(element).val('');
 };
 
 function getYears(mode, userID, deptID) {
@@ -111,16 +113,18 @@ function getYears(mode, userID, deptID) {
     else if (deptID !== undefined) param = 'mode=admin&query=years&dept=' + deptID
     else if (mode === undefined) param = 'query=years'
     else param = 'mode=admin&query=years'
+    $('#year').empty().append($('<option>').text('All').val(''));
     $.post('/get', param, json => {
         $.each(json.rows, (i, item) => {
             $('#year').append($('<option>').text(item).prop('value', item));
         });
     });
+    $('#year').val('');
 };
 
 function exportCSV(mode, query) {
     if (mode == 'super') mode = 'admin'
-    $.post('/export', getParams(mode, query), (data, textStatus, jqXHR) => {
+    $.post('/export', getParams(mode, query), (data, status, jqXHR) => {
         var blob = new Blob([data]);
         var link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
@@ -129,84 +133,82 @@ function exportCSV(mode, query) {
     });
 };
 
-function show(query) {
-    var url;
-    if (query == 'records') url = '/record';
-    else if (query == 'stats') url = '/stat';
-    else return false;
-    loading();
-    $.get(url).done(html => {
-        loading(false);
-        $('.content').html(html);
-        if (query == 'records') {
-            document.title = 'Employee Records - OLMS';
-            $('.title').text('Employee Records');
-        } else {
-            document.title = 'Employee Statistics - OLMS';
-            $('.title').text('Employee Statistics');
-        };
-    }).done(() => {
-        if (query == 'records') loadRecords('');
-        else loadStats('');
-        getYears();
-    }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
-};
-
-function showAdmin(query) {
-    var url;
-    if (query == 'records') url = '/record/admin';
-    else if (query == 'stats') url = '/stat/admin';
-    else if (query == 'empls') url = '/empl';
-    else return false;
+function showDepts(query) {
+    var url = '/dept';
     loading();
     $.get(url, html => {
         loading(false);
         $('.content').html(html);
-        if (query == 'records') {
-            document.title = 'Department Records - OLMS';
-            $('.title').text('Department Records');
-        } else if (query == 'stats') {
-            document.title = 'Department Statistics - OLMS';
-            $('.title').text('Department Statistics');
-        }
-        else if (query == 'empls') document.title = 'Employees List - OLMS';
+        document.title = 'Departments List - OLMS';
+    }).done(() => loadDepts('admin')).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
+};
+
+function showEmpls() {
+    var url = '/empl';
+    loading();
+    $.get(url, html => {
+        loading(false);
+        $('.content').html(html);
+        document.title = 'Employees List - OLMS';
     }).done(() => {
-        if (query == 'records') {
-            loadRecords('admin');
-            getEmpls('#empl');
-            getYears('admin');
-        }
-        else if (query == 'stats') {
-            loadStats('admin');
-            getEmpls('#empl');
-            getYears('admin');
-        }
-        else if (query == 'empls') loadEmpls('admin');
+        loadEmpls('admin');
         getDepts('#dept');
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 
-function showSuper(query) {
+function showRecords(mode) {
     var url;
-    if (query == 'depts') url = '/dept';
-    else if (query == 'records') url = '/record/super';
-    else return false;
+    if (mode == 'admin') url = '/record/admin';
+    else if (mode == 'super') url = '/record/super';
+    else url = '/record';
     loading();
-    $.get(url, html => {
+    $.get(url).done(html => {
         loading(false);
         $('.content').html(html);
-        if (query == 'records') {
+        if (mode == 'admin') {
+            document.title = 'Department Records - OLMS';
+            $('.title').text('Department Records');
+        } else if (mode == 'super') {
             document.title = 'All Records - OLMS';
             $('.title').text('All Records');
-        }
-        else document.title = 'Departments List - OLMS';
+        } else {
+            document.title = 'Employee Records - OLMS';
+            $('.title').text('Employee Records');
+        };
     }).done(() => {
-        if (query == 'records') {
-            loadRecords('super');
+        loadRecords(mode);
+        if (mode == '') getYears();
+        else {
             getDepts('#dept');
             getEmpls('#empl');
             getYears('admin');
-        } else loadDepts('admin');
+        };
+    }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
+};
+
+function showStats(mode) {
+    var url;
+    if (mode == '') url = '/stat';
+    else url = '/stat/admin';
+    loading();
+    $.get(url).done(html => {
+        loading(false);
+        $('.content').html(html);
+        if (mode == '') {
+            document.title = 'Employee Statistics - OLMS';
+            $('.title').text('Employee Statistics');
+        } else {
+            document.title = 'Department Statistics - OLMS';
+            $('.title').text('Department Statistics - OLMS');
+        };
+    }).done(() => {
+        loadStats(mode);
+        if (mode == '') getYears();
+        else {
+            getDepts('#dept');
+            getEmpls('#empl');
+            getYears('admin');
+        };
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login'; });
 };
 

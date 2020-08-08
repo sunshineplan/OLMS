@@ -75,9 +75,7 @@
   {{ template "content" . }}
 </div>
 <script>
-  $('.toggle').click(() => {
-    $('.sidebar').toggle('slide');
-  });
+  $('.toggle').click(() => { $('.sidebar').toggle('slide') });
   $('.content').click(() => {
     if ($('.sidebar').is(':visible') && $(window).width() <= 900) {
       $('.sidebar').toggle('slide');

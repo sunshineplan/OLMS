@@ -3,7 +3,7 @@
     <a class='h3 title'></a>
   </div>
   <div class='toolbar'>
-    {{ if eq .mode "admin" }}
+    {{ if ne .mode "" }}
     <div class='form-inline'>
       <div class='input-group input-group-sm' id='dept-selector'>
         <div class='input-group-prepend'>
@@ -33,34 +33,6 @@
           <option value='year'>Year</option>
         </select>
       </div>
-      <script>
-        $(function () {
-          if ($('#period').val() == 'year') {
-            $('#month-selector').prop('hidden', true);
-          };
-          if ($('#year').val() == '') {
-            $('#month').prop('disabled', true);
-          };
-          $('#period').on('change', function () {
-            if ($('#period').val() == 'year') {
-              $('#month-selector').prop('hidden', true);
-              init_selector('#year', 'unselect');
-              init_selector('#month', 'unselect');
-            } else {
-              $('#month-selector').prop('hidden', false);
-              init_selector('#year', 'unselect');
-            };
-          });
-          $('#year').on('change', function () {
-            if ($('#year').val() == '') {
-              $('#month').prop('disabled', true);
-              init_selector('#month', 'unselect');
-            } else {
-              $('#month').prop('disabled', false);
-            };
-          });
-        });
-      </script>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
           <label class='input-group-text' for='year'>Year</label>
@@ -73,7 +45,7 @@
         <div class='input-group-prepend'>
           <label class='input-group-text' for='month'>Month</label>
         </div>
-        <select class='custom-select' name='month' id='month'>
+        <select class='custom-select' name='month' id='month' disabled>
           <option value=''>All</option>
           <option value='01'>1</option>
           <option value='02'>2</option>
@@ -91,7 +63,7 @@
       </div>
       <div class='input-group'>
         <a class='btn btn-primary btn-sm' onclick="loadStats('{{ .mode }}')">Filter</a>
-        <a class='btn btn-primary btn-sm' onclick="clearParams();loadStats('{{ .mode }}')">Clear</a>
+        <a class='btn btn-primary btn-sm' onclick={{ if eq .mode "" }}"show('stats')"{{ else }}"showAdmin('stats')"{{ end }}>Reset</a>
         <a class='btn btn-info btn-sm' onclick="exportCSV('{{ .mode }}', 'stats')">Export</a>
       </div>
     </div>
@@ -102,7 +74,7 @@
     <thead>
       <tr>
         <th scope='col'>Period</th>
-        {{ if eq .mode "admin" }}
+        {{ if ne .mode "" }}
         <th scope='col'>Department</th>
         <th scope='col'>Realname</th>
         {{ end }}

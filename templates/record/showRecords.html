@@ -32,26 +32,11 @@
           <option value=''>All</option>
         </select>
       </div>
-      <script>
-        $(function () {
-          if ($('#year').val() == '') {
-            $('#month').prop('disabled', true);
-          };
-          $('#year').on('change', function () {
-            if ($('#year').val() == '') {
-              $('#month').prop('disabled', true);
-              init_selector('#month', 'unselect');
-            } else {
-              $('#month').prop('disabled', false);
-            };
-          });
-        });
-      </script>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
           <label class='input-group-text' for='month'>Month</label>
         </div>
-        <select class='custom-select' name='month' id='month'>
+        <select class='custom-select' name='month' id='month' disabled>
           <option value=''>All</option>
           <option value='01'>1</option>
           <option value='02'>2</option>
@@ -90,7 +75,7 @@
       </div>
       <div class='input-group'>
         <a class='btn btn-primary btn-sm' onclick="loadRecords('{{ .mode }}')">Filter</a>
-        <a class='btn btn-primary btn-sm' onclick="clearParams();loadRecords('{{ .mode }}')">Clear</a>
+        <a class='btn btn-primary btn-sm' onclick="clearParams();loadRecords('{{ .mode }}')">Reset</a>
         <a class='btn btn-info btn-sm' onclick="exportCSV('{{ .mode }}', 'records')">Export</a>
       </div>
     </div>
