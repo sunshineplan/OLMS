@@ -15,7 +15,7 @@ function pagination(total, current = 1) {
         if (i >= 1 && i <= page) {
             if (i - flag != 1) $li.append("<span class='page-link'>...</span>");
             else if (i == current)
-                $li.addClass('active').append("<span class='page-link' data-page='" + i + "'>" + i + "</span>");
+                $li.addClass('active').append("<span class='page-link'>" + i + "</span>");
             else $li.append("<span class='page-link' data-page='" + i + "'>" + i + "</span>");
             $('.pagination').append($li);
         };

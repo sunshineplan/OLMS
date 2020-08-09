@@ -58,10 +58,11 @@ function loadDepts(mode) {
     });
 };
 
-function loadEmpls(mode, page = 1) {
-    if (mode == 0) mode = 'super';
-    else mode = 'admin'
-    $.post('/get', getParams(mode, 'empls') + '&page=' + page, json => {
+function loadEmpls(mode, page = 1, param) {
+    if (mode == 0) mode = 'super'; else mode = 'admin';
+    if (param === undefined) param = getParams(mode, 'empls');
+    $.post('/get', param + '&page=' + page, json => {
+        pagination(json.total);
         $('tbody').empty();
         $("#total").text(json.total);
         $.each(json.rows, (i, item) => {
@@ -77,15 +78,19 @@ function loadEmpls(mode, page = 1) {
             };
             $tr.appendTo('tbody');
         });
-        pagination(json.total);
+    }).done(() => {
+        $('.pagination').data('mode', mode);
+        $('.pagination').data('query', 'empl');
+        $('.pagination').data('param', param);
     });
 };
 
-function loadRecords(mode, page = 1) {
-    var param
-    if (mode == 'super') param = getParams('admin', 'records');
-    else param = getParams(mode, 'records')
+function loadRecords(mode, page = 1, param) {
+    if (param === undefined)
+        if (mode == 'super') param = getParams('admin', 'records');
+        else param = getParams(mode, 'records');
     $.post('/get', param + '&page=' + page, json => {
+        pagination(json.total);
         $('tbody').empty();
         $("#total").text(json.total);
         $.each(json.rows, (i, item) => {
@@ -114,12 +119,17 @@ function loadRecords(mode, page = 1) {
                 $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='record(\"" + mode + "\"," + item.ID + ")'>Edit</a></td>");
             $tr.appendTo('tbody');
         });
-        pagination(json.total);
+    }).done(() => {
+        $('.pagination').data('mode', mode);
+        $('.pagination').data('query', 'record');
+        $('.pagination').data('param', param);
     });
 };
 
-function loadStats(mode, page = 1) {
-    $.post('/get', getParams(mode, 'stats') + '&page=' + page, json => {
+function loadStats(mode, page = 1, param) {
+    if (param === undefined) param = getParams(mode, 'stats');
+    $.post('/get', param + '&page=' + page, json => {
+        pagination(json.total);
         $('tbody').empty();
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr></tr>');
@@ -133,7 +143,10 @@ function loadStats(mode, page = 1) {
             $tr.append('<td>' + item.Summary + '</td>');
             $tr.appendTo('tbody');
         });
-        pagination(json.total);
+    }).done(() => {
+        $('.pagination').data('mode', mode);
+        $('.pagination').data('query', 'stat');
+        $('.pagination').data('param', param);
     });
 };
 

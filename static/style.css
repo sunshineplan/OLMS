@@ -166,6 +166,7 @@ body {
 }
 
 .table-responsive {
+    min-height: 300px;
     padding: 0 10px;
     cursor: default;
 }
