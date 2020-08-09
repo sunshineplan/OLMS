@@ -6,8 +6,8 @@ BootstrapButtons = Swal.mixin({
 });
 
 $(document).on('click', 'li>a.nav-link', function () {
-    $('li>a.nav-link').removeClass('active');
-    $(this).addClass('active');
+    $('li>a.nav-link').removeClass('selected');
+    $(this).addClass('selected');
 });
 
 $(document).on('change', '#dept', () => {

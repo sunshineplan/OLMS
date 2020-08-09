@@ -77,6 +77,7 @@ function loadEmpls(mode, page = 1) {
             };
             $tr.appendTo('tbody');
         });
+        pagination(json.total);
     });
 };
 
@@ -113,6 +114,7 @@ function loadRecords(mode, page = 1) {
                 $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='record(\"" + mode + "\"," + item.ID + ")'>Edit</a></td>");
             $tr.appendTo('tbody');
         });
+        pagination(json.total);
     });
 };
 
@@ -131,6 +133,7 @@ function loadStats(mode, page = 1) {
             $tr.append('<td>' + item.Summary + '</td>');
             $tr.appendTo('tbody');
         });
+        pagination(json.total);
     });
 };
 

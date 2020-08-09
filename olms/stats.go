@@ -61,7 +61,7 @@ func getStats(id interface{}, deptIDs []string, period, year, month, page string
 	bc := make(chan bool, 1)
 	if p, err := strconv.Atoi(page); err == nil {
 		go func() {
-			if err := db.QueryRow(fmt.Sprintf(stmt+group, "count(realname)")).Scan(&total); err != nil {
+			if err := db.QueryRow(fmt.Sprintf(stmt+group, "count(realname)"), args...).Scan(&total); err != nil {
 				log.Printf("Failed to get total records: %v", err)
 				bc <- false
 			}
