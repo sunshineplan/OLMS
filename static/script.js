@@ -5,6 +5,43 @@ BootstrapButtons = Swal.mixin({
     buttonsStyling: false
 });
 
+$(document).on('click', 'li>a.nav-link', function () {
+    $('li>a.nav-link').removeClass('active');
+    $(this).addClass('active');
+});
+
+$(document).on('change', '#dept', () => {
+    if ($('#empl').length) getEmpls('#empl', $('#dept').val());
+    if ($('#year').length) getYears(deptID = $('#dept').val());
+});
+
+$(document).on('change', '#empl', () => { getYears(userID = $('#empl').val()) });
+
+$(document).on('change', '#period', () => {
+    if ($('#period').val() == 'year') {
+        $('#month-selector').prop('hidden', true);
+        $('#year').val('');
+        $('#month').val('');
+    } else {
+        $('#month-selector').prop('hidden', false);
+        $('#year').val('');
+    };
+});
+
+$(document).on('change', '#year', () => {
+    if ($('#year').val() == '') $('#month').prop('disabled', true).val('');
+    else $('#month').prop('disabled', false);
+});
+
+$(() => {
+    $('.toggle').click(() => { $('.sidebar').toggle('slide') });
+    $('.content').click(() => {
+        if ($('.sidebar').is(':visible') && $(window).width() <= 900) {
+            $('.sidebar').toggle('slide');
+        };
+    });
+});
+
 function loading(show = true) {
     if (show) {
         $('.loading').css('display', 'flex');
@@ -26,29 +63,11 @@ function valid() {
     return result;
 };
 
-function goback() {
-    var last = document.cookie.split('LastVisit=')[1];
-    show(last);
+function goback(mode) {
+    var last = document.cookie.split('Last=')[1];
+    console.log(last)//test
+    if (last == '/') window.location = '/';
+    else if (last == 'dept') showDepts();
+    else if (last == 'empl') showEmpls(mode);
+    else showRecords(mode);
 };
-
-$(() => {
-    $(document).on('change', '#dept', () => {
-        if ($('#empl').length) getEmpls('#empl', $('#dept').val());
-        if ($('#year').length) getYears(deptID = $('#dept').val());
-    });
-    $(document).on('change', '#empl', () => { getYears(userID = $('#empl').val()) });
-    $(document).on('change', '#period', () => {
-        if ($('#period').val() == 'year') {
-            $('#month-selector').prop('hidden', true);
-            $('#year').val('');
-            $('#month').val('');
-        } else {
-            $('#month-selector').prop('hidden', false);
-            $('#year').val('');
-        };
-    });
-    $(document).on('change', '#year', () => {
-        if ($('#year').val() == '') $('#month').prop('disabled', true).val('');
-        else $('#month').prop('disabled', false);
-    });
-});

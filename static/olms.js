@@ -11,11 +11,12 @@ function getDepts(element) {
         $.each(json.rows, (i, item) => $(element).append($('<option>').text(item.Name).val(item.ID))));
 };
 
-function getEmpls(element, id) {
+function getEmpls(element, deptID, all = true) {
     var param
-    if (id === undefined) param = 'mode=admin&query=empls'
-    else param = 'mode=admin&query=empls&dept=' + id
-    $(element).empty().append($('<option>').text('All').val(''));
+    if (deptID === undefined) param = 'mode=admin&query=empls'
+    else param = 'mode=admin&query=empls&dept=' + deptID
+    if (all) $(element).empty().append($('<option>').text('All').val(''));
+    else $(element).empty().append($('<option>').text(' -- select an employee -- ').prop('disabled', true).val(''));
     $.post('/get', param, json =>
         $.each(json.rows, (i, item) => $(element).append($('<option>').text(item.Realname).val(item.ID))));
     $(element).val('');
@@ -57,11 +58,12 @@ function loadDepts(mode) {
     });
 };
 
-function loadEmpls(mode) {
+function loadEmpls(mode, page = 1) {
     if (mode == 0) mode = 'super';
     else mode = 'admin'
-    $.post('/get', getParams(mode, 'empls'), json => {
+    $.post('/get', getParams(mode, 'empls') + '&page=' + page, json => {
         $('tbody').empty();
+        $("#total").text(json.total);
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr></tr>');
             $tr.append('<td>' + item.Username + '</td>');
@@ -78,12 +80,13 @@ function loadEmpls(mode) {
     });
 };
 
-function loadRecords(mode) {
+function loadRecords(mode, page = 1) {
     var param
     if (mode == 'super') param = getParams('admin', 'records');
     else param = getParams(mode, 'records')
-    $.post('/get', param, json => {
+    $.post('/get', param + '&page=' + page, json => {
         $('tbody').empty();
+        $("#total").text(json.total);
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr></tr>');
             if (mode != '') {
@@ -113,8 +116,8 @@ function loadRecords(mode) {
     });
 };
 
-function loadStats(mode) {
-    $.post('/get', getParams(mode, 'stats'), json => {
+function loadStats(mode, page = 1) {
+    $.post('/get', getParams(mode, 'stats') + '&page=' + page, json => {
         $('tbody').empty();
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr></tr>');
@@ -132,6 +135,7 @@ function loadStats(mode) {
 };
 
 function showDepts() {
+    document.cookie = "Last=dept; Path=/";
     var url = '/dept';
     loading();
     $.get(url, html => {
@@ -142,6 +146,7 @@ function showDepts() {
 };
 
 function showEmpls(mode) {
+    document.cookie = "Last=empl; Path=/";
     var url = '/empl';
     loading();
     $.get(url, html => {
@@ -155,6 +160,7 @@ function showEmpls(mode) {
 };
 
 function showRecords(mode) {
+    document.cookie = "Last=record; Path=/";
     var url;
     if (mode == 'admin') url = '/record/admin';
     else if (mode == 'super') url = '/record/super';
@@ -249,7 +255,6 @@ function empl(id = 0) {
     }).done(() => {
         if (id != 0) {
             $.post('get', 'mode=super&query=empls&id=' + id, json => {
-                loading(false);
                 $.each(json.empl, (k, v) => $('#' + k).val(v));
                 $('#Dept').val(json.empl.DeptID);
                 if (json.empl.Role) {
@@ -259,6 +264,7 @@ function empl(id = 0) {
                 } else $('#Role').val(0);
             });
         };
+        loading(false);
         $('#Username').focus();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -287,13 +293,13 @@ function record(mode = '', id = 0) {
         if (id != 0) $.post('get', 'id=' + id + '&mode=' + mode, json => {
             $.each(json.record, (k, v) => $('#' + k).val(v));
             $('#Dept').val(json.record.DeptID);
-            getEmpls('#Empl', json.record.DeptID);
+            getEmpls('#Empl', json.record.DeptID, false);
             $('#Empl').val(json.record.UserID);
             $('#Date').val(json.record.Date.split('T')[0]);
             if (json.record.Type) $('#Type').val('1');
             else $('#Type').val('0');
         }, 'json');
-        else getEmpls('#Empl');
+        else getEmpls('#Empl', undefined, false);
         loading(false);
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -313,6 +319,7 @@ function verify(id) {
 };
 
 function setting() {
+    document.cookie = "Last=/; Path=/";
     loading();
     $.get('/auth/setting', html => {
         loading(false);
@@ -365,7 +372,7 @@ function doRecord(mode, id) {
 };
 
 function doVerify(id, status) {
-    $.post('/verify/' + id, 'status=' + status, () =>
+    $.post('/record/verify/' + id, 'status=' + status, () =>
         showRecords('admin')).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
 

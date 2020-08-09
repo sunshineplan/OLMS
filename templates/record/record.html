@@ -1,6 +1,6 @@
 <header style='padding-left: 20px;'>
-<a class='h3 title'></a>
-<hr>
+  <a class='h3 title'></a>
+  <hr>
 </header>
 <div class='form'>
   {{ if ne .mode "" }}
@@ -18,6 +18,9 @@
       </select>
     </div>
   </div>
+  <script>
+    $(document).on('change', '#Dept', () => getEmpls('#Empl', $('#Dept').val(), false));
+  </script>
   {{ end }}
   <div class='form-group'>
     <label for='date'>Date</label>
@@ -55,7 +58,7 @@
   {{ else }}
   <button class='btn btn-primary' onclick="doRecord('{{ .mode }}', '{{ .id }}')" id='submit'>{{ if eq .id "0" }}Add{{ else }}Save{{ end }}</button>
   {{ end }}
-  <button class='btn btn-primary' onclick='goback()'>Cancel</button>
+  <button class='btn btn-primary' onclick="goback('{{ .mode }}')">Cancel</button>
 </div>
 {{ if ne .id "0" }}
 <div class='form'>

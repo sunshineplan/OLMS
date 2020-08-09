@@ -19,7 +19,7 @@ type empl struct {
 	Permission string
 }
 
-func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls []empl, total int, err error) {
+func getEmpls(id interface{}, deptIDs []string, role, page string) (empls []empl, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -43,9 +43,9 @@ func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls [
 		for _, i := range deptIDs {
 			args = append(args, i)
 		}
-		if a, ok := role.(bool); ok {
+		if r, err := strconv.Atoi(role); err == nil {
 			stmt += " AND role = ?"
-			args = append(args, a)
+			args = append(args, r)
 		}
 		go func() {
 			if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)"), args...).Scan(&total); err != nil {
@@ -56,7 +56,7 @@ func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls [
 		}()
 
 		stmt += " ORDER BY dept_name, realname"
-		if p, ok := page.(int); ok {
+		if p, err := strconv.Atoi(page); err == nil {
 			stmt += fmt.Sprintf(" LIMIT ?, ?")
 			args = append(args, (p-1)*perPage, perPage)
 		}
@@ -183,7 +183,7 @@ func doEditEmpl(c *gin.Context) {
 
 func doDeleteEmpl(c *gin.Context) {
 	id := c.Param("id")
-	empls, _, err := getEmpls(id, nil, nil, nil)
+	empls, _, err := getEmpls(id, nil, "", "")
 	if err != nil {
 		log.Printf("Failed to get empl: %v", err)
 		c.String(400, "")

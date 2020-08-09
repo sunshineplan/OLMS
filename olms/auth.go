@@ -25,7 +25,7 @@ func adminRequired(c *gin.Context) {
 		c.AbortWithStatus(401)
 	case "0":
 	default:
-		user, _, err := getEmpls(userID, nil, nil, nil)
+		user, _, err := getEmpls(userID, nil, "", "")
 		if err != nil {
 			c.AbortWithStatus(500)
 		} else if !user[0].Role {

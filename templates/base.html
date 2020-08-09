@@ -33,7 +33,7 @@
     <div>
       <a class='navbar-brand'>Employee Panel</a>
       <ul class='navbar-nav'>
-        <li><a class='nav-link' onclick="showRecords('')">Employee Records</a></li>
+        <li><a class='nav-link {{ if ne .user.Role true }}active{{ end }}' onclick="showRecords('')">Employee Records</a></li>
         <li><a class='nav-link' onclick="showStats('')">Employee Statistics</a></li>
       </ul>
     </div>
@@ -43,7 +43,7 @@
       <a class='navbar-brand'>Department Panel</a>
       <ul class='navbar-nav'>
         {{ if ne .user.ID 0 }}
-        <li><a class='nav-link' onclick="showRecords('admin')">Department Records</a></li>
+        <li><a class='nav-link active' onclick="showRecords('admin')">Department Records</a></li>
         {{ end }}
         <li><a class='nav-link' onclick="showStats('admin')">Department Statistics</a></li>
       </ul>
@@ -71,14 +71,11 @@
     <div class='sk-wave-rect'></div>
   </div>
 </div>
-<div class='content' {{ if .user }}style='padding-left: 200px;' {{ end }}>
+<div class='content' {{ if .user }}style='padding-left: 200px;'{{ end }}>
   {{ template "content" . }}
 </div>
-<script>
-  $('.toggle').click(() => { $('.sidebar').toggle('slide') });
-  $('.content').click(() => {
-    if ($('.sidebar').is(':visible') && $(window).width() <= 900) {
-      $('.sidebar').toggle('slide');
-    };
-  });
-</script>
+{{ if ne .user.Role true }}
+<script>$(() => showRecords(''))</script>
+{{ else }}
+<script>$(() => showRecords('admin'))</script>
+{{ end }}

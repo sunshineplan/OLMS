@@ -3,6 +3,7 @@ package olms
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -15,7 +16,7 @@ type stat struct {
 	Summary  int
 }
 
-func getStats(id interface{}, deptIDs []string, period, year, month string, page interface{}) (stats []stat, total int, err error) {
+func getStats(id interface{}, deptIDs []string, period, year, month, page string) (stats []stat, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -58,9 +59,7 @@ func getStats(id interface{}, deptIDs []string, period, year, month string, page
 	}
 
 	bc := make(chan bool, 1)
-	if p, ok := page.(int); ok {
-		limit = fmt.Sprintf(" LIMIT ?, ?")
-		args = append(args, (p-1)*perPage, perPage)
+	if p, err := strconv.Atoi(page); err == nil {
 		go func() {
 			if err := db.QueryRow(fmt.Sprintf(stmt+group, "count(realname)")).Scan(&total); err != nil {
 				log.Printf("Failed to get total records: %v", err)
@@ -68,6 +67,8 @@ func getStats(id interface{}, deptIDs []string, period, year, month string, page
 			}
 			bc <- true
 		}()
+		limit = fmt.Sprintf(" LIMIT ?, ?")
+		args = append(args, (p-1)*perPage, perPage)
 	} else {
 		bc <- true
 	}
