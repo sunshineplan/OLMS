@@ -63,7 +63,7 @@
       </div>
       <div class='input-group'>
         <a class='btn btn-primary btn-sm' onclick="loadStats('{{ .mode }}')">Filter</a>
-        <a class='btn btn-primary btn-sm' onclick={{ if eq .mode "" }}"show('stats')"{{ else }}"showAdmin('stats')"{{ end }}>Reset</a>
+        <a class='btn btn-primary btn-sm' onclick="showStats('{{ .mode }}')">Reset</a>
         <a class='btn btn-info btn-sm' onclick="exportCSV('{{ .mode }}', 'stats')">Export</a>
       </div>
     </div>

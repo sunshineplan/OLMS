@@ -44,11 +44,11 @@
     <select multiple class='form-control' name='permission' id='Permission'></select>
   </div>
   {{ end }}
-  <button class='btn btn-primary' onclick='doEmpl({{ .id }})' id='submit'>{{ if eq .id "0" }}Add{{ else }}Save{{ end }}</button>
+  <button class='btn btn-primary' onclick="doEmpl('{{ .user }}', '{{ .id }}')" id='submit'>{{ if eq .id "0" }}Add{{ else }}Save{{ end }}</button>
   <button class='btn btn-primary' onclick='goback()'>Cancel</button>
 </div>
 {{ if ne .id "0" }}
 <div class='form'>
-  <button class='btn btn-danger delete' onclick="doDelete('empl', {{ .id }})">Delete</button>
+  <button class='btn btn-danger delete' onclick="doDelete('empl', '{{ .id }}')">Delete</button>
 </div>
 {{ end }}

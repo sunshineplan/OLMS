@@ -103,7 +103,7 @@ func get(c *gin.Context) {
 			c.String(400, "Unknown query")
 		}
 	case "admin":
-		if !user.Role || user.ID != 0 {
+		if !user.Role && user.ID != 0 {
 			c.String(403, "")
 			return
 		}
@@ -230,9 +230,9 @@ func get(c *gin.Context) {
 					return
 				}
 			}
-			for _, i := range empls {
-				i.Role = false
-				i.Permission = ""
+			for i := range empls {
+				empls[i].Role = false
+				empls[i].Permission = ""
 			}
 			c.JSON(200, gin.H{"total": total, "rows": empls})
 		case "depts":

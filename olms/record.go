@@ -58,7 +58,7 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 		}
 		if status != "" {
 			stmt += "status = ? AND "
-			args = append(args, Type)
+			args = append(args, status)
 		}
 
 		if userID != nil {

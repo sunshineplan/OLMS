@@ -19,8 +19,8 @@
     <label for='describe'>Describe</label>
     <textarea class='form-control' id='Describe' rows='3' readonly></textarea>
   </div>
-  <button class='btn btn-success' onclick='doVerify({{ .id }}, 1)'>Accept</button>
-  <button class='btn btn-danger' onclick='doVerify({{ .id }}, 2)'>Reject</button>
+  <button class='btn btn-success' onclick="doVerify('{{ .id }}', 1)">Accept</button>
+  <button class='btn btn-danger' onclick="doVerify('{{ .id }}', 2)">Reject</button>
   <button class='btn btn-primary' onclick='goback()'>Cancel</button>
 </div>
 

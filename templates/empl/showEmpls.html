@@ -25,8 +25,8 @@
       </div>
       {{ end }}
       <div class='input-group'>
-        <a class='btn btn-primary btn-sm' onclick='loadEmpls()'>Filter</a>
-        <a class='btn btn-primary btn-sm' onclick="showAdmin('empls')">Reset</a>
+        <a class='btn btn-primary btn-sm' onclick="loadEmpls('{{ .user }}')">Filter</a>
+        <a class='btn btn-primary btn-sm' onclick="showEmpls('{{ .user }}')">Reset</a>
       </div>
     </div>
   </div>

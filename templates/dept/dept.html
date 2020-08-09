@@ -7,11 +7,11 @@
     <label for='dept'>Department</label>
     <input class='form-control' name='dept' id='Name' required>
   </div>
-  <button class='btn btn-primary' onclick='doDept({{ .id }})' id='submit'>{{ if eq .id "0" }}Add{{ else }}Save{{ end }}</button>
+  <button class='btn btn-primary' onclick="doDept('{{ .id }}')" id='submit'>{{ if eq .id "0" }}Add{{ else }}Save{{ end }}</button>
   <button class='btn btn-primary' onclick='goback()'>Cancel</button>
 </div>
 {{ if ne .id "0" }}
 <div class='form'>
-  <button class='btn btn-danger delete' onclick="doDelete('dept', {{ .id }})">Delete</button>
+  <button class='btn btn-danger delete' onclick="doDelete('dept', '{{ .id }}')">Delete</button>
 </div>
 {{ end }}
