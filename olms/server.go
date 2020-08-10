@@ -2,6 +2,7 @@ package olms
 
 import (
 	"crypto/rand"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -10,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/contrib/sessions"
@@ -50,20 +52,36 @@ func loadTemplates() multitemplate.Renderer {
 
 // Run server
 func Run() {
-	f, err := os.OpenFile(LogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
-	if err != nil {
-		log.Fatalf("Failed to open log file: %v", err)
+	if LogPath != "" {
+		f, err := os.OpenFile(LogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
+		if err != nil {
+			log.Fatalf("Failed to open log file: %v", err)
+		}
+		gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
+		log.SetOutput(gin.DefaultWriter)
 	}
-	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
-	log.SetOutput(gin.DefaultWriter)
 
 	secret := make([]byte, 16)
-	_, err = rand.Read(secret)
-	if err != nil {
+	if _, err := rand.Read(secret); err != nil {
 		log.Fatalf("Failed to get secret: %v", err)
 	}
 
-	router := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
+			param.ClientIP,
+			param.TimeStamp.Format(time.RFC1123),
+			param.Method,
+			param.Path,
+			param.Request.Proto,
+			param.StatusCode,
+			param.Latency,
+			param.Request.UserAgent(),
+			param.ErrorMessage,
+		)
+	}))
 	router.Use(sessions.Sessions("session", sessions.NewCookieStore(secret)))
 	router.StaticFS("/static", http.Dir(joinPath(dir(Self), "static")))
 	router.HTMLRender = loadTemplates()
@@ -180,8 +198,7 @@ func Run() {
 
 	if UNIX != "" && OS == "linux" {
 		if _, err := os.Stat(UNIX); err == nil {
-			err = os.Remove(UNIX)
-			if err != nil {
+			if err := os.Remove(UNIX); err != nil {
 				log.Fatalf("Failed to remove socket file: %v", err)
 			}
 		}
@@ -201,15 +218,14 @@ func Run() {
 				log.Printf("Failed to close listener: %v", err)
 			}
 			if _, err := os.Stat(UNIX); err == nil {
-				err = os.Remove(UNIX)
-				if err != nil {
+				if err := os.Remove(UNIX); err != nil {
 					log.Printf("Failed to remove socket file: %v", err)
 				}
 			}
 			close(idleConnsClosed)
 		}()
 
-		if err = os.Chmod(UNIX, 0666); err != nil {
+		if err := os.Chmod(UNIX, 0666); err != nil {
 			log.Fatalf("Failed to chmod socket file: %v", err)
 		}
 

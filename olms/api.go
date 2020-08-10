@@ -367,8 +367,8 @@ func exportCSV(c *gin.Context) {
 		user = users[0]
 	}
 	query := c.PostForm("query")
-	userID := c.PostForm("user_id")
-	deptID := c.PostForm("dept_id")
+	userID := c.PostForm("empl")
+	deptID := c.PostForm("dept")
 	period := c.PostForm("period")
 	year := c.PostForm("year")
 	month := c.PostForm("month")
@@ -434,7 +434,7 @@ func exportCSV(c *gin.Context) {
 						return
 					}
 					if len(records) == 0 {
-						c.String(200, "No result.")
+						c.String(404, "No result.")
 						return
 					}
 					prefix = records[0].Name
@@ -451,7 +451,7 @@ func exportCSV(c *gin.Context) {
 						return
 					}
 					if len(records) == 0 {
-						c.String(200, "No result.")
+						c.String(404, "No result.")
 						return
 					}
 					prefix = records[0].DeptName
@@ -485,7 +485,7 @@ func exportCSV(c *gin.Context) {
 						return
 					}
 					if len(stats) == 0 {
-						c.String(200, "No result.")
+						c.String(404, "No result.")
 						return
 					}
 					prefix = stats[0].Name
@@ -502,7 +502,7 @@ func exportCSV(c *gin.Context) {
 						return
 					}
 					if len(stats) == 0 {
-						c.String(200, "No result.")
+						c.String(404, "No result.")
 						return
 					}
 					prefix = stats[0].DeptName

@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -11,11 +13,27 @@ import (
 	"github.com/vharitonsky/iniflags"
 )
 
+func usage() {
+	fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
+	fmt.Println(`
+  run
+		run OLMS web service mode (Default)
+  backup
+		run OLMS database`)
+}
+
 func main() {
-	flag.StringVar(&olms.UNIX, "UNIX", "", "UNIX-domain Socket")
-	flag.StringVar(&olms.Host, "Host", "127.0.0.1", "Server Host")
+	flag.Usage = usage
+	flag.StringVar(&olms.UNIX, "unix", "", "UNIX-domain Socket")
+	flag.StringVar(&olms.Host, "host", "0.0.0.0", "Server Host")
 	flag.StringVar(&olms.Port, "port", "12345", "Server Port")
-	flag.StringVar(&olms.LogPath, "log", filepath.Join(filepath.Dir(olms.Self), "access.log"), "Log Path")
+	flag.StringVar(&olms.MailSetting.From, "from", "", "Backup sender")
+	flag.StringVar(&olms.To, "to", "", "Backup receiver")
+	flag.StringVar(&olms.MailSetting.Password, "password", "", "Backup sender password")
+	flag.StringVar(&olms.MailSetting.SMTPServer, "server", "", "Backup sender server")
+	flag.IntVar(&olms.MailSetting.SMTPServerPort, "bport", 587, "Backup sender server port")
+	flag.StringVar(&olms.LogPath, "log", "", "Log Path")
+	//flag.StringVar(&olms.LogPath, "log", filepath.Join(filepath.Dir(olms.Self), "access.log"), "Log Path")
 	iniflags.SetConfigFile(filepath.Join(filepath.Dir(olms.Self), "config.ini"))
 	iniflags.SetAllowMissingConfigFile(true)
 	iniflags.Parse()

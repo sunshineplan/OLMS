@@ -37,10 +37,10 @@ function getYears(mode, userID, deptID) {
 function exportCSV(mode, query) {
     if (mode == 'super') mode = 'admin'
     $.post('/export', getParams(mode, query), (data, status, jqXHR) => {
-        var blob = new Blob([data]);
+        var blob = new Blob([new Uint8Array([0xEF,0xBB,0xBF]), data], { type: 'text/csv;charset=utf-8' });
         var link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
-        link.download = jqXHR.getResponseHeader('Content-Disposition').split('filename=')[1].replace(/"/g, '');
+        link.download = decodeURI(jqXHR.getResponseHeader('Content-Disposition').split('filename=')[1].replace(/"/g, ''));
         link.click();
     });
 };

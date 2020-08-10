@@ -5,12 +5,17 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/sunshineplan/utils/mail"
 )
 
-var mailSetting mail.Setting
+// MailSetting contain backup account information
+var MailSetting mail.Setting
+
+// To is backup receiver
+var To string
 
 var (
 	joinPath = filepath.Join
@@ -22,9 +27,10 @@ func Backup() {
 	log.Println("Start!")
 	file := dump()
 	defer os.Remove(file)
+	MailSetting.To = strings.Split(To, ",")
 	if err := mail.SendMail(
-		&mailSetting,
-		fmt.Sprintf("My Bookmarks Backup-%s", time.Now().Format("20060102")),
+		&MailSetting,
+		fmt.Sprintf("OLMS Backup-%s", time.Now().Format("20060102")),
 		"",
 		&mail.Attachment{FilePath: file, Filename: "database"},
 	); err != nil {
