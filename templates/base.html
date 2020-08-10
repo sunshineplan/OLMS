@@ -1,21 +1,24 @@
 <!doctype html>
-<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='viewport' content='width=device-width, initial-scale=.75'>
 <title>OLMS</title>
 <link rel='icon' href='/static/favicon.ico'>
 <script src='https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/jquery-ui-dist@1/jquery-ui.min.js'></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9/dist/sweetalert2.all.min.js"></script>
 <script src='/static/script.js'></script>
 <script src='/static/olms.js'></script>
 <script src='/static/pagination.js'></script>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css'>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/spinkit@2/spinkit.min.css'>
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/gh/google/material-design-icons@3/iconfont/material-icons.min.css'>
 <link rel='stylesheet' href='/static/style.css'>
 <nav class='navbar navbar-light topbar'>
   <div class='d-flex' style='height: 100%;'>
     {{ if .user }}
     <a class='toggle'><i class='material-icons menu'>menu</i></a>
     {{ end }}
-    <a class='brand' href='/'>Overtime and Leave Management System</a>
+    <a class='brand full' href='/'>Overtime and Leave Management System</a>
+    <a class='brand short' href='/'>OLMS</a>
   </div>
   <div class='navbar-nav flex-row'>
     {{ if .user }}
@@ -29,7 +32,7 @@
 </nav>
 {{ if .user }}
 <nav class='nav flex-column navbar-light sidebar'>
-  <div class='menu'>
+  <div class='panel'>
     {{ if ne .user.ID 0 }}
     <div>
       <a class='navbar-brand'>Employee Panel</a>

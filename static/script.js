@@ -8,6 +8,7 @@ BootstrapButtons = Swal.mixin({
 $(document).on('click', 'li>a.nav-link', function () {
     $('li>a.nav-link').removeClass('selected');
     $(this).addClass('selected');
+    if ($(window).width() <= 900) $('.sidebar').toggle('slide');
 });
 
 $(document).on('change', '#dept', () => {
@@ -33,13 +34,11 @@ $(document).on('change', '#year', () => {
     else $('#month').prop('disabled', false);
 });
 
-$(() => {
-    $('.toggle').click(() => { $('.sidebar').toggle('slide') });
-    $('.content').click(() => {
-        if ($('.sidebar').is(':visible') && $(window).width() <= 900) {
-            $('.sidebar').toggle('slide');
-        };
-    });
+$(document).on('click', '.toggle', () => $('.sidebar').toggle('slide'));
+
+$(document).on('click', '.content', () => {
+    if ($('.sidebar').is(':visible') && $(window).width() <= 900)
+        $('.sidebar').toggle('slide');
 });
 
 function loading(show = true) {

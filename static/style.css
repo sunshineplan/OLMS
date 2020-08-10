@@ -72,7 +72,7 @@ body {
     user-select: none;
 }
 
-.menu {
+.panel {
     height: 100%;
     width: 100%;
     padding-top: 10px;
@@ -81,15 +81,15 @@ body {
     background-color: white;
 }
 
-.menu .navbar-brand {
+.panel .navbar-brand {
     text-indent: 10px;
 }
 
-.menu .navbar-nav {
+.panel .navbar-nav {
     text-indent: 20px;
 }
 
-.menu .nav-link {
+.panel .nav-link {
     display: block;
     cursor: pointer;
     margin: 0;
@@ -97,7 +97,7 @@ body {
     color: rgba(0,0,0,.7) !important;
 }
 
-.menu .nav-link:hover {
+.panel .nav-link:hover {
     background-color: rgb(232, 232, 232) !important;
 }
 
@@ -106,7 +106,7 @@ body {
     color: #1a73e8 !important;
 }
 
-.menu .nav-link.selected {
+.panel .nav-link.selected {
     background-color: rgba(161,194,250,.16);
     color: #3367d6 !important;
 }
@@ -210,6 +210,14 @@ td {
     margin: 8px 6px;
 }
 
+.material-icons.menu {
+    font-size: 30px;
+}
+
+.short {
+    display: none;
+}
+
 @media (min-width: 901px) {
     .sidebar {
         display: block !important;
@@ -217,5 +225,37 @@ td {
 
     .toggle {
         display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .brand {
+        padding-left: 10px;
+    }
+
+    .sidebar {
+        box-shadow: 0 4px 8px rgba(0,0,0,.1);
+        display: none;
+    }
+
+    .content {
+        padding-left: 0 !important;
+    }
+
+    .loading {
+        left: 0;
+        width: 100%;
+    }
+
+    .short {
+        display: inline; 
+    }
+    
+    .full {
+        display: none;
+    }
+
+    table {
+        table-layout: auto;
     }
 }
