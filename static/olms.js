@@ -62,7 +62,7 @@ function loadEmpls(mode, page = 1, param) {
     if (mode == 0) mode = 'super'; else mode = 'admin';
     if (param === undefined) param = getParams(mode, 'empls');
     $.post('/get', param + '&page=' + page, json => {
-        pagination(json.total);
+        pagination(json.total, page);
         $('tbody').empty();
         $("#total").text(json.total);
         $.each(json.rows, (i, item) => {
@@ -90,7 +90,7 @@ function loadRecords(mode, page = 1, param) {
         if (mode == 'super') param = getParams('admin', 'records');
         else param = getParams(mode, 'records');
     $.post('/get', param + '&page=' + page, json => {
-        pagination(json.total);
+        pagination(json.total, page);
         $('tbody').empty();
         $("#total").text(json.total);
         $.each(json.rows, (i, item) => {
@@ -129,7 +129,7 @@ function loadRecords(mode, page = 1, param) {
 function loadStats(mode, page = 1, param) {
     if (param === undefined) param = getParams(mode, 'stats');
     $.post('/get', param + '&page=' + page, json => {
-        pagination(json.total);
+        pagination(json.total, page);
         $('tbody').empty();
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr></tr>');
@@ -308,14 +308,16 @@ function record(mode = '', id = 0) {
         if (mode != '') mode = 'admin';
         if (id != 0) $.post('get', 'id=' + id + '&mode=' + mode, json => {
             $.each(json.record, (k, v) => $('#' + k).val(v));
-            $('#Dept').val(json.record.DeptID);
-            getEmpls('#Empl', json.record.DeptID, false);
-            $('#Empl').val(json.record.UserID);
+            if (mode != '') {
+                $('#Dept').val(json.record.DeptID);
+                getEmpls('#Empl', json.record.DeptID, false);
+                $('#Empl').val(json.record.UserID);
+            }
             $('#Date').val(json.record.Date.split('T')[0]);
             if (json.record.Type) $('#Type').val('1');
             else $('#Type').val('0');
         }, 'json');
-        else getEmpls('#Empl', undefined, false);
+        else if (mode != '') getEmpls('#Empl', undefined, false);
         loading(false);
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };

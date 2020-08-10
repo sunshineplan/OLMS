@@ -64,7 +64,7 @@
 </nav>
 {{ if ne .user.Role true }}
 <script>$(() => showRecords(''))</script>
-{{ else }}
+{{ else if ne .user.ID 0 }}
 <script>$(() => showRecords('admin'))</script>
 {{ end }}
 {{ end }}

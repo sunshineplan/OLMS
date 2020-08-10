@@ -65,7 +65,6 @@ function valid() {
 
 function goback(mode) {
     var last = document.cookie.split('Last=')[1];
-    console.log(last)//test
     if (last == '/') window.location = '/';
     else if (last == 'dept') showDepts();
     else if (last == 'empl') showEmpls(mode);
