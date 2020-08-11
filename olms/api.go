@@ -61,6 +61,9 @@ func get(c *gin.Context) {
 		}
 		switch query {
 		case "records", "":
+			if page == "" {
+				page = "1"
+			}
 			var records []record
 			if id != "" {
 				records, total, err = getRecords(id, nil, nil, year, month, Type, status, page)
@@ -84,6 +87,9 @@ func get(c *gin.Context) {
 			}
 			c.JSON(200, gin.H{"total": total, "rows": records})
 		case "stats":
+			if page == "" {
+				page = "1"
+			}
 			stats, total, err := getStats(user.ID, nil, period, year, month, page)
 			if err != nil {
 				log.Println(err)
@@ -109,6 +115,9 @@ func get(c *gin.Context) {
 		}
 		switch query {
 		case "records", "":
+			if page == "" {
+				page = "1"
+			}
 			var records []record
 			if id != "" {
 				records, _, err = getRecords(id, nil, nil, year, month, Type, status, page)
@@ -159,6 +168,9 @@ func get(c *gin.Context) {
 			}
 			c.JSON(200, gin.H{"total": total, "rows": records})
 		case "stats":
+			if page == "" {
+				page = "1"
+			}
 			var stats []stat
 			if userID != "" {
 				if checkPermission(c, "", userID) {

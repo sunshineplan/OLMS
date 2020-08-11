@@ -31,9 +31,10 @@ $(document).on('click', '.page-link', function () {
     var page = $(this).data('page');
     if (page !== undefined) {
         var mode = $('.pagination').data('mode');
+        var type = $('.pagination').data('type');
         var param = $('.pagination').data('param');
-        if (mode == 'empl') loadEmpls(mode, page, param);
-        else if (mode == 'stat') loadStats(mode, page, param);
+        if (type == 'empl') loadEmpls(mode, page, param);
+        else if (type == 'stat') loadStats(mode, page, param);
         else loadRecords(mode, page, param);
     };
 });

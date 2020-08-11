@@ -1,8 +1,8 @@
-function getParams(mode, query) {
+function getParams(mode, type) {
     var data = {}, param;
     $('select').serializeArray().forEach(i => { if (i.value != '') data[i.name] = i.value });
-    if ($.isEmptyObject(data)) param = 'mode=' + mode + '&query=' + query;
-    else param = $.param(data) + '&mode=' + mode + '&query=' + query;
+    if ($.isEmptyObject(data)) param = 'mode=' + mode + '&query=' + type;
+    else param = $.param(data) + '&mode=' + mode + '&query=' + type;
     return param;
 };
 
@@ -12,9 +12,9 @@ function getDepts(element) {
 };
 
 function getEmpls(element, deptID, all = true) {
-    var param
-    if (deptID === undefined) param = 'mode=admin&query=empls'
-    else param = 'mode=admin&query=empls&dept=' + deptID
+    var param;
+    if (deptID === undefined) param = 'mode=admin&query=empls';
+    else param = 'mode=admin&query=empls&dept=' + deptID;
     if (all) $(element).empty().append($('<option>').text('All').val(''));
     else $(element).empty().append($('<option>').text(' -- select an employee -- ').prop('disabled', true).val(''));
     $.post('/get', param, json =>
@@ -23,21 +23,21 @@ function getEmpls(element, deptID, all = true) {
 };
 
 function getYears(mode, userID, deptID) {
-    var param
-    if (userID !== undefined) param = 'mode=admin&query=years&empl=' + userID
-    else if (deptID !== undefined) param = 'mode=admin&query=years&dept=' + deptID
-    else if (mode === undefined) param = 'query=years'
-    else param = 'mode=admin&query=years'
+    var param;
+    if (userID !== undefined) param = 'mode=admin&query=years&empl=' + userID;
+    else if (deptID !== undefined) param = 'mode=admin&query=years&dept=' + deptID;
+    else if (mode === undefined) param = 'query=years';
+    else param = 'mode=admin&query=years';
     $('#year').empty().append($('<option>').text('All').val(''));
     $.post('/get', param, json =>
         $.each(json.rows, (i, item) => $('#year').append($('<option>').text(item).val(item))));
     $('#year').val('');
 };
 
-function exportCSV(mode, query) {
-    if (mode == 'super') mode = 'admin'
-    $.post('/export', getParams(mode, query), (data, status, jqXHR) => {
-        var blob = new Blob([new Uint8Array([0xEF,0xBB,0xBF]), data], { type: 'text/csv;charset=utf-8' });
+function exportCSV(mode, type) {
+    if (mode == 'super') mode = 'admin';
+    $.post('/export', getParams(mode, type), (data, status, jqXHR) => {
+        var blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), data], { type: 'text/csv;charset=utf-8' });
         var link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
         link.download = decodeURI(jqXHR.getResponseHeader('Content-Disposition').split('filename=')[1].replace(/"/g, ''));
@@ -80,7 +80,7 @@ function loadEmpls(mode, page = 1, param) {
         });
     }).done(() => {
         $('.pagination').data('mode', mode);
-        $('.pagination').data('query', 'empl');
+        $('.pagination').data('type', 'empl');
         $('.pagination').data('param', param);
     });
 };
@@ -111,8 +111,7 @@ function loadRecords(mode, page = 1, param) {
             if (mode == 'admin')
                 if (item.Status == 0)
                     $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='verify(" + item.ID + ")'>Verify</a></td>");
-                else
-                    $tr.append("<td><a class='btn btn-outline-primary btn-sm disabled'>Verify</a></td>");
+                else $tr.append("<td><a class='btn btn-outline-primary btn-sm disabled'>Verify</a></td>");
             else if (mode == '' && item.Status != 0)
                 $tr.append("<td><a class='btn btn-outline-primary btn-sm disabled'>Edit</a></td>");
             else
@@ -121,7 +120,7 @@ function loadRecords(mode, page = 1, param) {
         });
     }).done(() => {
         $('.pagination').data('mode', mode);
-        $('.pagination').data('query', 'record');
+        $('.pagination').data('type', 'record');
         $('.pagination').data('param', param);
     });
 };
@@ -145,7 +144,7 @@ function loadStats(mode, page = 1, param) {
         });
     }).done(() => {
         $('.pagination').data('mode', mode);
-        $('.pagination').data('query', 'stat');
+        $('.pagination').data('type', 'stat');
         $('.pagination').data('param', param);
     });
 };
@@ -394,15 +393,15 @@ function doVerify(id, status) {
         showRecords('admin')).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
 
-function doDelete(mode, id) {
+function doDelete(type, id) {
     var url;
-    if (mode == 'dept') url = '/dept/delete/' + id;
-    else if (mode == 'empl') url = '/empl/delete/' + id;
-    else if (mode == 'record') url = '/record/delete/' + id;
+    if (type == 'dept') url = '/dept/delete/' + id;
+    else if (type == 'empl') url = '/empl/delete/' + id;
+    else if (type == 'record') url = '/record/delete/' + id;
     else return false;
     Swal.fire({
         title: 'Are you sure?',
-        text: 'This ' + mode + ' will be deleted permanently.',
+        text: 'This ' + type + ' will be deleted permanently.',
         icon: 'warning',
         confirmButtonText: 'Delete',
         showCancelButton: true,
@@ -415,10 +414,9 @@ function doDelete(mode, id) {
     }).then(confirm => {
         if (confirm.isConfirmed)
             $.post(url, json => {
-                if (json.status == 1)
-                    if (mode == 'dept') showDepts();
-                    else if (mode == 'empl') showEmpls;
-                    else window.location = '/';
+                if (json.status == 0)
+                    BootstrapButtons.fire('Error', json.message, 'error');
+                else window.location = '/';
             }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
     });
 };
