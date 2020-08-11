@@ -104,7 +104,7 @@ func doAddEmpl(c *gin.Context) {
 	var code int
 	if username == "" {
 		message = "Username is required."
-	} else if err := db.QueryRow("SELECT id FROM user WHERE username = ?", username).Scan(&exist); err == nil {
+	} else if err := db.QueryRow("SELECT id FROM user WHERE username = ?", strings.ToLower(username)).Scan(&exist); err == nil {
 		message = fmt.Sprintf("Username %s is already existed.", username)
 		code = 1
 	} else if deptID == "" {
@@ -117,7 +117,7 @@ func doAddEmpl(c *gin.Context) {
 				permission = c.PostFormArray("permission")
 			}
 			if _, err = db.Exec("INSERT INTO user (username, realname, dept_id, role, permission) VALUES (?, ?, ?, ?, ?)",
-				username, realname, deptID, role, strings.Join(permission, ",")); err != nil {
+				strings.ToLower(username), realname, deptID, role, strings.Join(permission, ",")); err != nil {
 				log.Printf("Failed to add user: %v", err)
 				c.String(500, "")
 				return
@@ -164,13 +164,14 @@ func doEditEmpl(c *gin.Context) {
 	var exist, message string
 	if username == "" {
 		message = "Username is required."
-	} else if err := db.QueryRow("SELECT id FROM user WHERE username = ? AND id != ?", username, id).Scan(&exist); err == nil {
+	} else if err := db.QueryRow("SELECT id FROM user WHERE username = ? AND id != ?",
+		strings.ToLower(username), id).Scan(&exist); err == nil {
 		message = fmt.Sprintf("Username %s is already existed.", username)
 	} else if deptID == "" {
 		message = "Department is required."
 	} else {
 		if _, err = db.Exec("UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ?, permission = ? WHERE id = ?",
-			username, realname, deptID, role, strings.Join(permission, ","), id); err != nil {
+			strings.ToLower(username), realname, deptID, role, strings.Join(permission, ","), id); err != nil {
 			log.Printf("Failed to edit user: %v", err)
 			c.String(500, "")
 			return

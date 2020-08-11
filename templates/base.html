@@ -12,7 +12,8 @@
 <script src='https://www.recaptcha.net/recaptcha/api.js?render={{ .recaptcha }}'></script>
 <script>
   grecaptcha.ready(() => setInterval(() => {
-    grecaptcha.execute('{{ .recaptcha }}', { action: 'get' }).then(token => { $('#recaptcha').date('key', token) })
+    grecaptcha.execute('{{ .recaptcha }}', { action: 'get' }).then(token => { $('#recaptcha').date('get', token) });
+    grecaptcha.execute('{{ .recaptcha }}', { action: 'export' }).then(token => { $('#recaptcha').date('export', token) });
   }, 100000))
 </script>
 {{ end }}
@@ -91,4 +92,4 @@
 <div class='content' {{ if .user }}style='padding-left: 200px;'{{ end }}>
   {{ template "content" . }}
 </div>
-<div id='recaptcha'></div>
+<input type='hidden' name='recaptcha' id='recaptcha' form='login'>

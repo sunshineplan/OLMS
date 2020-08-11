@@ -51,24 +51,26 @@ func login(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
-		c.HTML(200, "login.html", gin.H{"error": "Failed to connect to database."})
+		c.String(503, "")
 		return
 	}
 	defer db.Close()
 	var id, realname, pw, message string
-	if err := db.QueryRow("SELECT id, realname, password FROM user WHERE username = ?",
+	if SiteKey != "" && SecretKey != "" {
+		recaptcha := c.PostForm("recaptcha")
+		if ok, _ := challenge("login", c.ClientIP(), recaptcha); !ok {
+			message = "reCAPTCHA challenge failed"
+		}
+	} else if err := db.QueryRow("SELECT id, realname, password FROM user WHERE username = ?",
 		username).Scan(&id, &realname, &pw); err != nil {
 		if strings.Contains(err.Error(), "no such table") {
 			Restore("")
-			c.HTML(200, "login.html", gin.H{"error": "Detected first time running. Initialized the database."})
-			return
-		}
-		if strings.Contains(err.Error(), "no rows") {
+			message = "Detected first time running. Initialized the database."
+		} else if strings.Contains(err.Error(), "no rows") {
 			message = "Incorrect username"
 		} else {
 			log.Println(err)
-			c.HTML(200, "login.html", gin.H{"error": "Critical Error! Please contact your system administrator."})
-			return
+			message = "Critical Error! Please contact your system administrator."
 		}
 	} else {
 		if err = bcrypt.CompareHashAndPassword([]byte(pw), []byte(password)); err != nil {
@@ -76,8 +78,7 @@ func login(c *gin.Context) {
 				message = "Incorrect password"
 			} else if pw != password {
 				log.Println(err)
-				c.HTML(200, "login.html", gin.H{"error": "Critical Error! Please contact your system administrator."})
-				return
+				message = "Critical Error! Please contact your system administrator."
 			}
 		}
 		if message == "" {
@@ -93,12 +94,16 @@ func login(c *gin.Context) {
 
 			if err := session.Save(); err != nil {
 				log.Println(err)
-				c.HTML(200, "login.html", gin.H{"error": "Failed to save session."})
+				message = "Failed to save session."
+			} else {
+				c.Redirect(302, "/")
 				return
 			}
-			c.Redirect(302, "/")
-			return
 		}
+	}
+	if SiteKey != "" && SecretKey != "" {
+		c.HTML(200, "login.html", gin.H{"error": message, "recaptcha": SiteKey})
+		return
 	}
 	c.HTML(200, "login.html", gin.H{"error": message})
 }

@@ -86,11 +86,12 @@ func Run() {
 	router.StaticFS("/static", http.Dir(joinPath(dir(Self), "static")))
 	router.HTMLRender = loadTemplates()
 	router.GET("/", func(c *gin.Context) {
+		var user empl
 		switch userID := sessions.Default(c).Get("userID"); userID {
 		case nil:
 			c.Redirect(302, "/auth/login")
 		case "0":
-			c.HTML(200, "index.html", gin.H{"user": empl{ID: 0, Realname: "root", Role: true}})
+			user = empl{ID: 0, Realname: "root", Role: true}
 		default:
 			users, _, err := getEmpls(userID, nil, nil, nil)
 			if err != nil {
@@ -98,8 +99,13 @@ func Run() {
 				c.String(500, "")
 				return
 			}
-			c.HTML(200, "index.html", gin.H{"user": users[0]})
+			user = users[0]
 		}
+		if SiteKey != "" && SecretKey != "" {
+			c.HTML(200, "index.html", gin.H{"user": user, "recaptcha": SiteKey})
+			return
+		}
+		c.HTML(200, "index.html", gin.H{"user": user})
 	})
 
 	auth := router.Group("/auth")
@@ -107,6 +113,10 @@ func Run() {
 		user := sessions.Default(c).Get("userID")
 		if user != nil {
 			c.Redirect(302, "/")
+			return
+		}
+		if SiteKey != "" && SecretKey != "" {
+			c.HTML(200, "login.html", gin.H{"error": "", "recaptcha": SiteKey})
 			return
 		}
 		c.HTML(200, "login.html", gin.H{"error": ""})

@@ -1,5 +1,3 @@
-// Package olms recaptcha handles reCaptcha (http://www.google.com/recaptcha) form submissions
-// https://github.com/dpapathanasiou/go-recaptcha
 package olms
 
 import (
@@ -11,7 +9,7 @@ import (
 	"time"
 )
 
-type recaptchaResponse struct {
+type reCAPTCHA struct {
 	Success     bool      `json:"success"`
 	Score       float64   `json:"score"`
 	Action      string    `json:"action"`
@@ -20,38 +18,34 @@ type recaptchaResponse struct {
 	ErrorCodes  []string  `json:"error-codes"`
 }
 
-const recaptchaServerName = "https://www.recaptcha.net/recaptcha/api/siteverify"
+// SiteKey reCAPTCHA
+var SiteKey string
 
-var RecaptchaSiteKey string
-var RecaptchaSecretKey string
+// SecretKey reCAPTCHA
+var SecretKey string
 
-func check(remoteip, response string) (r recaptchaResponse, err error) {
-	resp, err := http.PostForm(recaptchaServerName,
-		url.Values{"secret": {RecaptchaSecretKey}, "remoteip": {remoteip}, "response": {response}})
+func challenge(action, remoteip, response string) (bool, error) {
+	data := url.Values{"secret": {SecretKey}, "remoteip": {remoteip}, "response": {response}}
+	client := &http.Client{Transport: &http.Transport{Proxy: nil}}
+	resp, err := client.PostForm("https://www.recaptcha.net/recaptcha/api/siteverify", data)
 	if err != nil {
 		log.Printf("Post error: %s\n", err)
-		return
+		return false, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Read error: could not read body: %v", err)
-		return
+		return false, err
 	}
-	if err = json.Unmarshal(body, &r); err != nil {
+	var r reCAPTCHA
+	if err := json.Unmarshal(body, &r); err != nil {
 		log.Printf("Read error: got invalid JSON: %v", err)
-		return
+		return false, err
 	}
-	return
-}
-
-// Confirm is the public interface function.
-// It calls check, which the client ip address, the challenge code from the reCaptcha form,
-// and the client's response input to that challenge to determine whether or not
-// the client answered the reCaptcha input question correctly.
-// It returns a boolean value indicating whether or not the client answered correctly.
-func Confirm(remoteip, response string) (result bool, err error) {
-	resp, err := check(remoteip, response)
-	result = resp.Success
-	return
+	if !r.Success || r.Score < 0.3 || action != r.Action {
+		log.Println("Challenge failed.", r)
+		return false, nil
+	}
+	return true, nil
 }

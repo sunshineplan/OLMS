@@ -11,6 +11,24 @@ import (
 )
 
 func get(c *gin.Context) {
+	var obj map[string]interface{}
+	if err := c.BindJSON(&obj); err != nil {
+		c.String(400, "")
+		return
+	}
+
+	if SiteKey != "" && SecretKey != "" {
+		if recaptcha, ok := obj["recaptcha"].(string); ok {
+			if ok, _ := challenge("get", c.ClientIP(), recaptcha); !ok {
+				c.String(403, "reCAPTCHA challenge failed")
+				return
+			}
+		} else {
+			c.String(403, "missing reCAPTCHA response")
+			return
+		}
+	}
+
 	var user empl
 	switch userID := sessions.Default(c).Get("userID"); userID {
 	case "0":
@@ -38,11 +56,6 @@ func get(c *gin.Context) {
 		user = users[0]
 	}
 
-	var obj map[string]interface{}
-	if err := c.BindJSON(&obj); err != nil {
-		c.String(400, "")
-		return
-	}
 	query := obj["query"]
 	id := obj["id"]
 	userID := obj["empl"]
@@ -357,6 +370,24 @@ func get(c *gin.Context) {
 }
 
 func exportCSV(c *gin.Context) {
+	var obj map[string]interface{}
+	if err := c.BindJSON(&obj); err != nil {
+		c.String(400, "")
+		return
+	}
+
+	if SiteKey != "" && SecretKey != "" {
+		if recaptcha, ok := obj["recaptcha"].(string); ok {
+			if ok, _ := challenge("export", c.ClientIP(), recaptcha); !ok {
+				c.String(403, "reCAPTCHA challenge failed")
+				return
+			}
+		} else {
+			c.String(403, "missing reCAPTCHA response")
+			return
+		}
+	}
+
 	var user empl
 	switch userID := sessions.Default(c).Get("userID"); userID {
 	case "0":
@@ -383,11 +414,7 @@ func exportCSV(c *gin.Context) {
 		}
 		user = users[0]
 	}
-	var obj map[string]interface{}
-	if err := c.BindJSON(&obj); err != nil {
-		c.String(400, "")
-		return
-	}
+
 	query := obj["query"]
 	userID := obj["empl"]
 	deptID := obj["dept"]

@@ -5,6 +5,10 @@ BootstrapButtons = Swal.mixin({
     buttonsStyling: false
 });
 
+$(document).on('submit', '#login', () => {
+    if ($('#username').val() != 'root') localStorage.setItem('username', $('#username').val());
+});
+
 $(document).on('click', 'li>a.nav-link', function () {
     $('li>a.nav-link').removeClass('selected');
     $(this).addClass('selected');
@@ -79,11 +83,12 @@ function cleanObj(obj) {
 };
 
 function postJSON(url, data, success) {
+    var recaptcha = $('#recaptcha').data(url.replace('/', ''));
     return $.ajax({
         url: url,
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify(data),
+        data: JSON.stringify($.extend(data, cleanObj({ recaptcha: recaptcha }))),
         success: success
     });
 };

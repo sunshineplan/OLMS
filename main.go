@@ -27,6 +27,8 @@ func main() {
 	flag.StringVar(&olms.UNIX, "unix", "", "UNIX-domain Socket")
 	flag.StringVar(&olms.Host, "host", "0.0.0.0", "Server Host")
 	flag.StringVar(&olms.Port, "port", "12345", "Server Port")
+	flag.StringVar(&olms.SiteKey, "sitekey", "", "reCAPTCHA Site Key")
+	flag.StringVar(&olms.SecretKey, "secretkey", "", "reCAPTCHA Secret Key")
 	flag.StringVar(&olms.MailSetting.From, "from", "", "Backup sender")
 	flag.StringVar(&olms.To, "to", "", "Backup receiver")
 	flag.StringVar(&olms.MailSetting.Password, "password", "", "Backup sender password")
