@@ -92,7 +92,7 @@ func Run() {
 		case "0":
 			c.HTML(200, "index.html", gin.H{"user": empl{ID: 0, Realname: "root", Role: true}})
 		default:
-			users, _, err := getEmpls(userID, nil, "", "")
+			users, _, err := getEmpls(userID, nil, nil, nil)
 			if err != nil {
 				log.Printf("Failed to get users: %v", err)
 				c.String(500, "")

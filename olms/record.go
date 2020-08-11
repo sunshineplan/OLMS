@@ -25,7 +25,7 @@ type record struct {
 	Created  time.Time
 }
 
-func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, status, page string) (records []record, total int, err error) {
+func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, status, page interface{}) (records []record, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -43,20 +43,20 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 		args = append(args, id)
 		bc <- true
 	} else {
-		if year != "" {
-			if month == "" {
+		if year != nil {
+			if month == nil {
 				stmt += "strftime('%%Y', date) = ? AND "
 				args = append(args, year)
 			} else {
 				stmt += "strftime('%%Y%%m', date) = ? AND "
-				args = append(args, year+month)
+				args = append(args, fmt.Sprintf("%v%v", year, month))
 			}
 		}
-		if Type != "" {
+		if Type != nil {
 			stmt += "type = ? AND "
 			args = append(args, Type)
 		}
-		if status != "" {
+		if status != nil {
 			stmt += "status = ? AND "
 			args = append(args, status)
 		}
@@ -75,7 +75,7 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 			}
 		}
 
-		if p, err := strconv.Atoi(page); err == nil {
+		if p, ok := page.(float64); ok {
 			go func() {
 				if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)"), args...).Scan(&total); err != nil {
 					log.Printf("Failed to get total records: %v", err)
@@ -84,7 +84,7 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 				bc <- true
 			}()
 			limit = fmt.Sprintf(" LIMIT ?, ?")
-			args = append(args, (p-1)*perPage, perPage)
+			args = append(args, int(p-1)*perPage, perPage)
 		} else {
 			bc <- true
 		}
@@ -156,7 +156,7 @@ func checkRecord(c *gin.Context, record record, super bool) bool {
 	if userID == "0" {
 		return true
 	}
-	users, _, err := getEmpls(userID, nil, "", "")
+	users, _, err := getEmpls(userID, nil, nil, nil)
 	if err != nil {
 		return false
 	}
@@ -220,7 +220,7 @@ func doAddRecord(c *gin.Context) {
 	case "0":
 		user = empl{ID: 0}
 	default:
-		users, _, err := getEmpls(userID, nil, "", "")
+		users, _, err := getEmpls(userID, nil, nil, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -308,7 +308,7 @@ func doEditRecord(c *gin.Context) {
 	describe := c.PostForm("describe")
 
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, "", "", "", "", "")
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -350,7 +350,7 @@ func doEditRecord(c *gin.Context) {
 
 func verifyRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, "", "", "", "", "")
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -365,7 +365,7 @@ func verifyRecord(c *gin.Context) {
 
 func doVerifyRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, "", "", "", "", "")
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -405,7 +405,7 @@ func doVerifyRecord(c *gin.Context) {
 	case "0":
 		user = empl{ID: 0}
 	default:
-		users, _, err := getEmpls(userID, nil, "", "")
+		users, _, err := getEmpls(userID, nil, nil, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -424,7 +424,7 @@ func doVerifyRecord(c *gin.Context) {
 
 func doDeleteRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, "", "", "", "", "")
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -435,7 +435,7 @@ func doDeleteRecord(c *gin.Context) {
 	case "0":
 		user = empl{ID: 0}
 	default:
-		users, _, err := getEmpls(userID, nil, "", "")
+		users, _, err := getEmpls(userID, nil, nil, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")

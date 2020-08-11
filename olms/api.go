@@ -29,7 +29,7 @@ func get(c *gin.Context) {
 		}
 		user = empl{ID: 0, Role: true, Permission: string(permission)}
 	default:
-		users, _, err := getEmpls(userID, nil, "", "")
+		users, _, err := getEmpls(userID, nil, nil, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -38,34 +38,39 @@ func get(c *gin.Context) {
 		user = users[0]
 	}
 
-	query := c.PostForm("query")
-	id := c.PostForm("id")
-	userID := c.PostForm("empl")
-	deptID := c.PostForm("dept")
-	period := c.PostForm("period")
-	year := c.PostForm("year")
-	month := c.PostForm("month")
-	Type := c.PostForm("type")
-	status := c.PostForm("status")
-	role := c.PostForm("role")
-	page := c.PostForm("page")
+	var obj map[string]interface{}
+	if err := c.BindJSON(&obj); err != nil {
+		c.String(400, "")
+		return
+	}
+	query := obj["query"]
+	id := obj["id"]
+	userID := obj["empl"]
+	deptID := obj["dept"]
+	period := obj["period"]
+	year := obj["year"]
+	month := obj["month"]
+	Type := obj["type"]
+	status := obj["status"]
+	role := obj["role"]
+	page := obj["page"]
 
 	var total int
 	var err error
-	switch c.PostForm("mode") {
-	case "":
+	switch obj["mode"] {
+	case nil:
 		if user.ID == 0 {
 			log.Println("Super Administrator has no personal record.")
 			c.String(400, "")
 			return
 		}
 		switch query {
-		case "records", "":
-			if page == "" {
-				page = "1"
+		case "records", nil:
+			if page == nil {
+				page = 1.0
 			}
 			var records []record
-			if id != "" {
+			if id != nil {
 				records, total, err = getRecords(id, nil, nil, year, month, Type, status, page)
 				if err != nil {
 					log.Println(err)
@@ -87,8 +92,8 @@ func get(c *gin.Context) {
 			}
 			c.JSON(200, gin.H{"total": total, "rows": records})
 		case "stats":
-			if page == "" {
-				page = "1"
+			if page == nil {
+				page = 1.0
 			}
 			stats, total, err := getStats(user.ID, nil, period, year, month, page)
 			if err != nil {
@@ -114,12 +119,12 @@ func get(c *gin.Context) {
 			return
 		}
 		switch query {
-		case "records", "":
-			if page == "" {
-				page = "1"
+		case "records", nil:
+			if page == nil {
+				page = 1.0
 			}
 			var records []record
-			if id != "" {
+			if id != nil {
 				records, _, err = getRecords(id, nil, nil, year, month, Type, status, page)
 				if err != nil {
 					log.Println(err)
@@ -134,8 +139,8 @@ func get(c *gin.Context) {
 				}
 				c.String(403, "")
 				return
-			} else if userID != "" {
-				if checkPermission(c, "", userID) {
+			} else if userID != nil {
+				if checkPermission(c, nil, userID) {
 					records, total, err = getRecords(nil, userID, nil, year, month, Type, status, page)
 					if err != nil {
 						log.Println(err)
@@ -146,9 +151,9 @@ func get(c *gin.Context) {
 					c.String(403, "")
 					return
 				}
-			} else if deptID != "" {
+			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					records, total, err = getRecords(nil, nil, []string{deptID}, year, month, Type, status, page)
+					records, total, err = getRecords(nil, nil, []string{fmt.Sprintf("%v", deptID)}, year, month, Type, status, page)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -168,12 +173,12 @@ func get(c *gin.Context) {
 			}
 			c.JSON(200, gin.H{"total": total, "rows": records})
 		case "stats":
-			if page == "" {
-				page = "1"
+			if page == nil {
+				page = 1.0
 			}
 			var stats []stat
-			if userID != "" {
-				if checkPermission(c, "", userID) {
+			if userID != nil {
+				if checkPermission(c, nil, userID) {
 					stats, total, err = getStats(userID, nil, period, year, month, page)
 					if err != nil {
 						log.Println(err)
@@ -184,9 +189,9 @@ func get(c *gin.Context) {
 					c.String(403, "")
 					return
 				}
-			} else if deptID != "" {
+			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					stats, total, err = getStats(nil, []string{deptID}, period, year, month, page)
+					stats, total, err = getStats(nil, []string{fmt.Sprintf("%v", deptID)}, period, year, month, page)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -207,8 +212,8 @@ func get(c *gin.Context) {
 			c.JSON(200, gin.H{"total": total, "rows": stats})
 		case "empls":
 			var empls []empl
-			if id != "" {
-				empls, _, err = getEmpls(id, nil, "", "")
+			if id != nil {
+				empls, _, err = getEmpls(id, nil, nil, nil)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -222,9 +227,9 @@ func get(c *gin.Context) {
 				}
 				c.String(403, "")
 				return
-			} else if deptID != "" {
+			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					empls, total, err = getEmpls(nil, []string{deptID}, role, page)
+					empls, total, err = getEmpls(nil, []string{fmt.Sprintf("%v", deptID)}, role, page)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -249,8 +254,8 @@ func get(c *gin.Context) {
 			c.JSON(200, gin.H{"total": total, "rows": empls})
 		case "depts":
 			var depts []dept
-			if id != "" {
-				depts, err = getDepts([]string{id})
+			if id != nil {
+				depts, err = getDepts([]string{fmt.Sprintf("%v", id)})
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -274,8 +279,8 @@ func get(c *gin.Context) {
 			c.JSON(200, gin.H{"rows": depts})
 		case "years":
 			var years []string
-			if userID != "" {
-				if checkPermission(c, "", userID) {
+			if userID != nil {
+				if checkPermission(c, nil, userID) {
 					years, err = getYears(userID, nil)
 					if err != nil {
 						log.Println(err)
@@ -286,9 +291,9 @@ func get(c *gin.Context) {
 					c.String(403, "")
 					return
 				}
-			} else if deptID != "" {
+			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					years, err = getYears(nil, []string{deptID})
+					years, err = getYears(nil, []string{fmt.Sprintf("%v", deptID)})
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -318,8 +323,8 @@ func get(c *gin.Context) {
 		switch query {
 		case "empls", "":
 			var empls []empl
-			if id != "" {
-				empls, _, err = getEmpls(id, nil, "", "")
+			if id != nil {
+				empls, _, err = getEmpls(id, nil, nil, nil)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -327,8 +332,8 @@ func get(c *gin.Context) {
 				}
 				c.JSON(200, gin.H{"empl": empls[0]})
 				return
-			} else if deptID != "" {
-				empls, total, err = getEmpls(nil, []string{deptID}, role, page)
+			} else if deptID != nil {
+				empls, total, err = getEmpls(nil, []string{fmt.Sprintf("%v", deptID)}, role, page)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -370,7 +375,7 @@ func exportCSV(c *gin.Context) {
 		}
 		user = empl{ID: 0, Role: true, Permission: string(permission)}
 	default:
-		users, _, err := getEmpls(userID, nil, "", "")
+		users, _, err := getEmpls(userID, nil, nil, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -378,28 +383,33 @@ func exportCSV(c *gin.Context) {
 		}
 		user = users[0]
 	}
-	query := c.PostForm("query")
-	userID := c.PostForm("empl")
-	deptID := c.PostForm("dept")
-	period := c.PostForm("period")
-	year := c.PostForm("year")
-	month := c.PostForm("month")
-	Type := c.PostForm("type")
-	status := c.PostForm("status")
+	var obj map[string]interface{}
+	if err := c.BindJSON(&obj); err != nil {
+		c.String(400, "")
+		return
+	}
+	query := obj["query"]
+	userID := obj["empl"]
+	deptID := obj["dept"]
+	period := obj["period"]
+	year := obj["year"]
+	month := obj["month"]
+	Type := obj["type"]
+	status := obj["status"]
 
 	var prefix string
 	var results []map[string]interface{}
 	var err error
-	switch c.PostForm("mode") {
-	case "":
+	switch obj["mode"] {
+	case nil:
 		if user.ID == 0 {
 			log.Println("Super Administrator has no personal record.")
 			c.String(400, "")
 			return
 		}
 		switch query {
-		case "records", "":
-			records, _, err := getRecords(nil, user.ID, nil, year, month, Type, status, "")
+		case "records", nil:
+			records, _, err := getRecords(nil, user.ID, nil, year, month, Type, status, nil)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -409,11 +419,11 @@ func exportCSV(c *gin.Context) {
 				results = append(results, i.format())
 			}
 			sendCSV(c,
-				fmt.Sprintf("EmplRecords-%s%s%s.csv", user.Realname, year, month),
+				fmt.Sprintf("EmplRecords-%s%v%v.csv", user.Realname, year, month),
 				[]string{"Date", "Type", "Duration", "Describe", "Created", "Status"},
 				results)
 		case "stats":
-			stats, _, err := getStats(user.ID, nil, period, year, month, "")
+			stats, _, err := getStats(user.ID, nil, period, year, month, nil)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -423,7 +433,7 @@ func exportCSV(c *gin.Context) {
 				results = append(results, i.format())
 			}
 			sendCSV(c,
-				fmt.Sprintf("EmplStats-%s%s%s.csv", user.Realname, year, month),
+				fmt.Sprintf("EmplStats-%s%v%v.csv", user.Realname, year, month),
 				[]string{"Period", "DeptName", "Name", "Overtime", "Leave", "Summary"},
 				results)
 		default:
@@ -435,11 +445,11 @@ func exportCSV(c *gin.Context) {
 			return
 		}
 		switch query {
-		case "records", "":
+		case "records", nil:
 			var records []record
-			if userID != "" {
-				if checkPermission(c, "", userID) {
-					records, _, err = getRecords(nil, userID, nil, year, month, Type, status, "")
+			if userID != nil {
+				if checkPermission(c, nil, userID) {
+					records, _, err = getRecords(nil, userID, nil, year, month, Type, status, nil)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -454,9 +464,9 @@ func exportCSV(c *gin.Context) {
 					c.String(403, "")
 					return
 				}
-			} else if deptID != "" {
+			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					records, _, err = getRecords(nil, nil, []string{deptID}, year, month, Type, status, "")
+					records, _, err = getRecords(nil, nil, []string{fmt.Sprintf("%v", deptID)}, year, month, Type, status, nil)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -472,7 +482,7 @@ func exportCSV(c *gin.Context) {
 					return
 				}
 			} else {
-				records, _, err = getRecords(nil, nil, strings.Split(user.Permission, ","), year, month, Type, status, "")
+				records, _, err = getRecords(nil, nil, strings.Split(user.Permission, ","), year, month, Type, status, nil)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -483,14 +493,14 @@ func exportCSV(c *gin.Context) {
 				results = append(results, i.format())
 			}
 			sendCSV(c,
-				fmt.Sprintf("DeptRecords%s%s%s.csv", prefix, year, month),
+				fmt.Sprintf("DeptRecords%s%v%v.csv", prefix, year, month),
 				[]string{"DeptName", "Name", "Date", "Type", "Duration", "Describe", "Created", "Status"},
 				results)
 		case "stats":
 			var stats []stat
-			if userID != "" {
-				if checkPermission(c, "", userID) {
-					stats, _, err = getStats(userID, nil, period, year, month, "")
+			if userID != nil {
+				if checkPermission(c, nil, userID) {
+					stats, _, err = getStats(userID, nil, period, year, month, nil)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -505,9 +515,9 @@ func exportCSV(c *gin.Context) {
 					c.String(403, "")
 					return
 				}
-			} else if deptID != "" {
+			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					stats, _, err = getStats(nil, []string{deptID}, period, year, month, "")
+					stats, _, err = getStats(nil, []string{fmt.Sprintf("%v", deptID)}, period, year, month, nil)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -523,7 +533,7 @@ func exportCSV(c *gin.Context) {
 					return
 				}
 			} else {
-				stats, _, err = getStats(nil, strings.Split(user.Permission, ","), period, year, month, "")
+				stats, _, err = getStats(nil, strings.Split(user.Permission, ","), period, year, month, nil)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -534,7 +544,7 @@ func exportCSV(c *gin.Context) {
 				results = append(results, i.format())
 			}
 			sendCSV(c,
-				fmt.Sprintf("DeptStats%s%s%s.csv", prefix, year, month),
+				fmt.Sprintf("DeptStats%s%v%v.csv", prefix, year, month),
 				[]string{"Period", "DeptName", "Name", "Overtime", "Leave", "Summary"},
 				results)
 		default:

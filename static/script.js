@@ -69,3 +69,21 @@ function goback(mode) {
     else if (last == 'empl') showEmpls(mode);
     else showRecords(mode);
 };
+
+function cleanObj(obj) {
+    $.each(obj, (k, v) => {
+        if (v === undefined || v === '')
+            delete obj[k]
+    });
+    return obj;
+};
+
+function postJSON(url, data, success) {
+    return $.ajax({
+        url: url,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: success
+    });
+};

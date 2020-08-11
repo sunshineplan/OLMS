@@ -27,14 +27,14 @@ function pagination(total, current = 1) {
 };
 
 $(document).on('click', '.page-link', function () {
-    $('.page-item').removeClass('active');
     var page = $(this).data('page');
     if (page !== undefined) {
+        $('.page-item').removeClass('active');
         var mode = $('.pagination').data('mode');
         var type = $('.pagination').data('type');
-        var param = $('.pagination').data('param');
-        if (type == 'empl') loadEmpls(mode, page, param);
-        else if (type == 'stat') loadStats(mode, page, param);
-        else loadRecords(mode, page, param);
+        var data = JSON.parse($('.pagination').data('data'));
+        if (type == 'empl') loadEmpls(mode, page, data);
+        else if (type == 'stat') loadStats(mode, page, data);
+        else loadRecords(mode, page, data);
     };
 });

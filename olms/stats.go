@@ -3,7 +3,6 @@ package olms
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 )
 
@@ -16,7 +15,7 @@ type stat struct {
 	Summary  int
 }
 
-func getStats(id interface{}, deptIDs []string, period, year, month, page string) (stats []stat, total int, err error) {
+func getStats(id interface{}, deptIDs []string, period, year, month, page interface{}) (stats []stat, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -29,14 +28,14 @@ func getStats(id interface{}, deptIDs []string, period, year, month, page string
 	var args []interface{}
 	if period == "month" {
 		fields = "period, dept_name, realname, overtime, leave, summary"
-		if month == "" {
-			if year != "" {
+		if month == nil {
+			if year != nil {
 				stmt += "substr(period,1,4) = ? AND "
 				args = append(args, year)
 			}
 		} else {
 			stmt += "period = ? AND "
-			args = append(args, year+"-"+month)
+			args = append(args, fmt.Sprintf("%v-%v", year, month))
 		}
 	} else {
 		fields = "substr(period,1,4) year, dept_name, realname, sum(overtime), sum(leave), sum(summary)"
@@ -59,7 +58,7 @@ func getStats(id interface{}, deptIDs []string, period, year, month, page string
 	}
 
 	bc := make(chan bool, 1)
-	if p, err := strconv.Atoi(page); err == nil {
+	if p, ok := page.(float64); ok {
 		go func() {
 			if err := db.QueryRow(fmt.Sprintf(stmt+group, "count(realname)"), args...).Scan(&total); err != nil {
 				log.Printf("Failed to get total records: %v", err)
@@ -68,7 +67,7 @@ func getStats(id interface{}, deptIDs []string, period, year, month, page string
 			bc <- true
 		}()
 		limit = fmt.Sprintf(" LIMIT ?, ?")
-		args = append(args, (p-1)*perPage, perPage)
+		args = append(args, int(p-1)*perPage, perPage)
 	} else {
 		bc <- true
 	}

@@ -1,6 +1,7 @@
 package olms
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -51,29 +52,31 @@ func checkSuper(c *gin.Context) bool {
 	return false
 }
 
-func checkPermission(c *gin.Context, ids ...string) bool {
+func checkPermission(c *gin.Context, ids ...interface{}) bool {
 	userID := sessions.Default(c).Get("userID")
 	if userID == "0" {
 		return true
 	}
-	users, _, err := getEmpls(userID, nil, "", "")
+	users, _, err := getEmpls(userID, nil, nil, nil)
 	if err != nil {
 		return false
 	}
 	switch len(ids) {
 	case 1:
+		id := fmt.Sprintf("%v", ids[0])
 		for _, i := range strings.Split(users[0].Permission, ",") {
-			if ids[0] == i {
+			if id == i {
 				return true
 			}
 		}
 	case 2:
-		empls, _, err := getEmpls(ids[1], nil, "", "")
+		id := fmt.Sprintf("%v", ids[0])
+		empls, _, err := getEmpls(ids[1], nil, nil, nil)
 		if err != nil {
 			return false
 		}
 		for _, i := range strings.Split(users[0].Permission, ",") {
-			if (ids[0] == "" || ids[0] == i) && strconv.Itoa(empls[0].DeptID) == i {
+			if (ids[0] == nil || id == i) && strconv.Itoa(empls[0].DeptID) == i {
 				return true
 			}
 		}

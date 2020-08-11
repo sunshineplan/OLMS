@@ -68,6 +68,6 @@ func sendCSV(c *gin.Context, filename string, fieldnames []string, r []map[strin
 		c.String(500, "Failed to read csv bytes: "+err.Error())
 		return
 	}
-	c.Header("content-disposition", fmt.Sprintf("attachment; filename=\"%s\"", url.PathEscape(filename)))
+	c.Header("content-disposition", fmt.Sprintf("attachment; filename=\"%s\"", url.PathEscape(strings.ReplaceAll(filename, "<nil>", ""))))
 	c.Data(200, "text/csv", body)
 }
