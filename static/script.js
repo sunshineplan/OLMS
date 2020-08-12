@@ -83,12 +83,21 @@ function cleanObj(obj) {
 };
 
 function postJSON(url, data, success) {
-    var recaptcha = $('#recaptcha').data(url.replace('/', ''));
+    if ($('#recaptcha').length)
+        return grecaptcha.execute(sitekey, { action: url.replace('/', '') })
+            .then(token =>
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify($.extend(data, { recaptcha: token })),
+                    success: success
+                }));
     return $.ajax({
         url: url,
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify($.extend(data, cleanObj({ recaptcha: recaptcha }))),
+        data: JSON.stringify(data),
         success: success
     });
 };

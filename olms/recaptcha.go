@@ -43,7 +43,7 @@ func challenge(action, remoteip, response string) (bool, error) {
 		log.Printf("Read error: got invalid JSON: %v", err)
 		return false, err
 	}
-	if !r.Success || r.Score < 0.3 || action != r.Action {
+	if !r.Success || r.Score < 0.5 || action != r.Action {
 		log.Println("Challenge failed.", r)
 		return false, nil
 	}

@@ -71,7 +71,7 @@ function loadEmpls(mode, page = 1, data) {
             };
             $tr.appendTo('tbody');
         });
-    }).done(() => {
+    }).then(() => {
         $('.pagination').data('mode', mode);
         $('.pagination').data('type', 'empl');
         $('.pagination').data('data', JSON.stringify(data));
@@ -111,7 +111,7 @@ function loadRecords(mode, page = 1, data) {
                 $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='record(\"" + mode + "\"," + item.ID + ")'>Edit</a></td>");
             $tr.appendTo('tbody');
         });
-    }).done(() => {
+    }).then(() => {
         $('.pagination').data('mode', mode);
         $('.pagination').data('type', 'record');
         $('.pagination').data('data', JSON.stringify(data));
@@ -135,7 +135,7 @@ function loadStats(mode, page = 1, data) {
             $tr.append('<td>' + item.Summary + '</td>');
             $tr.appendTo('tbody');
         });
-    }).done(() => {
+    }).then(() => {
         $('.pagination').data('mode', mode);
         $('.pagination').data('type', 'stat');
         $('.pagination').data('data', JSON.stringify(data));

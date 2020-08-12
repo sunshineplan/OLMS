@@ -59,9 +59,11 @@ func login(c *gin.Context) {
 	if SiteKey != "" && SecretKey != "" {
 		recaptcha := c.PostForm("recaptcha")
 		if ok, _ := challenge("login", c.ClientIP(), recaptcha); !ok {
-			message = "reCAPTCHA challenge failed"
+			c.HTML(200, "login.html", gin.H{"error": "reCAPTCHA challenge failed", "recaptcha": SiteKey})
+			return
 		}
-	} else if err := db.QueryRow("SELECT id, realname, password FROM user WHERE username = ?",
+	}
+	if err := db.QueryRow("SELECT id, realname, password FROM user WHERE username = ?",
 		username).Scan(&id, &realname, &pw); err != nil {
 		if strings.Contains(err.Error(), "no such table") {
 			Restore("")
@@ -72,34 +74,32 @@ func login(c *gin.Context) {
 			log.Println(err)
 			message = "Critical Error! Please contact your system administrator."
 		}
-	} else {
-		if err = bcrypt.CompareHashAndPassword([]byte(pw), []byte(password)); err != nil {
-			if (strings.Contains(err.Error(), "too short") && pw != password) || strings.Contains(err.Error(), "is not") {
-				message = "Incorrect password"
-			} else if pw != password {
-				log.Println(err)
-				message = "Critical Error! Please contact your system administrator."
-			}
+	} else if err = bcrypt.CompareHashAndPassword([]byte(pw), []byte(password)); err != nil {
+		if (strings.Contains(err.Error(), "too short") && pw != password) || strings.Contains(err.Error(), "is not") {
+			message = "Incorrect password"
+		} else if pw != password {
+			log.Println(err)
+			message = "Critical Error! Please contact your system administrator."
 		}
-		if message == "" {
-			session.Clear()
-			session.Set("userID", id)
+	}
+	if message == "" {
+		session.Clear()
+		session.Set("userID", id)
 
-			rememberme := c.PostForm("rememberme")
-			if rememberme == "on" {
-				session.Options(sessions.Options{Path: "/", HttpOnly: true, MaxAge: 856400 * 365})
-			} else {
-				session.Options(sessions.Options{Path: "/", HttpOnly: true, MaxAge: 0})
-			}
-
-			if err := session.Save(); err != nil {
-				log.Println(err)
-				message = "Failed to save session."
-			} else {
-				c.Redirect(302, "/")
-				return
-			}
+		rememberme := c.PostForm("rememberme")
+		if rememberme == "on" {
+			session.Options(sessions.Options{Path: "/", HttpOnly: true, MaxAge: 856400 * 365})
+		} else {
+			session.Options(sessions.Options{Path: "/", HttpOnly: true, MaxAge: 0})
 		}
+
+		if err := session.Save(); err != nil {
+			log.Println("Failed to save session.", err)
+			c.String(500, "")
+			return
+		}
+		c.Redirect(302, "/")
+		return
 	}
 	if SiteKey != "" && SecretKey != "" {
 		c.HTML(200, "login.html", gin.H{"error": message, "recaptcha": SiteKey})

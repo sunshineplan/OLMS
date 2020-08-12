@@ -2,21 +2,19 @@
 <meta name='viewport' content='width=device-width, initial-scale=.75'>
 <title>OLMS</title>
 <link rel='icon' href='/static/favicon.ico'>
+{{ if .recaptcha }}
+<script src='https://www.recaptcha.net/recaptcha/api.js?render={{ .recaptcha }}'></script>
+<script>
+  const sitekey = '{{ .recaptcha }}';
+</script>
+<input type='hidden' name='recaptcha' id='recaptcha' form='login'>
+{{ end }}
 <script src='https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/jquery-ui-dist@1/jquery-ui.min.js'></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9/dist/sweetalert2.all.min.js"></script>
 <script src='/static/script.js'></script>
 <script src='/static/olms.js'></script>
 <script src='/static/pagination.js'></script>
-{{ if .recaptcha }}
-<script src='https://www.recaptcha.net/recaptcha/api.js?render={{ .recaptcha }}'></script>
-<script>
-  grecaptcha.ready(() => setInterval(() => {
-    grecaptcha.execute('{{ .recaptcha }}', { action: 'get' }).then(token => { $('#recaptcha').date('get', token) });
-    grecaptcha.execute('{{ .recaptcha }}', { action: 'export' }).then(token => { $('#recaptcha').date('export', token) });
-  }, 100000))
-</script>
-{{ end }}
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css'>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/spinkit@2/spinkit.min.css'>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/gh/google/material-design-icons@3/iconfont/material-icons.min.css'>
@@ -92,4 +90,3 @@
 <div class='content' {{ if .user }}style='padding-left: 200px;'{{ end }}>
   {{ template "content" . }}
 </div>
-<input type='hidden' name='recaptcha' id='recaptcha' form='login'>
