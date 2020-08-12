@@ -13,19 +13,23 @@ installOLMS() {
 }
 
 configOLMS() {
-    read -p 'Please enter unix socket(default: /run/olms-go.sock): ' unix
+    read -p 'Please enter unix socket (default: /run/olms-go.sock): ' unix
     [ -z $unix ] && unix=/var/www/olms-go/olms-go.sock
-    read -p 'Please enter host(default: 127.0.0.1): ' host
-    [ -z $host ] && host=127.0.0.1
-    read -p 'Please enter port(default: 12345): ' port
+    read -p 'Please enter host (default: 0.0.0.0): ' host
+    [ -z $host ] && host=0.0.0.0
+    read -p 'Please enter port (default: 12345): ' port
     [ -z $port ] && port=12345
-    read -p 'Please enter log path(default: /var/log/app/olms-go.log): ' log
+    read -p 'Please enter log path (default: /var/log/app/olms-go.log): ' log
     [ -z $log ] && log=/var/log/app/olms-go.log
+    read -p 'Please enter reCAPTCHA site key (leave blank if not set reCAPTCHA): ' sitekey
+    read -p 'Please enter reCAPTCHA secret key (leave blank if not set reCAPTCHA): ' secretkey
     mkdir -p $(dirname $log)
     sed "s,\$unix,$unix," /var/www/olms-go/config.ini.default > /var/www/olms-go/config.ini
     sed -i "s,\$log,$log," /var/www/olms-go/config.ini
     sed -i "s/\$host/$host/" /var/www/olms-go/config.ini
     sed -i "s/\$port/$port/" /var/www/olms-go/config.ini
+    sed -i "s/\$sitekey/$sitekey/" /var/www/olms-go/config.ini
+    sed -i "s/\$secretkey/$secretkey/" /var/www/olms-go/config.ini
 }
 
 setupsystemd() {
