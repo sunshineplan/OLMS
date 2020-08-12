@@ -39,7 +39,7 @@ function exportCSV(mode, type) {
 };
 
 function loadDepts(mode) {
-    postJSON('/get', getData(mode, 'depts'), json => {
+    return postJSON('/get', getData(mode, 'depts'), json => {
         $('tbody').empty();
         $.each(json.rows, (i, item) => {
             var $tr = $('<tr></tr>');
@@ -54,7 +54,7 @@ function loadDepts(mode) {
 function loadEmpls(mode, page = 1, data) {
     if (mode == 0) mode = 'super'; else mode = 'admin';
     if (data === undefined) data = getData(mode, 'empls');
-    postJSON('/get', $.extend(data, { page: page }), json => {
+    return postJSON('/get', $.extend(data, { page: page }), json => {
         pagination(json.total, page);
         $('tbody').empty();
         $("#total").text(json.total);
@@ -82,7 +82,7 @@ function loadRecords(mode, page = 1, data) {
     if (data === undefined)
         if (mode == 'super') data = getData('admin', 'records');
         else data = getData(mode, 'records');
-    postJSON('/get', $.extend(data, { page: page }), json => {
+    return postJSON('/get', $.extend(data, { page: page }), json => {
         pagination(json.total, page);
         $('tbody').empty();
         $("#total").text(json.total);
@@ -120,7 +120,7 @@ function loadRecords(mode, page = 1, data) {
 
 function loadStats(mode, page = 1, data) {
     if (data === undefined) data = getData(mode, 'stats');
-    postJSON('/get', $.extend(data, { page: page }), json => {
+    return postJSON('/get', $.extend(data, { page: page }), json => {
         pagination(json.total, page);
         $('tbody').empty();
         $.each(json.rows, (i, item) => {

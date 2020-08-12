@@ -29,12 +29,15 @@ function pagination(total, current = 1) {
 $(document).on('click', '.page-link', function () {
     var page = $(this).data('page');
     if (page !== undefined) {
+        loading();
         $('.page-item').removeClass('active');
         var mode = $('.pagination').data('mode');
         var type = $('.pagination').data('type');
         var data = JSON.parse($('.pagination').data('data'));
-        if (type == 'empl') loadEmpls(mode, page, data);
-        else if (type == 'stat') loadStats(mode, page, data);
-        else loadRecords(mode, page, data);
+        var promise
+        if (type == 'empl') promise = loadEmpls(mode, page, data);
+        else if (type == 'stat') promise = loadStats(mode, page, data);
+        else promise = loadRecords(mode, page, data);
+        promise.then(() => loading(false));
     };
 });
