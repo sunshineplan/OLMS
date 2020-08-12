@@ -1,0 +1,111 @@
+<header style='padding-left: 20px;'>
+  <div style='height: 50px;'>
+    <a class='h3 title'></a>
+  </div>
+  <div class='toolbar'>
+    {{ if ne .mode "" }}
+    <div class='form-inline'>
+      <div class='input-group input-group-sm' id='dept-selector'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='dept'>Department</label>
+        </div>
+        <select class='custom-select' name='dept' id='dept'>
+          <option value=''>All</option>
+        </select>
+      </div>
+      <div class='input-group input-group-sm' id='empl-selector'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='empl'>Name</label>
+        </div>
+        <select class='custom-select' name='empl' id='empl'>
+          <option value=''>All</option>
+        </select>
+      </div>
+    </div>
+    {{ end }}
+    <div class='form-inline'>
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='year'>Year</label>
+        </div>
+        <select class='custom-select' name='year' id='year'>
+          <option value=''>All</option>
+        </select>
+      </div>
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='month'>Month</label>
+        </div>
+        <select class='custom-select' name='month' id='month' disabled>
+          <option value=''>All</option>
+          <option value='01'>1</option>
+          <option value='02'>2</option>
+          <option value='03'>3</option>
+          <option value='04'>4</option>
+          <option value='05'>5</option>
+          <option value='06'>6</option>
+          <option value='07'>7</option>
+          <option value='08'>8</option>
+          <option value='09'>9</option>
+          <option value='10'>10</option>
+          <option value='11'>11</option>
+          <option value='12'>12</option>
+        </select>
+      </div>
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='type'>Type</label>
+        </div>
+        <select class='custom-select' name='type' id='type'>
+          <option value=''>All</option>
+          <option value='1'>Overtime</option>
+          <option value='0'>Leave</option>
+        </select>
+      </div>
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='status'>Status</label>
+        </div>
+        <select class='custom-select' name='status' id='status'>
+          <option value=''>All</option>
+          <option value='0'>Unverified</option>
+          <option value='1'>Verified</option>
+          <option value='2'>Rejected</option>
+        </select>
+      </div>
+      <div class='input-group'>
+        <a class='btn btn-primary btn-sm' onclick="loadRecords('{{ .mode }}')">Filter</a>
+        <a class='btn btn-primary btn-sm' onclick="showRecords('{{ .mode }}')">Reset</a>
+        <a class='btn btn-info btn-sm' onclick="exportCSV('{{ .mode }}', 'records')">Export</a>
+      </div>
+    </div>
+  </div>
+  {{ if ne .mode "" }}
+  <a class='btn btn-primary' onclick="record('{{ .mode }}')">New</a>
+  {{ else }}
+  <a class='btn btn-primary' onclick='record()'>New</a>
+  {{ end }}
+  <p>
+</header>
+<a class='text-secondary' style='padding-left: 15px'>Total: <span id='total'></span></a>
+<div class='table-responsive'>
+  <table class='table table-hover table-sm'>
+    <thead>
+      <tr>
+        {{ if ne .mode "" }}
+        <th scope='col'>Department</th>
+        <th scope='col'>Realname</th>
+        {{ end }}
+        <th scope='col'>Date</th> 
+        <th scope='col'>Type</th>
+        <th scope='col'>Duration</th>
+        <th scope='col'>Describe</th>
+        <th scope='col'>Created</th>
+        <th scope='col'>Status</th>
+        <th scope='col'>Operation</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<nav><ul class='pagination justify-content-center'></ul></nav>

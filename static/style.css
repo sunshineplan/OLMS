@@ -1,0 +1,261 @@
+:root {
+    --sk-color: #1a73e8;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+                 'Microsoft YaHei New', 'Microsoft Yahei', 微软雅黑, 宋体, SimSun, STXihei, 华文细黑, sans-serif;
+}
+
+.topbar {
+    position: fixed;
+    top: 0px;
+    z-index: 2;
+    width: 100%;
+    height: 70px;
+    padding: 0 10px 0 0;
+    background-color: #1a73e8;
+    user-select: none;
+}
+
+.toggle {
+    padding: 20px;
+    color: white !important;
+}
+
+.toggle:hover {
+    color: #1a73e8 !important;
+    background-color: rgb(232, 232, 232);
+}
+
+.brand {
+    padding-left: 20px;
+    margin: auto;
+    font-size: 25px;
+    letter-spacing: .3px;
+    color: white;
+}
+
+.brand:hover {
+    color: white;
+    text-decoration: none;
+}
+
+.topbar .nav-link {
+    padding-left: 8px;
+    padding-right: 8px;
+    color: white !important;
+}
+
+.topbar .link:hover {
+    background: rgba(255,255,255,.2);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.login {
+    width: 250px;
+    margin: 0 auto 20px;
+}
+
+.d-inline-flex {
+    margin: 0 20px 20px;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    z-index: 1;
+    height: 100%;
+    width: 200px;
+    padding-top: 70px;
+    user-select: none;
+}
+
+.panel {
+    height: 100%;
+    width: 100%;
+    padding-top: 10px;
+    overflow-x: hidden;
+    border-right: 1px solid #e9ecef;
+    background-color: white;
+}
+
+.panel .navbar-brand {
+    text-indent: 10px;
+}
+
+.panel .navbar-nav {
+    text-indent: 20px;
+}
+
+.panel .nav-link {
+    display: block;
+    cursor: pointer;
+    margin: 0;
+    border-left: 5px solid transparent;
+    color: rgba(0,0,0,.7) !important;
+}
+
+.panel .nav-link:hover {
+    background-color: rgb(232, 232, 232) !important;
+}
+
+.selected {
+    border-left: 5px solid #1a73e8 !important;
+    color: #1a73e8 !important;
+}
+
+.panel .nav-link.selected {
+    background-color: rgba(161,194,250,.16);
+    color: #3367d6 !important;
+}
+
+.content {
+    position: fixed;
+    top: 0;
+    padding-top: 90px;
+    height: 100%;
+    width: 100%;
+}
+
+.form {
+    padding: 0 20px;
+}
+
+.loading {
+    position: fixed;
+    z-index: 2;
+    top: 70px;
+    left: 250px;
+    height: calc(100% - 70px);
+    width: calc(100% - 250px);
+    display: none;
+}
+
+.h3 {
+    cursor: default;
+}
+
+.toolbar {
+    padding-bottom: 10px;
+}
+
+#dept {
+    width: 150px;
+}
+
+#empl {
+    width: 95px;
+}
+
+#year {
+    width: 70px;
+}
+
+.input-group {
+    padding: 5px 10px 5px 0px;
+}
+
+.form-control {
+    width: 250px;
+}
+
+.input-group select {
+    max-width: 200px;
+}
+
+.table-responsive {
+    min-height: 300px;
+    padding: 0 10px;
+    cursor: default;
+}
+
+table {
+    table-layout: fixed;
+}
+
+td {
+    white-space: nowrap;
+}
+
+.describe {
+    white-space: normal;
+    min-width: 160px;
+    max-width: 480px;
+}
+
+.btn-primary {
+    margin-right: 4px;
+}
+
+.btn-info {
+    margin-left: 8px;
+}
+
+.form-row {
+    margin-right: 0px;
+    margin-left: 0px;
+}
+
+.form-row .form-group {
+    padding-right: 30px;
+}
+
+.delete {
+    margin-top: 8px;
+}
+
+.swal {
+    margin: 8px 6px;
+}
+
+.material-icons.menu {
+    font-size: 30px;
+}
+
+.short {
+    display: none;
+}
+
+@media (min-width: 901px) {
+    .sidebar {
+        display: block !important;
+    }
+
+    .toggle {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .brand {
+        padding-left: 10px;
+    }
+
+    .sidebar {
+        box-shadow: 0 4px 8px rgba(0,0,0,.1);
+        display: none;
+    }
+
+    .content {
+        padding-left: 0 !important;
+    }
+
+    .loading {
+        left: 0;
+        width: 100%;
+    }
+
+    .short {
+        display: inline; 
+    }
+    
+    .full {
+        display: none;
+    }
+
+    table {
+        table-layout: auto;
+    }
+}

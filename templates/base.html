@@ -1,0 +1,92 @@
+<!doctype html>
+<meta name='viewport' content='width=device-width, initial-scale=.75'>
+<title>OLMS</title>
+<link rel='icon' href='/static/favicon.ico'>
+{{ if .recaptcha }}
+<script src='https://www.recaptcha.net/recaptcha/api.js?render={{ .recaptcha }}'></script>
+<script>
+  const sitekey = '{{ .recaptcha }}';
+</script>
+<input type='hidden' name='recaptcha' id='recaptcha' form='login'>
+{{ end }}
+<script src='https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/jquery-ui-dist@1/jquery-ui.min.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9/dist/sweetalert2.all.min.js"></script>
+<script src='/static/script.js'></script>
+<script src='/static/olms.js'></script>
+<script src='/static/pagination.js'></script>
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css'>
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/spinkit@2/spinkit.min.css'>
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/gh/google/material-design-icons@3/iconfont/material-icons.min.css'>
+<link rel='stylesheet' href='/static/style.css'>
+<nav class='navbar navbar-light topbar'>
+  <div class='d-flex' style='height: 100%;'>
+    {{ if .user }}
+    <a class='toggle'><i class='material-icons menu'>menu</i></a>
+    {{ end }}
+    <a class='brand full' href='/'>Overtime and Leave Management System</a>
+    <a class='brand short' href='/'>OLMS</a>
+  </div>
+  <div class='navbar-nav flex-row'>
+    {{ if .user }}
+    <a class='nav-link'>{{ .user.Realname }}</a>
+    <a class='nav-link link' onclick='setting()'>Setting</a>
+    <a class='nav-link link' href='/auth/logout'>Logout</a>
+    {{ else }}
+    <a class='nav-link'>Login</a></li>
+    {{ end }}
+  </div>
+</nav>
+{{ if .user }}
+<nav class='nav flex-column navbar-light sidebar'>
+  <div class='panel'>
+    {{ if ne .user.ID 0 }}
+    <div>
+      <a class='navbar-brand'>Employee Panel</a>
+      <ul class='navbar-nav'>
+        <li><a class='nav-link {{ if ne .user.Role true }}selected{{ end }}' onclick="showRecords('')">Employee Records</a></li>
+        <li><a class='nav-link' onclick="showStats('')">Employee Statistics</a></li>
+      </ul>
+    </div>
+    {{ end }}
+    {{ if eq .user.Role true }}
+    <div>
+      <a class='navbar-brand'>Department Panel</a>
+      <ul class='navbar-nav'>
+        {{ if ne .user.ID 0 }}
+        <li><a class='nav-link selected' onclick="showRecords('admin')">Department Records</a></li>
+        {{ end }}
+        <li><a class='nav-link' onclick="showStats('admin')">Department Statistics</a></li>
+      </ul>
+    </div>
+    <div>
+      <a class='navbar-brand'>Control Panel</a>
+      <ul class='navbar-nav'>
+        <li><a class='nav-link' onclick="showEmpls('{{ .user.ID }}')">Manage Employee</a></li>
+        {{ if eq .user.ID 0 }}
+        <li><a class='nav-link' onclick='showDepts()'>Manage Department</a></li>
+        <li><a class='nav-link' onclick="showRecords('super')">Manage Records</a></li>
+        {{ end }}
+      </ul>
+    </div>
+    {{ end }}
+  </div>
+</nav>
+{{ if ne .user.Role true }}
+<script>$(() => showRecords(''))</script>
+{{ else if ne .user.ID 0 }}
+<script>$(() => showRecords('admin'))</script>
+{{ end }}
+{{ end }}
+<div class='loading'>
+  <div class='sk-wave sk-center'>
+    <div class='sk-wave-rect'></div>
+    <div class='sk-wave-rect'></div>
+    <div class='sk-wave-rect'></div>
+    <div class='sk-wave-rect'></div>
+    <div class='sk-wave-rect'></div>
+  </div>
+</div>
+<div class='content' {{ if .user }}style='padding-left: 200px;'{{ end }}>
+  {{ template "content" . }}
+</div>

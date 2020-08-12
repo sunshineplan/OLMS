@@ -1,0 +1,54 @@
+<header style='padding-left: 20px;'>
+  <div style='height: 50px;'>
+    <a class='h3 title'>Employees List</a>
+  </div>
+  <div class='toolbar'>
+    <div class='form-inline'>
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='dept'>Department</label>
+        </div>
+        <select class='custom-select' name='dept' id='dept'>
+          <option value=''>All</option>
+        </select>
+      </div>
+      {{ if eq .user "0" }}
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='type'>Type</label>
+        </div>
+        <select class='custom-select' name='type' id='type'>
+          <option value=''>All</option>
+          <option value='0'>General Employee</option>
+          <option value='1'>Administrator</option>
+        </select>
+      </div>
+      {{ end }}
+      <div class='input-group'>
+        <a class='btn btn-primary btn-sm' onclick="loadEmpls('{{ .user }}')">Filter</a>
+        <a class='btn btn-primary btn-sm' onclick="showEmpls('{{ .user }}')">Reset</a>
+      </div>
+    </div>
+  </div>
+  <a class='btn btn-primary' onclick='empl()'>Add</a>
+  <p>
+</header>
+<a class='text-secondary' style='padding-left: 15px'>Total: <span id='total'></span></a>
+<div class='table-responsive'>
+  <table class='table table-hover table-sm'>
+    <thead>
+      <tr>
+        <th scope='col'>Username</th>
+        <th scope='col'>Realname</th>
+        <th scope='col'>Department</th>
+        {{ if eq .user "0" }}
+        <th scope='col'>Role</th>
+        <th scope='col'>Permission</th>
+        <th scope='col'>Operation</th>
+        {{ end }}
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<nav><ul class='pagination justify-content-center'></ul></nav>

@@ -1,0 +1,39 @@
+{{ define "content" }}
+<header>
+  <h3 class='d-flex justify-content-center align-items-center' style='height: 100%;'>Login</h3>
+</header>
+{{ if ne .error "" }}
+<div class='alert alert-danger login'>{{ .error }}</div>
+{{ end }}
+<form class='login' id='login' method='POST'>
+  <div class='form-group'>
+    <label for='username'>Username</label>
+    <input autofocus class='form-control' name='username' id='username' maxlength=20 placeholder='Username' required>
+  </div>
+  <div class='form-group'>
+    <label for='password'>Password</label>
+    <input class='form-control' type='password' name='password' id='password' maxlength=20 placeholder='Password' required>
+  </div>
+  <div class='form-group form-check'>
+    <input type='checkbox' class='form-check-input' name='rememberme' id='rememberme'>
+    <label class='form-check-label' for='rememberme'>Remember Me</label>
+  </div>
+  {{ if .recaptcha }}
+  <small class='form-text text-muted'>This site is protected by reCAPTCHA and the Google
+    <a href='https://policies.google.com/privacy'>Privacy Policy</a> and
+    <a href='https://policies.google.com/terms'>Terms of Service</a> apply.
+  </small>
+  <script>
+    grecaptcha.ready(() => grecaptcha.execute(sitekey, { action: 'login' }).then(token => { $('#recaptcha').val(token) }))
+  </script>
+  {{ end }}
+  <hr>
+  <input type='submit' value='Login' class='btn btn-primary login'>
+</form>
+<script>
+  $(() => {
+    username = localStorage.getItem('username');
+    if (username != null) $('#username').val(username);
+  });
+</script>
+{{ end }}
