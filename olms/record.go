@@ -235,7 +235,8 @@ func doAddRecord(c *gin.Context) {
 	}
 
 	userID := c.PostForm("empl")
-	ip := c.ClientIP()
+	ip, _, _ := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
+	ip = ip + "-" + c.ClientIP()
 	if userID == "" {
 		if _, err := db.Exec("INSERT INTO record (date, type, duration, describe, dept_id, user_id, createdby) VALUES (?, ?, ?, ?, ?, ?, ?)",
 			date, Type, duration, describe, user.DeptID, user.ID, fmt.Sprintf("%d-%s", user.ID, ip)); err != nil {
@@ -418,8 +419,9 @@ func doVerifyRecord(c *gin.Context) {
 		}
 		user = users[0]
 	}
-	ip := c.ClientIP()
-	if _, err := db.Exec("UPDATE record SET status = ?, verifiedby = ? WHERE id = ?", status, fmt.Sprintf("%d-%s", user.ID, ip), id); err != nil {
+	ip, _, _ := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
+	if _, err := db.Exec("UPDATE record SET status = ?, verifiedby = ? WHERE id = ?",
+		status, fmt.Sprintf("%d-%s-%s", user.ID, ip, c.ClientIP()), id); err != nil {
 		log.Printf("Failed to verify record: %v", err)
 		c.String(500, "")
 		return
