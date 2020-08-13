@@ -155,14 +155,11 @@ body {
 
 .input-group {
     padding: 5px 10px 5px 0px;
+    max-width: 240px;
 }
 
 .form-control {
     width: 250px;
-}
-
-.input-group select {
-    max-width: 200px;
 }
 
 .table-responsive {
@@ -261,5 +258,9 @@ td:hover {
 
     .describe {
         width: 300px;
+    }
+
+    .department, .permission {
+        width: 150px;
     }
 }

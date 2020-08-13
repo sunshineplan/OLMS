@@ -6,7 +6,7 @@
     <div class='form-inline'>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='dept'>Department</label>
+          <label class='input-group-text' for='dept'>Dept</label>
         </div>
         <select class='custom-select' name='dept' id='dept'>
           <option value=''>All</option>
@@ -38,12 +38,12 @@
   <table class='table table-hover table-sm'>
     <thead>
       <tr>
-        <th style='width: 150px'>Username</th>
+        <th style='width: 120px'>Username</th>
         <th style='width: 100px'>Realname</th>
-        <th>Department</th>
+        <th class='department'>Department</th>
         {{ if eq .user "0" }}
         <th style='width: 150px'>Role</th>
-        <th>Permission</th>
+        <th class='permission'>Permission</th>
         <th style='width: 100px'>Operation</th>
         {{ end }}
       </tr>
