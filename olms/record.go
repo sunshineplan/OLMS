@@ -25,7 +25,8 @@ type record struct {
 	Created  time.Time
 }
 
-func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, status, page interface{}) (records []record, total int, err error) {
+func getRecords(id, userID interface{}, deptIDs []string,
+	year, month, Type, status, describe, page interface{}) (records []record, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -59,6 +60,10 @@ func getRecords(id, userID interface{}, deptIDs []string, year, month, Type, sta
 		if status != nil {
 			stmt += "status = ? AND "
 			args = append(args, status)
+		}
+		if describe != nil {
+			stmt += "describe LIKE ? AND "
+			args = append(args, fmt.Sprintf("%%%v%%", describe))
 		}
 
 		if userID != nil {
@@ -308,7 +313,7 @@ func doEditRecord(c *gin.Context) {
 	describe := c.PostForm("describe")
 
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil)
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -350,7 +355,7 @@ func doEditRecord(c *gin.Context) {
 
 func verifyRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil)
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -365,7 +370,7 @@ func verifyRecord(c *gin.Context) {
 
 func doVerifyRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil)
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -424,7 +429,7 @@ func doVerifyRecord(c *gin.Context) {
 
 func doDeleteRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil)
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")

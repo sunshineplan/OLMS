@@ -73,6 +73,14 @@
           <option value='2'>Rejected</option>
         </select>
       </div>
+    </div>
+    <div class='form-inline'>
+      <div class='input-group input-group-sm'>
+        <div class='input-group-prepend'>
+          <label class='input-group-text' for='describe'>Describe</label>
+        </div>
+        <input class='form-control' name='describe' id='describe'>
+      </div>
       <div class='input-group'>
         <a class='btn btn-primary btn-sm' onclick="loadRecords('{{ .mode }}')">Filter</a>
         <a class='btn btn-primary btn-sm' onclick="showRecords('{{ .mode }}')">Reset</a>

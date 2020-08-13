@@ -65,6 +65,7 @@ func get(c *gin.Context) {
 	month := obj["month"]
 	Type := obj["type"]
 	status := obj["status"]
+	describe := obj["describe"]
 	role := obj["role"]
 	page := obj["page"]
 
@@ -84,7 +85,7 @@ func get(c *gin.Context) {
 			}
 			var records []record
 			if id != nil {
-				records, total, err = getRecords(id, nil, nil, year, month, Type, status, page)
+				records, total, err = getRecords(id, nil, nil, year, month, Type, status, describe, page)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -97,7 +98,7 @@ func get(c *gin.Context) {
 				c.JSON(200, gin.H{"record": records[0]})
 				return
 			}
-			records, total, err = getRecords(nil, user.ID, nil, year, month, Type, status, page)
+			records, total, err = getRecords(nil, user.ID, nil, year, month, Type, status, describe, page)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -138,7 +139,7 @@ func get(c *gin.Context) {
 			}
 			var records []record
 			if id != nil {
-				records, _, err = getRecords(id, nil, nil, year, month, Type, status, page)
+				records, _, err = getRecords(id, nil, nil, year, month, Type, status, describe, page)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -154,7 +155,7 @@ func get(c *gin.Context) {
 				return
 			} else if userID != nil {
 				if checkPermission(c, nil, userID) {
-					records, total, err = getRecords(nil, userID, nil, year, month, Type, status, page)
+					records, total, err = getRecords(nil, userID, nil, year, month, Type, status, describe, page)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -166,7 +167,7 @@ func get(c *gin.Context) {
 				}
 			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					records, total, err = getRecords(nil, nil, []string{fmt.Sprintf("%v", deptID)}, year, month, Type, status, page)
+					records, total, err = getRecords(nil, nil, []string{fmt.Sprintf("%v", deptID)}, year, month, Type, status, describe, page)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -177,7 +178,7 @@ func get(c *gin.Context) {
 					return
 				}
 			} else {
-				records, total, err = getRecords(nil, nil, strings.Split(user.Permission, ","), year, month, Type, status, page)
+				records, total, err = getRecords(nil, nil, strings.Split(user.Permission, ","), year, month, Type, status, describe, page)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -423,6 +424,7 @@ func exportCSV(c *gin.Context) {
 	month := obj["month"]
 	Type := obj["type"]
 	status := obj["status"]
+	describe := obj["describe"]
 
 	var prefix string
 	var results []map[string]interface{}
@@ -436,7 +438,7 @@ func exportCSV(c *gin.Context) {
 		}
 		switch query {
 		case "records", nil:
-			records, _, err := getRecords(nil, user.ID, nil, year, month, Type, status, nil)
+			records, _, err := getRecords(nil, user.ID, nil, year, month, Type, status, describe, nil)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -476,7 +478,7 @@ func exportCSV(c *gin.Context) {
 			var records []record
 			if userID != nil {
 				if checkPermission(c, nil, userID) {
-					records, _, err = getRecords(nil, userID, nil, year, month, Type, status, nil)
+					records, _, err = getRecords(nil, userID, nil, year, month, Type, status, describe, nil)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -493,7 +495,7 @@ func exportCSV(c *gin.Context) {
 				}
 			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					records, _, err = getRecords(nil, nil, []string{fmt.Sprintf("%v", deptID)}, year, month, Type, status, nil)
+					records, _, err = getRecords(nil, nil, []string{fmt.Sprintf("%v", deptID)}, year, month, Type, status, describe, nil)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -509,7 +511,7 @@ func exportCSV(c *gin.Context) {
 					return
 				}
 			} else {
-				records, _, err = getRecords(nil, nil, strings.Split(user.Permission, ","), year, month, Type, status, nil)
+				records, _, err = getRecords(nil, nil, strings.Split(user.Permission, ","), year, month, Type, status, describe, nil)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")

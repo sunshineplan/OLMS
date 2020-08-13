@@ -1,6 +1,6 @@
 function getData(mode, type) {
     var obj = {};
-    $('select').serializeArray().forEach(i => { if (i.value != '') obj[i.name] = i.value });
+    $('select, input').serializeArray().forEach(i => { if (i.value != '') obj[i.name] = i.value });
     return cleanObj($.extend(obj, { mode: mode, query: type }));
 };
 
