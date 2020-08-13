@@ -92,7 +92,7 @@ function loadRecords(mode, page = 1, data) {
                 $tr.append('<td>' + item.DeptName + '</td>');
                 $tr.append('<td>' + item.Name + '</td>');
             };
-            $tr.append('<td>' + item.Date.split('T')[0] + '</td>');
+            $tr.append('<td>' + item.Date.replace(':00Z','').replace(/-/g,'/').replace('T',' ') + '</td>');
             if (item.Type == true) $tr.append('<td>Overtime</td>');
             else $tr.append('<td>Leave</td>');
             $tr.append('<td>' + item.Duration + '</td>');
@@ -306,7 +306,7 @@ function record(mode = '', id = 0) {
                     getEmpls('#Empl', json.record.DeptID, false);
                     $('#Empl').val(json.record.UserID);
                 }
-                $('#Date').val(json.record.Date.split('T')[0]);
+                $('#Date').val(json.record.Date.replace(':00Z',''));
                 if (json.record.Type) $('#Type').val('1');
                 else $('#Type').val('0');
             });
@@ -322,7 +322,7 @@ function verify(id) {
         document.title = 'Verify Record - OLMS';
         postJSON('/get', { mode: 'admin', id: id }, json => {
             $.each(json.record, (k, v) => $('#' + k).val(v));
-            $('#Date').val(json.record.Date.split('T')[0]);
+            $('#Date').val(json.record.Date.replace(':00Z','').replace('T',' '));
             if (json.record.Type) $('#Type').val('Overtime');
             else $('#Type').val('Leave');
         });
