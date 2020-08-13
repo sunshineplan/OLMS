@@ -168,7 +168,7 @@ body {
     cursor: default;
 }
 
-table {
+table, table.record {
     table-layout: fixed;
 }
 
@@ -252,15 +252,15 @@ td:hover {
         display: none;
     }
 
+    table {
+        table-layout: auto;
+    }
+
     td {
         white-space: normal;
     }
 
     .describe {
         width: 300px;
-    }
-
-    .department, .permission {
-        width: 150px;
     }
 }
