@@ -96,7 +96,7 @@ function loadRecords(mode, page = 1, data) {
             if (item.Type == true) $tr.append('<td>Overtime</td>');
             else $tr.append('<td>Leave</td>');
             $tr.append('<td>' + item.Duration + ' Hour(s)</td>');
-            $tr.append('<td>' + item.Describe + '</td>');
+            $tr.append("<td class='describe'>" + item.Describe + '</td>');
             $tr.append('<td>' + item.Created.split('T')[0] + '</td>');
             if (item.Status == 0) $tr.append("<td><a class='text-muted'>Unverified</a></td>");
             else if (item.Status == 1) $tr.append("<td><a class='text-success'>Verified</a></td>");
