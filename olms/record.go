@@ -3,6 +3,7 @@ package olms
 import (
 	"fmt"
 	"log"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -324,8 +325,8 @@ func doEditRecord(c *gin.Context) {
 		c.String(403, "")
 		return
 	}
-	userID := c.PostForm("empl")
-	if userID == "" {
+	user := sessions.Default(c).Get("userID")
+	if user != "0" {
 		if records[0].Status != 0 {
 			c.JSON(200, gin.H{"status": 0, "message": "You can only update record which is not verified."})
 			return
@@ -339,9 +340,21 @@ func doEditRecord(c *gin.Context) {
 		c.JSON(200, gin.H{"status": 1})
 		return
 	}
+	userID := c.PostForm("empl")
 	deptID := c.PostForm("dept")
-	if deptID != "" && !checkPermission(c, deptID, userID) {
-		c.String(403, "")
+	if userID == "" || deptID == "" {
+		log.Print("Missing param.")
+		c.String(400, "")
+		return
+	}
+	users, _, err := getEmpls(userID, nil, nil, nil)
+	if err != nil {
+		log.Printf("Failed to get users: %v", err)
+		c.String(400, "")
+		return
+	}
+	if deptID != strconv.Itoa(users[0].DeptID) {
+		c.JSON(200, gin.H{"status": 0, "message": "Employee does not belong this department."})
 		return
 	}
 	status := c.PostForm("status")
