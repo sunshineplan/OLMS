@@ -371,8 +371,7 @@ function doEmpl(mode, id) {
 function doRecord(mode, id) {
     var url;
     if (id == 0) url = '/record/add';
-    else if (mode == '') url = '/record/edit/' + id;
-    else url = '/record/super/edit/' + id;
+    else url = '/record/edit/' + id;
     if (valid())
         $.post(url, $('input, select, textarea').serialize(), json => {
             $('.form').removeClass('was-validated');
