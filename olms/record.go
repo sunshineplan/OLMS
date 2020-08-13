@@ -339,7 +339,7 @@ func doEditRecord(c *gin.Context) {
 		return
 	}
 	status := c.PostForm("status")
-	if _, err := db.Exec("UPDATE record SET empl_id = ?, dept_id = ?, date = ?, type = ?, duration = ?, status = ?, describe = ? WHERE id = ?",
+	if _, err := db.Exec("UPDATE record SET user_id = ?, dept_id = ?, date = ?, type = ?, duration = ?, status = ?, describe = ? WHERE id = ?",
 		userID, deptID, date, Type, duration, status, describe, id); err != nil {
 		log.Printf("Failed to update record: %v", err)
 		c.String(500, "")
