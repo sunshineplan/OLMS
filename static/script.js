@@ -12,7 +12,7 @@ $(document).on('submit', '#login', () => {
 $(document).on('click', 'li>a.nav-link', function () {
     $('li>a.nav-link').removeClass('selected');
     $(this).addClass('selected');
-    if ($(window).width() <= 900) $('.sidebar').toggle('slide');
+    if ($(window).width() <= 1200) $('.sidebar').toggle('slide');
 });
 
 $(document).on('change', '#dept', () => {
@@ -41,7 +41,7 @@ $(document).on('change', '#year', () => {
 $(document).on('click', '.toggle', () => $('.sidebar').toggle('slide'));
 
 $(document).on('click', '.content', () => {
-    if ($('.sidebar').is(':visible') && $(window).width() <= 900)
+    if ($('.sidebar').is(':visible') && $(window).width() <= 1200)
         $('.sidebar').toggle('slide');
 });
 

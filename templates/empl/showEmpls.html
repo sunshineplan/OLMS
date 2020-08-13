@@ -38,13 +38,13 @@
   <table class='table table-hover table-sm'>
     <thead>
       <tr>
-        <th scope='col'>Username</th>
-        <th scope='col'>Realname</th>
-        <th scope='col'>Department</th>
+        <th style='width: 150px'>Username</th>
+        <th style='width: 100px'>Realname</th>
+        <th>Department</th>
         {{ if eq .user "0" }}
-        <th scope='col'>Role</th>
-        <th scope='col'>Permission</th>
-        <th scope='col'>Operation</th>
+        <th style='width: 150px'>Role</th>
+        <th>Permission</th>
+        <th style='width: 100px'>Operation</th>
         {{ end }}
       </tr>
     </thead>

@@ -177,12 +177,12 @@ table {
 
 td {
     white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
-.describe {
+td:hover {
     white-space: normal;
-    min-width: 160px;
-    max-width: 480px;
 }
 
 .btn-primary {
@@ -218,7 +218,7 @@ td {
     display: none;
 }
 
-@media (min-width: 901px) {
+@media (min-width: 1201px) {
     .sidebar {
         display: block !important;
     }
@@ -228,7 +228,7 @@ td {
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
     .brand {
         padding-left: 10px;
     }
@@ -255,7 +255,11 @@ td {
         display: none;
     }
 
-    table {
-        table-layout: auto;
+    td {
+        white-space: normal;
+    }
+
+    .describe {
+        width: 300px;
     }
 }
