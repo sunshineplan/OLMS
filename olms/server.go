@@ -213,7 +213,7 @@ func Run() {
 			}
 		}
 
-		listener, err := net.Listen("UNIX", UNIX)
+		listener, err := net.Listen("unix", UNIX)
 		if err != nil {
 			log.Fatalf("Failed to listen socket file: %v", err)
 		}
