@@ -14,7 +14,7 @@ installOLMS() {
 
 configOLMS() {
     read -p 'Please enter unix socket (default: /run/olms-go.sock): ' unix
-    [ -z $unix ] && unix=/var/www/olms-go/olms-go.sock
+    [ -z $unix ] && unix=/run/olms-go.sock
     read -p 'Please enter host (default: 0.0.0.0): ' host
     [ -z $host ] && host=0.0.0.0
     read -p 'Please enter port (default: 12345): ' port
