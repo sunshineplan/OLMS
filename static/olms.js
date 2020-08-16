@@ -382,7 +382,7 @@ function doRecord(mode, id) {
                     .then(() => $('#duration').val(''));
             else showRecords(mode);
         }).catch(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
-    }
+    };
 };
 
 function doVerify(id, status) {

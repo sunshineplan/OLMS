@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type empl struct {
@@ -170,11 +171,27 @@ func doEditEmpl(c *gin.Context) {
 	} else if deptID == "" {
 		message = "Department is required."
 	} else {
-		if _, err = db.Exec("UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ?, permission = ? WHERE id = ?",
-			strings.ToLower(username), realname, deptID, role, strings.Join(permission, ","), id); err != nil {
-			log.Printf("Failed to edit user: %v", err)
-			c.String(500, "")
-			return
+		if password := c.PostForm("password"); password == "" {
+			if _, err = db.Exec("UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ?, permission = ? WHERE id = ?",
+				strings.ToLower(username), realname, deptID, role, strings.Join(permission, ","), id); err != nil {
+				log.Printf("Failed to edit user: %v", err)
+				c.String(500, "")
+				return
+			}
+		} else {
+			newPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+			if err != nil {
+				log.Println(err)
+				c.String(500, "")
+				return
+			}
+			if _, err = db.Exec(
+				"UPDATE user SET username = ?, realname = ?, password = ?, dept_id = ?, role = ?, permission = ? WHERE id = ?",
+				strings.ToLower(username), realname, string(newPassword), deptID, role, strings.Join(permission, ","), id); err != nil {
+				log.Printf("Failed to edit user: %v", err)
+				c.String(500, "")
+				return
+			}
 		}
 		c.JSON(200, gin.H{"status": 1})
 		return
