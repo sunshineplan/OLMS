@@ -181,6 +181,10 @@ func checkRecord(c *gin.Context, record record, super bool) bool {
 }
 
 func doAddRecord(c *gin.Context) {
+	if !verifyResponse("record", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
+		c.String(403, "reCAPTCHA challenge failed")
+		return
+	}
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -274,6 +278,10 @@ func doAddRecord(c *gin.Context) {
 }
 
 func doEditRecord(c *gin.Context) {
+	if !verifyResponse("record", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
+		c.String(403, "reCAPTCHA challenge failed")
+		return
+	}
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -383,6 +391,10 @@ func verifyRecord(c *gin.Context) {
 }
 
 func doVerifyRecord(c *gin.Context) {
+	if !verifyResponse("verify", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
+		c.String(403, "reCAPTCHA challenge failed")
+		return
+	}
 	id := c.Param("id")
 	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {

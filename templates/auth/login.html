@@ -19,6 +19,7 @@
     <label class='form-check-label' for='rememberme'>Remember Me</label>
   </div>
   {{ if .recaptcha }}
+  <input type='hidden' name='g-recaptcha-response' id='recaptcha' form='login'>
   <small class='form-text text-muted'>This site is protected by reCAPTCHA and the Google
     <a href='https://policies.google.com/privacy'>Privacy Policy</a> and
     <a href='https://policies.google.com/terms'>Terms of Service</a> apply.

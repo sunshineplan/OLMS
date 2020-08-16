@@ -44,6 +44,10 @@ func superRequired(c *gin.Context) {
 }
 
 func login(c *gin.Context) {
+	if !verifyResponse("login", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
+		c.HTML(200, "login.html", gin.H{"error": "reCAPTCHA challenge failed", "recaptcha": SiteKey})
+		return
+	}
 	session := sessions.Default(c)
 	username := strings.TrimSpace(strings.ToLower(c.PostForm("username")))
 	password := c.PostForm("password")
@@ -56,13 +60,6 @@ func login(c *gin.Context) {
 	}
 	defer db.Close()
 	var id, realname, pw, message string
-	if SiteKey != "" && SecretKey != "" {
-		recaptcha := c.PostForm("recaptcha")
-		if ok, _ := challenge("login", c.ClientIP(), recaptcha); !ok {
-			c.HTML(200, "login.html", gin.H{"error": "reCAPTCHA challenge failed", "recaptcha": SiteKey})
-			return
-		}
-	}
 	if err := db.QueryRow("SELECT id, realname, password FROM user WHERE username = ?",
 		username).Scan(&id, &realname, &pw); err != nil {
 		if strings.Contains(err.Error(), "no such table") {
@@ -109,6 +106,10 @@ func login(c *gin.Context) {
 }
 
 func setting(c *gin.Context) {
+	if !verifyResponse("setting", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
+		c.JSON(200, gin.H{"status": 0, "message": "reCAPTCHA challenge failed"})
+		return
+	}
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -124,8 +125,7 @@ func setting(c *gin.Context) {
 	password2 := c.PostForm("password2")
 
 	var oldPassword string
-	err = db.QueryRow("SELECT password FROM user WHERE id = ?", userID).Scan(&oldPassword)
-	if err != nil {
+	if err := db.QueryRow("SELECT password FROM user WHERE id = ?", userID).Scan(&oldPassword); err != nil {
 		log.Println(err)
 		c.String(500, "")
 		return
@@ -139,16 +139,18 @@ func setting(c *gin.Context) {
 		if (strings.Contains(err.Error(), "too short") && password != oldPassword) || strings.Contains(err.Error(), "is not") {
 			message = "Incorrect password."
 			errorCode = 1
+			break
 		} else if password != oldPassword {
 			log.Println(err)
 			c.String(500, "")
 			return
 		}
-	case password1 != password2:
-		message = "Confirm password doesn't match new password."
-		errorCode = 2
+		fallthrough
 	case password1 == password:
 		message = "New password cannot be the same as your current password."
+		errorCode = 2
+	case password1 != password2:
+		message = "Confirm password doesn't match new password."
 		errorCode = 2
 	case password1 == "":
 		message = "New password cannot be blank."

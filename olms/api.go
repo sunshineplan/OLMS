@@ -17,16 +17,9 @@ func get(c *gin.Context) {
 		return
 	}
 
-	if SiteKey != "" && SecretKey != "" {
-		if recaptcha, ok := obj["recaptcha"].(string); ok {
-			if ok, _ := challenge("get", c.ClientIP(), recaptcha); !ok {
-				c.String(403, "reCAPTCHA challenge failed")
-				return
-			}
-		} else {
-			c.String(403, "missing reCAPTCHA response")
-			return
-		}
+	if !verifyResponse("get", c.ClientIP(), obj["g-recaptcha-response"]) {
+		c.String(403, "reCAPTCHA challenge failed")
+		return
 	}
 
 	var user empl
@@ -377,16 +370,9 @@ func exportCSV(c *gin.Context) {
 		return
 	}
 
-	if SiteKey != "" && SecretKey != "" {
-		if recaptcha, ok := obj["recaptcha"].(string); ok {
-			if ok, _ := challenge("export", c.ClientIP(), recaptcha); !ok {
-				c.String(403, "reCAPTCHA challenge failed")
-				return
-			}
-		} else {
-			c.String(403, "missing reCAPTCHA response")
-			return
-		}
+	if !verifyResponse("export", c.ClientIP(), obj["g-recaptcha-response"]) {
+		c.String(403, "reCAPTCHA challenge failed")
+		return
 	}
 
 	var user empl

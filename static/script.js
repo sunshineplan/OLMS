@@ -83,16 +83,18 @@ function cleanObj(obj) {
 };
 
 function postJSON(url, data, success) {
-    if ($('#recaptcha').length)
+    if ($('.g-recaptcha-response').length)
         return grecaptcha.execute(sitekey, { action: url.replace('/', '') })
-            .then(token =>
+            .then(token => {
+                data['g-recaptcha-response'] = token
                 $.ajax({
                     url: url,
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify($.extend(data, { recaptcha: token })),
+                    data: JSON.stringify(data),
                     success: success
-                }));
+                });
+            });
     return $.ajax({
         url: url,
         type: 'POST',

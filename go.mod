@@ -10,7 +10,7 @@ require (
 	github.com/go-mail/mail v2.3.1+incompatible // indirect
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.0
-	github.com/sunshineplan/utils v0.0.0-20200812061024-54cd08480826
+	github.com/sunshineplan/utils v0.0.0-20200815021458-379b7918decc
 	github.com/vharitonsky/iniflags v0.0.0-20180513140207-a33cd0b5f3de
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
 )

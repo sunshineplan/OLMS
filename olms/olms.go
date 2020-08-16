@@ -44,6 +44,15 @@ func init() {
 	sqlitePy = joinPath(dir(Self), "scripts/sqlite.py")
 }
 
+func verifyResponse(action, remoteip string, response interface{}) bool {
+	if SiteKey != "" && SecretKey != "" {
+		if !challenge(action, remoteip, response) {
+			return false
+		}
+	}
+	return true
+}
+
 func checkSuper(c *gin.Context) bool {
 	userID := sessions.Default(c).Get("userID")
 	if userID == "0" {

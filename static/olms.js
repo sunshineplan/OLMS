@@ -367,21 +367,32 @@ function doEmpl(mode, id) {
 };
 
 function doRecord(mode, id) {
-    var url;
+    var url, jqXHR;
     if (id == 0) url = '/record/add';
     else url = '/record/edit/' + id;
-    if (valid())
-        $.post(url, $('input, select, textarea').serialize(), json => {
+    if (valid()) {
+        if ($('.g-recaptcha-response').length)
+            jqXHR = grecaptcha.execute(sitekey, { action: 'record' })
+                .then(() => $.post(url, $('input, select, textarea').serialize()));
+        else jqXHR = $.post(url, $('input, select, textarea').serialize());
+        jqXHR.then(json => {
             $('.form').removeClass('was-validated');
             if (json.status == 0)
-                BootstrapButtons.fire('Error', json.message, 'error').then(() => $('#duration').val(''));
+                BootstrapButtons.fire('Error', json.message, 'error')
+                    .then(() => $('#duration').val(''));
             else showRecords(mode);
-        }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
+        }).catch(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
+    }
 };
 
 function doVerify(id, status) {
-    $.post('/record/verify/' + id, { status: status }, () => showRecords('admin'))
-        .fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
+    var jqXHR;
+    if ($('.g-recaptcha-response').length)
+        jqXHR = grecaptcha.execute(sitekey, { action: 'verify' })
+            .then(token => $.post('/record/verify/' + id, { status: status, 'g-recaptcha-response': token }));
+    else jqXHR = $.post('/record/verify/' + id, { status: status });
+    jqXHR.then(() => showRecords('admin'))
+        .catch(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
 
 function doDelete(type, id) {
@@ -413,8 +424,13 @@ function doDelete(type, id) {
 };
 
 function doSetting() {
-    if (valid())
-        $.post('/auth/setting', $('input').serialize(), json => {
+    if (valid()) {
+        var jqXHR;
+        if ($('.g-recaptcha-response').length)
+            jqXHR = grecaptcha.execute(sitekey, { action: 'setting' })
+                .then(() => $.post('/auth/setting', $('input, textarea').serialize()));
+        else jqXHR = $.post('/auth/setting', $('input').serialize());
+        jqXHR.then(json => {
             $('.form').removeClass('was-validated');
             if (json.status == 1)
                 BootstrapButtons.fire('Success', 'Your password has changed. Please Re-login!', 'success')
@@ -426,5 +442,6 @@ function doSetting() {
                     $('#password2').val('');
                 };
             });
-        }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
+        }).catch(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
+    };
 };
