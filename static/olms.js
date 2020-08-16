@@ -147,10 +147,10 @@ function showDepts() {
     var url = '/dept';
     loading();
     $.get(url, html => {
-        loading(false);
         $('.content').html(html);
         document.title = 'Departments List - OLMS';
-    }).done(() => loadDepts('admin')).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
+    }).done(() => loadDepts('admin').then(() => loading(false)))
+        .fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
 
 function showEmpls(mode) {
@@ -158,11 +158,10 @@ function showEmpls(mode) {
     var url = '/empl';
     loading();
     $.get(url, html => {
-        loading(false);
         $('.content').html(html);
         document.title = 'Employees List - OLMS';
     }).done(() => {
-        loadEmpls(mode);
+        loadEmpls(mode).then(() => loading(false));
         getDepts('#dept');
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -175,7 +174,6 @@ function showRecords(mode) {
     else url = '/record';
     loading();
     $.get(url, html => {
-        loading(false);
         $('.content').html(html);
         if (mode == 'admin') {
             document.title = 'Department Records - OLMS';
@@ -188,7 +186,7 @@ function showRecords(mode) {
             $('.title').text('Employee Records');
         };
     }).done(() => {
-        loadRecords(mode);
+        loadRecords(mode).then(() => loading(false));
         if (mode == '') getYears();
         else {
             getDepts('#dept');
@@ -204,7 +202,6 @@ function showStats(mode) {
     else url = '/stat/admin';
     loading();
     $.get(url, html => {
-        loading(false);
         $('.content').html(html);
         if (mode == '') {
             document.title = 'Employee Statistics - OLMS';
@@ -214,7 +211,7 @@ function showStats(mode) {
             $('.title').text('Department Statistics');
         };
     }).done(() => {
-        loadStats(mode);
+        loadStats(mode).then(() => loading(false));
         if (mode == '') getYears();
         else {
             getDepts('#dept');
