@@ -20,7 +20,7 @@ $(document).on('change', '#dept', () => {
     if ($('#year').length) getYears(deptID = $('#dept').val());
 });
 
-$(document).on('change', '#empl', () => { getYears(userID = $('#empl').val()) });
+$(document).on('change', '#empl', () => getYears(userID = $('#empl').val()));
 
 $(document).on('change', '#period', () => {
     if ($('#period').val() == 'year') {

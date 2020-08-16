@@ -24,7 +24,7 @@
     <a href='https://policies.google.com/terms'>Terms of Service</a> apply.
   </small>
   <script>
-    grecaptcha.ready(() => grecaptcha.execute(sitekey, { action: 'login' }).then(token => { $('#recaptcha').val(token) }))
+    grecaptcha.ready(() => grecaptcha.execute(sitekey, { action: 'login' }).then(token => $('#recaptcha').val(token)))
   </script>
   {{ end }}
   <hr>

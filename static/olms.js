@@ -92,7 +92,7 @@ function loadRecords(mode, page = 1, data) {
                 $tr.append('<td>' + item.DeptName + '</td>');
                 $tr.append('<td>' + item.Name + '</td>');
             };
-            $tr.append('<td>' + item.Date.replace(':00Z','').replace(/-/g,'/').replace('T',' ') + '</td>');
+            $tr.append('<td>' + item.Date.replace(':00Z', '').replace(/-/g, '/').replace('T', ' ') + '</td>');
             if (item.Type == true) $tr.append('<td>Overtime</td>');
             else $tr.append('<td>Leave</td>');
             $tr.append('<td>' + item.Duration + ' Hour(s)</td>');
@@ -306,7 +306,7 @@ function record(mode = '', id = 0) {
                     getEmpls('#Empl', json.record.DeptID, false);
                     $('#Empl').val(json.record.UserID);
                 }
-                $('#Date').val(json.record.Date.replace(':00Z',''));
+                $('#Date').val(json.record.Date.replace(':00Z', ''));
                 if (json.record.Type) $('#Type').val('1');
                 else $('#Type').val('0');
             });
@@ -322,7 +322,7 @@ function verify(id) {
         document.title = 'Verify Record - OLMS';
         postJSON('/get', { mode: 'admin', id: id }, json => {
             $.each(json.record, (k, v) => $('#' + k).val(v));
-            $('#Date').val(json.record.Date.replace(':00Z','').replace('T',' '));
+            $('#Date').val(json.record.Date.replace(':00Z', '').replace('T', ' '));
             if (json.record.Type) $('#Type').val('Overtime');
             else $('#Type').val('Leave');
         });
@@ -382,8 +382,8 @@ function doRecord(mode, id) {
 };
 
 function doVerify(id, status) {
-    $.post('/record/verify/' + id, { status: status }, () =>
-        showRecords('admin')).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
+    $.post('/record/verify/' + id, { status: status }, () => showRecords('admin'))
+        .fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
 
 function doDelete(type, id) {
