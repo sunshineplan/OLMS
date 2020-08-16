@@ -20,7 +20,18 @@ $(document).on('change', '#dept', () => {
     if ($('#year').length) getYears(deptID = $('#dept').val());
 });
 
+$(document).on('change', '#Dept', () => getEmpls('#Empl', $('#Dept').val(), false));
+
 $(document).on('change', '#empl', () => getYears(userID = $('#empl').val()));
+
+$(document).on('change', '#Role', function () {
+    if ($('#Role').val() == 0) {
+        $('#permission-selector option:selected').prop('selected', false);
+        $('#permission-selector').prop('hidden', true);
+    } else {
+        $('#permission-selector').prop('hidden', false);
+    };
+});
 
 $(document).on('change', '#period', () => {
     if ($('#period').val() == 'year') {
