@@ -455,7 +455,7 @@ func exportCSV(c *gin.Context) {
 			c.String(400, "Unknown query")
 		}
 	case "admin":
-		if !user.Role || user.ID != 0 {
+		if !user.Role && user.ID != 0 {
 			c.String(403, "")
 			return
 		}
