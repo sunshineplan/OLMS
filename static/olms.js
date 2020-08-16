@@ -329,6 +329,7 @@ function verify(id) {
 function setting() {
     document.cookie = "Last=/; Path=/";
     loading();
+    $('li>a.nav-link').removeClass('selected');
     $.get('/auth/setting', html => {
         loading(false);
         $('.content').html(html);
