@@ -43,7 +43,7 @@ function exportCSV(mode, type) {
         link.href = window.URL.createObjectURL(blob);
         link.download = decodeURI(jqXHR.getResponseHeader('Content-Disposition').split('filename=')[1].replace(/"/g, ''));
         link.click();
-    });
+    }).catch(jqXHR => { if (jqXHR.status == 404) BootstrapButtons.fire('Info', 'No result.', 'info'); });
 };
 
 function loadDepts(mode) {
