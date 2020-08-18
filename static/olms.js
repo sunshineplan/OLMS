@@ -27,6 +27,14 @@ function getYears(mode, userID, deptID) {
     $('#year').val('');
 };
 
+function getInfo() {
+    postJSON('/get', { mode: 'admin', query: 'info' }, json => {
+        $.each(json.depts, (i, item) => $("#dept").append($('<option>').text(item.Name).val(item.ID)));
+        $.each(json.empls, (i, item) => $("#empl").append($('<option>').text(item.Realname).val(item.ID)));
+        $.each(json.years, (i, item) => $('#year').append($('<option>').text(item).val(item)));
+    });
+};
+
 function exportCSV(mode, type) {
     if (mode == 'super') mode = 'admin';
     postJSON('/export', getData(mode, type), (data, status, jqXHR) => {
@@ -188,11 +196,7 @@ function showRecords(mode) {
     }).done(() => {
         loadRecords(mode).then(() => loading(false));
         if (mode == '') getYears();
-        else {
-            getDepts('#dept');
-            getEmpls('#empl');
-            getYears('admin');
-        };
+        else getInfo();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
 
@@ -213,11 +217,7 @@ function showStats(mode) {
     }).done(() => {
         loadStats(mode).then(() => loading(false));
         if (mode == '') getYears();
-        else {
-            getDepts('#dept');
-            getEmpls('#empl');
-            getYears('admin');
-        };
+        else getInfo();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
 

@@ -319,6 +319,32 @@ func get(c *gin.Context) {
 				}
 			}
 			c.JSON(200, gin.H{"rows": years})
+		case "info":
+			depts, err := getDepts(strings.Split(user.Permission, ","))
+			if err != nil {
+				log.Println(err)
+				c.String(500, "")
+				return
+			}
+			empls, _, err := getEmpls(nil, strings.Split(user.Permission, ","), nil, nil)
+			if err != nil {
+				log.Println(err)
+				c.String(500, "")
+				return
+			}
+			if user.ID != 0 {
+				for i := range empls {
+					empls[i].Role = false
+					empls[i].Permission = ""
+				}
+			}
+			years, err := getYears(nil, strings.Split(user.Permission, ","))
+			if err != nil {
+				log.Println(err)
+				c.String(500, "")
+				return
+			}
+			c.JSON(200, gin.H{"depts": depts, "empls": empls, "years": years})
 		default:
 			c.String(400, "Unknown query")
 		}
