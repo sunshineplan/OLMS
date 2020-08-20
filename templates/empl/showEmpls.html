@@ -25,7 +25,7 @@
       </div>
       {{ end }}
       <div class='input-group'>
-        <a class='btn btn-primary btn-sm' onclick="loadEmpls('{{ .user }}')">Filter</a>
+        <a class='btn btn-primary btn-sm' id='filter' onclick="loadEmpls('{{ .user }}')">Filter</a>
         <a class='btn btn-primary btn-sm' onclick="showEmpls('{{ .user }}')">Reset</a>
       </div>
     </div>
@@ -38,12 +38,12 @@
   <table class='table table-hover table-sm'>
     <thead>
       <tr>
-        <th>Username</th>
-        <th>Realname</th>
-        <th>Department</th>
+        <th class='sortable' data-name='username'>Username</th>
+        <th class='sortable' data-name='realname'>Realname</th>
+        <th class='sortable' data-name='dept_name'>Department</th>
         {{ if eq .user "0" }}
-        <th>Role</th>
-        <th>Permission</th>
+        <th class='sortable' data-name='role'>Role</th>
+        <th class='sortable' data-name='permission'>Permission</th>
         <th>Operation</th>
         {{ end }}
       </tr>

@@ -20,7 +20,7 @@ type empl struct {
 	Permission string
 }
 
-func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls []empl, total int, err error) {
+func getEmpls(id interface{}, deptIDs []string, role, page, sort, order interface{}) (empls []empl, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -30,6 +30,7 @@ func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls [
 
 	stmt := "SELECT %s FROM employee WHERE"
 	var args []interface{}
+	var orderBy, limit string
 	bc := make(chan bool, 1)
 	if id != nil {
 		stmt += " id = ?"
@@ -56,13 +57,17 @@ func getEmpls(id interface{}, deptIDs []string, role, page interface{}) (empls [
 			bc <- true
 		}()
 
-		stmt += " ORDER BY dept_name, realname"
 		if p, ok := page.(float64); ok {
-			stmt += fmt.Sprintf(" LIMIT ?, ?")
+			limit = fmt.Sprintf(" LIMIT ?, ?")
 			args = append(args, int(p-1)*perPage, perPage)
 		}
 	}
-	rows, err := db.Query(fmt.Sprintf(stmt, "id, username, realname, dept_id, dept_name, role, permission"), args...)
+	if sort != nil {
+		orderBy = fmt.Sprintf(" ORDER BY %v %v", sort, order)
+	} else {
+		orderBy = " ORDER BY dept_name, realname"
+	}
+	rows, err := db.Query(fmt.Sprintf(stmt+orderBy+limit, "id, username, realname, dept_id, dept_name, role, permission"), args...)
 	if err != nil {
 		log.Printf("Failed to get employees: %v", err)
 		return
@@ -201,7 +206,7 @@ func doEditEmpl(c *gin.Context) {
 
 func doDeleteEmpl(c *gin.Context) {
 	id := c.Param("id")
-	empls, _, err := getEmpls(id, nil, nil, nil)
+	empls, _, err := getEmpls(id, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get empl: %v", err)
 		c.String(400, "")

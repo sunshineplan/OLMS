@@ -27,7 +27,7 @@ type record struct {
 }
 
 func getRecords(id, userID interface{}, deptIDs []string,
-	year, month, Type, status, describe, page interface{}) (records []record, total int, err error) {
+	year, month, Type, status, describe, page, sort, order interface{}) (records []record, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -38,7 +38,7 @@ func getRecords(id, userID interface{}, deptIDs []string,
 	stmt := "SELECT %s FROM record JOIN employee ON user_id = employee.id WHERE "
 
 	var args []interface{}
-	var limit string
+	var orderBy, limit string
 	bc := make(chan bool, 1)
 	if id != nil {
 		stmt += " record.id = ?"
@@ -95,7 +95,12 @@ func getRecords(id, userID interface{}, deptIDs []string,
 			bc <- true
 		}
 	}
-	rows, err := db.Query(fmt.Sprintf(stmt+" ORDER BY created DESC"+limit,
+	if sort != nil {
+		orderBy = fmt.Sprintf(" ORDER BY %v %v", sort, order)
+	} else {
+		orderBy = " ORDER BY created DESC"
+	}
+	rows, err := db.Query(fmt.Sprintf(stmt+orderBy+limit,
 		"record.id, employee.dept_id, dept_name, employee.id, realname, date, ABS(duration), type, status, describe, created"), args...)
 	if err != nil {
 		log.Printf("Failed to get records: %v", err)
@@ -162,7 +167,7 @@ func checkRecord(c *gin.Context, record record, super bool) bool {
 	if userID == "0" {
 		return true
 	}
-	users, _, err := getEmpls(userID, nil, nil, nil)
+	users, _, err := getEmpls(userID, nil, nil, nil, nil, nil)
 	if err != nil {
 		return false
 	}
@@ -230,7 +235,7 @@ func doAddRecord(c *gin.Context) {
 	case "0":
 		user = empl{ID: 0}
 	default:
-		users, _, err := getEmpls(userID, nil, nil, nil)
+		users, _, err := getEmpls(userID, nil, nil, nil, nil, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -323,7 +328,7 @@ func doEditRecord(c *gin.Context) {
 	describe := c.PostForm("describe")
 
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil)
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -355,7 +360,7 @@ func doEditRecord(c *gin.Context) {
 		c.String(400, "")
 		return
 	}
-	users, _, err := getEmpls(userID, nil, nil, nil)
+	users, _, err := getEmpls(userID, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get users: %v", err)
 		c.String(400, "")
@@ -377,7 +382,7 @@ func doEditRecord(c *gin.Context) {
 
 func verifyRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil)
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -396,7 +401,7 @@ func doVerifyRecord(c *gin.Context) {
 		return
 	}
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil)
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -436,7 +441,7 @@ func doVerifyRecord(c *gin.Context) {
 	case "0":
 		user = empl{ID: 0}
 	default:
-		users, _, err := getEmpls(userID, nil, nil, nil)
+		users, _, err := getEmpls(userID, nil, nil, nil, nil, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -456,7 +461,7 @@ func doVerifyRecord(c *gin.Context) {
 
 func doDeleteRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil)
+	records, _, err := getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -467,7 +472,7 @@ func doDeleteRecord(c *gin.Context) {
 	case "0":
 		user = empl{ID: 0}
 	default:
-		users, _, err := getEmpls(userID, nil, nil, nil)
+		users, _, err := getEmpls(userID, nil, nil, nil, nil, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")

@@ -82,7 +82,7 @@
         <input class='form-control' name='describe' id='describe'>
       </div>
       <div class='input-group'>
-        <a class='btn btn-primary btn-sm' onclick="loadRecords('{{ .mode }}')">Filter</a>
+        <a class='btn btn-primary btn-sm' id='filter' onclick="loadRecords('{{ .mode }}')">Filter</a>
         <a class='btn btn-primary btn-sm' onclick="showRecords('{{ .mode }}')">Reset</a>
         <a class='btn btn-info btn-sm' onclick="exportCSV('{{ .mode }}', 'records')">Export</a>
       </div>
@@ -101,15 +101,15 @@
     <thead>
       <tr>
         {{ if ne .mode "" }}
-        <th style='width: 150px'>Department</th>
-        <th style='width: 80px'>Realname</th>
+        <th class='sortable' data-name='dept_name' style='width: 150px'>Department</th>
+        <th class='sortable' data-name='realname' style='width: 100px'>Realname</th>
         {{ end }}
-        <th style='width: 150px'>Date</th> 
-        <th style='width: 80px'>Type</th>
-        <th style='width: 100px'>Duration</th>
-        <th class='describe'>Describe</th>
-        <th style='width: 100px'>Created</th>
-        <th style='width: 100px'>Status</th>
+        <th class='sortable' data-name='date' style='width: 150px'>Date</th> 
+        <th class='sortable' data-name='type' style='width: 80px'>Type</th>
+        <th class='sortable' data-name='duration' style='width: 100px'>Duration</th>
+        <th class='describe sortable' data-name='describe'>Describe</th>
+        <th class='sortable' data-name='created' style='width: 100px'>Created</th>
+        <th class='sortable' data-name='status' style='width: 100px'>Status</th>
         <th style='width: 100px'>Operation</th>
       </tr>
     </thead>

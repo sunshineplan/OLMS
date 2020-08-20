@@ -62,7 +62,7 @@
         </select>
       </div>
       <div class='input-group'>
-        <a class='btn btn-primary btn-sm' onclick="loadStats('{{ .mode }}')">Filter</a>
+        <a class='btn btn-primary btn-sm' id='filter' onclick="loadStats('{{ .mode }}')">Filter</a>
         <a class='btn btn-primary btn-sm' onclick="showStats('{{ .mode }}')">Reset</a>
         <a class='btn btn-info btn-sm' onclick="exportCSV('{{ .mode }}', 'stats')">Export</a>
       </div>
@@ -73,14 +73,14 @@
   <table class='table table-hover table-sm'>
     <thead>
       <tr>
-        <th>Period</th>
+        <th class='sortable' data-name='period'>Period</th>
         {{ if ne .mode "" }}
-        <th>Department</th>
-        <th>Realname</th>
+        <th class='sortable' data-name='dept_name'>Department</th>
+        <th class='sortable' data-name='realname'>Realname</th>
         {{ end }}
-        <th>Overtime</th>
-        <th>Leave</th>
-        <th>Summary</th>
+        <th class='sortable' data-name='overtime'>Overtime</th>
+        <th class='sortable' data-name='leave'>Leave</th>
+        <th class='sortable' data-name='summary'>Summary</th>
       </tr>
     </thead>
     <tbody></tbody>

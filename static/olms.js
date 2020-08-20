@@ -60,7 +60,7 @@ function loadDepts(mode) {
 };
 
 function loadEmpls(mode, page = 1, data) {
-    if (mode == 0) mode = 'super'; else mode = 'admin';
+    if (mode == 0 || mode == 'super') mode = 'super'; else mode = 'admin';
     if (data === undefined) data = getData(mode, 'empls');
     return postJSON('/get', $.extend(data, { page: page }), json => {
         pagination(json.total, page);
@@ -170,6 +170,7 @@ function showEmpls(mode) {
         document.title = 'Employees List - OLMS';
     }).done(() => {
         loadEmpls(mode).then(() => loading(false));
+        $('.sortable').addClass('default');
         getDepts('#dept');
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -195,6 +196,7 @@ function showRecords(mode) {
         };
     }).done(() => {
         loadRecords(mode).then(() => loading(false));
+        $('.sortable').addClass('default');
         if (mode == '') getYears();
         else getInfo();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
@@ -216,6 +218,7 @@ function showStats(mode) {
         };
     }).done(() => {
         loadStats(mode).then(() => loading(false));
+        $('.sortable').addClass('default');
         if (mode == '') getYears();
         else getInfo();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });

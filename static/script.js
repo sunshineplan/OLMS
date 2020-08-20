@@ -49,6 +49,12 @@ $(document).on('change', '#year', () => {
     else $('#month').prop('disabled', false);
 });
 
+$(document).on('click', '#filter', () => {
+    $('.sortable').removeClass('asc');
+    $('.sortable').removeClass('desc');
+    $('.sortable').addClass('default');
+});
+
 $(document).on('click', '.toggle', () => $('.sidebar').toggle('slide'));
 
 $(document).on('click', '.content', () => {

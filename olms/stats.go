@@ -15,7 +15,7 @@ type stat struct {
 	Summary  int
 }
 
-func getStats(id interface{}, deptIDs []string, period, year, month, page interface{}) (stats []stat, total int, err error) {
+func getStats(id interface{}, deptIDs []string, period, year, month, page, sort, order interface{}) (stats []stat, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -24,7 +24,7 @@ func getStats(id interface{}, deptIDs []string, period, year, month, page interf
 	defer db.Close()
 
 	stmt := "SELECT %s FROM statistics WHERE "
-	var fields, group, order, limit string
+	var fields, group, orderBy, limit string
 	var args []interface{}
 	if period == "month" {
 		fields = "period, dept_name, realname, overtime, leave, summary"
@@ -38,9 +38,9 @@ func getStats(id interface{}, deptIDs []string, period, year, month, page interf
 			args = append(args, fmt.Sprintf("%v-%v", year, month))
 		}
 	} else {
-		fields = "substr(period,1,4) year, dept_name, realname, sum(overtime), sum(leave), sum(summary)"
-		group = " GROUP BY year, dept_id, user_id"
-		order = " ORDER BY year DESC"
+		fields = "substr(period,1,4) period, dept_name, realname, sum(overtime), sum(leave), sum(summary)"
+		group = " GROUP BY period, dept_id, user_id"
+		orderBy = " ORDER BY period DESC"
 	}
 
 	if id != nil {
@@ -61,7 +61,7 @@ func getStats(id interface{}, deptIDs []string, period, year, month, page interf
 	if p, ok := page.(float64); ok {
 		go func() {
 			if err := db.QueryRow(fmt.Sprintf("SELECT count(*) FROM (%s)",
-				fmt.Sprintf(stmt+group, "substr(period,1,4) year")), args...).Scan(&total); err != nil {
+				fmt.Sprintf(stmt+group, "substr(period,1,4) period")), args...).Scan(&total); err != nil {
 				log.Printf("Failed to get total records: %v", err)
 				bc <- false
 			}
@@ -72,7 +72,10 @@ func getStats(id interface{}, deptIDs []string, period, year, month, page interf
 	} else {
 		bc <- true
 	}
-	rows, err := db.Query(fmt.Sprintf(stmt+group+order+limit, fields), args...)
+	if sort != nil {
+		orderBy = fmt.Sprintf(" ORDER BY %v %v", sort, order)
+	}
+	rows, err := db.Query(fmt.Sprintf(stmt+group+orderBy+limit, fields), args...)
 	if err != nil {
 		log.Printf("Failed to get statistics: %v", err)
 		return
