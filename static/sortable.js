@@ -1,5 +1,5 @@
 $(document).on('click', '.default', function () {
-    sort($(this));
+    sort($(this), false);
 });
 
 $(document).on('click', '.asc', function () {
