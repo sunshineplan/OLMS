@@ -10,6 +10,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type idOptions struct {
+	RecordID interface{}
+	UserID   interface{}
+	DeptIDs  []string
+}
+
+type searchOptions struct {
+	Period   interface{}
+	Year     interface{}
+	Month    interface{}
+	Type     interface{}
+	Role     interface{}
+	Status   interface{}
+	Describe interface{}
+	Page     interface{}
+	Sort     interface{}
+	Order    interface{}
+}
+
 func get(c *gin.Context) {
 	var obj map[string]interface{}
 	if err := c.BindJSON(&obj); err != nil {
@@ -40,7 +59,7 @@ func get(c *gin.Context) {
 		}
 		user = empl{ID: 0, Role: true, Permission: string(permission)}
 	default:
-		users, _, err := getEmpls(userID, nil, nil, nil, nil, nil)
+		users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -49,20 +68,21 @@ func get(c *gin.Context) {
 		user = users[0]
 	}
 
+	var options searchOptions
 	query := obj["query"]
 	id := obj["id"]
 	userID := obj["empl"]
 	deptID := obj["dept"]
-	period := obj["period"]
-	year := obj["year"]
-	month := obj["month"]
-	Type := obj["type"]
-	status := obj["status"]
-	describe := obj["describe"]
-	role := obj["role"]
-	page := obj["page"]
-	sort := obj["sort"]
-	order := obj["order"]
+	options.Period = obj["period"]
+	options.Year = obj["year"]
+	options.Month = obj["month"]
+	options.Type = obj["type"]
+	options.Status = obj["status"]
+	options.Describe = obj["describe"]
+	options.Role = obj["role"]
+	options.Page = obj["page"]
+	options.Sort = obj["sort"]
+	options.Order = obj["order"]
 
 	var total int
 	var err error
@@ -75,12 +95,12 @@ func get(c *gin.Context) {
 		}
 		switch query {
 		case "records", nil:
-			if page == nil {
-				page = 1.0
+			if options.Page == nil {
+				options.Page = 1.0
 			}
 			var records []record
 			if id != nil {
-				records, _, err = getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+				records, _, err = getRecords(&idOptions{RecordID: id}, nil)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -93,7 +113,7 @@ func get(c *gin.Context) {
 				c.JSON(200, gin.H{"record": records[0]})
 				return
 			}
-			records, total, err = getRecords(nil, user.ID, nil, year, month, Type, status, describe, page, sort, order)
+			records, total, err = getRecords(&idOptions{RecordID: user.ID}, &options)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -101,10 +121,10 @@ func get(c *gin.Context) {
 			}
 			c.JSON(200, gin.H{"total": total, "rows": records})
 		case "stats":
-			if page == nil {
-				page = 1.0
+			if options.Page == nil {
+				options.Page = 1.0
 			}
-			stats, total, err := getStats(user.ID, nil, period, year, month, page, sort, order)
+			stats, total, err := getStats(&idOptions{UserID: user.ID}, &options)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -112,7 +132,7 @@ func get(c *gin.Context) {
 			}
 			c.JSON(200, gin.H{"total": total, "rows": stats})
 		case "years":
-			years, err := getYears(user.ID, nil)
+			years, err := getYears(&idOptions{UserID: user.ID})
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -129,12 +149,12 @@ func get(c *gin.Context) {
 		}
 		switch query {
 		case "records", nil:
-			if page == nil {
-				page = 1.0
+			if options.Page == nil {
+				options.Page = 1.0
 			}
 			var records []record
 			if id != nil {
-				records, _, err = getRecords(id, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+				records, _, err = getRecords(&idOptions{RecordID: id}, nil)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -150,7 +170,7 @@ func get(c *gin.Context) {
 				return
 			} else if userID != nil {
 				if checkPermission(c, nil, userID) {
-					records, total, err = getRecords(nil, userID, nil, year, month, Type, status, describe, page, sort, order)
+					records, total, err = getRecords(&idOptions{UserID: userID}, &options)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -162,7 +182,7 @@ func get(c *gin.Context) {
 				}
 			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					records, total, err = getRecords(nil, nil, []string{fmt.Sprintf("%v", deptID)}, year, month, Type, status, describe, page, sort, order)
+					records, total, err = getRecords(&idOptions{DeptIDs: []string{fmt.Sprintf("%v", deptID)}}, &options)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -173,7 +193,7 @@ func get(c *gin.Context) {
 					return
 				}
 			} else {
-				records, total, err = getRecords(nil, nil, strings.Split(user.Permission, ","), year, month, Type, status, describe, page, sort, order)
+				records, total, err = getRecords(&idOptions{DeptIDs: strings.Split(user.Permission, ",")}, &options)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -182,13 +202,13 @@ func get(c *gin.Context) {
 			}
 			c.JSON(200, gin.H{"total": total, "rows": records})
 		case "stats":
-			if page == nil {
-				page = 1.0
+			if options.Page == nil {
+				options.Page = 1.0
 			}
 			var stats []stat
 			if userID != nil {
 				if checkPermission(c, nil, userID) {
-					stats, total, err = getStats(userID, nil, period, year, month, page, sort, order)
+					stats, total, err = getStats(&idOptions{UserID: userID}, &options)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -200,7 +220,7 @@ func get(c *gin.Context) {
 				}
 			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					stats, total, err = getStats(nil, []string{fmt.Sprintf("%v", deptID)}, period, year, month, page, sort, order)
+					stats, total, err = getStats(&idOptions{DeptIDs: []string{fmt.Sprintf("%v", deptID)}}, &options)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -211,7 +231,7 @@ func get(c *gin.Context) {
 					return
 				}
 			} else {
-				stats, total, err = getStats(nil, strings.Split(user.Permission, ","), period, year, month, page, sort, order)
+				stats, total, err = getStats(&idOptions{DeptIDs: strings.Split(user.Permission, ",")}, &options)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -222,7 +242,7 @@ func get(c *gin.Context) {
 		case "empls":
 			var empls []empl
 			if id != nil {
-				empls, _, err = getEmpls(id, nil, nil, nil, nil, nil)
+				empls, _, err = getEmpls(&idOptions{UserID: id}, nil)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -238,7 +258,7 @@ func get(c *gin.Context) {
 				return
 			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					empls, total, err = getEmpls(nil, []string{fmt.Sprintf("%v", deptID)}, role, page, sort, order)
+					empls, total, err = getEmpls(&idOptions{DeptIDs: []string{fmt.Sprintf("%v", deptID)}}, &options)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -249,7 +269,7 @@ func get(c *gin.Context) {
 					return
 				}
 			} else {
-				empls, total, err = getEmpls(nil, strings.Split(user.Permission, ","), role, page, sort, order)
+				empls, total, err = getEmpls(&idOptions{DeptIDs: strings.Split(user.Permission, ",")}, &options)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -290,7 +310,7 @@ func get(c *gin.Context) {
 			var years []string
 			if userID != nil {
 				if checkPermission(c, nil, userID) {
-					years, err = getYears(userID, nil)
+					years, err = getYears(&idOptions{UserID: userID})
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -302,7 +322,7 @@ func get(c *gin.Context) {
 				}
 			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					years, err = getYears(nil, []string{fmt.Sprintf("%v", deptID)})
+					years, err = getYears(&idOptions{DeptIDs: []string{fmt.Sprintf("%v", deptID)}})
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -313,7 +333,7 @@ func get(c *gin.Context) {
 					return
 				}
 			} else {
-				years, err = getYears(nil, strings.Split(user.Permission, ","))
+				years, err = getYears(&idOptions{DeptIDs: strings.Split(user.Permission, ",")})
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -328,7 +348,7 @@ func get(c *gin.Context) {
 				c.String(500, "")
 				return
 			}
-			empls, _, err := getEmpls(nil, strings.Split(user.Permission, ","), nil, nil, nil, nil)
+			empls, _, err := getEmpls(&idOptions{DeptIDs: strings.Split(user.Permission, ",")}, nil)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -340,7 +360,7 @@ func get(c *gin.Context) {
 					empls[i].Permission = ""
 				}
 			}
-			years, err := getYears(nil, strings.Split(user.Permission, ","))
+			years, err := getYears(&idOptions{DeptIDs: strings.Split(user.Permission, ",")})
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -359,7 +379,7 @@ func get(c *gin.Context) {
 		case "empls", "":
 			var empls []empl
 			if id != nil {
-				empls, _, err = getEmpls(id, nil, nil, nil, nil, nil)
+				empls, _, err = getEmpls(&idOptions{UserID: id}, nil)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -368,14 +388,14 @@ func get(c *gin.Context) {
 				c.JSON(200, gin.H{"empl": empls[0]})
 				return
 			} else if deptID != nil {
-				empls, total, err = getEmpls(nil, []string{fmt.Sprintf("%v", deptID)}, role, page, sort, order)
+				empls, total, err = getEmpls(&idOptions{DeptIDs: []string{fmt.Sprintf("%v", deptID)}}, &options)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
 					return
 				}
 			} else {
-				empls, total, err = getEmpls(nil, strings.Split(user.Permission, ","), role, page, sort, order)
+				empls, total, err = getEmpls(&idOptions{DeptIDs: strings.Split(user.Permission, ",")}, &options)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -421,7 +441,7 @@ func exportCSV(c *gin.Context) {
 		}
 		user = empl{ID: 0, Role: true, Permission: string(permission)}
 	default:
-		users, _, err := getEmpls(userID, nil, nil, nil, nil, nil)
+		users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -430,15 +450,16 @@ func exportCSV(c *gin.Context) {
 		user = users[0]
 	}
 
+	var options searchOptions
 	query := obj["query"]
 	userID := obj["empl"]
 	deptID := obj["dept"]
-	period := obj["period"]
-	year := obj["year"]
-	month := obj["month"]
-	Type := obj["type"]
-	status := obj["status"]
-	describe := obj["describe"]
+	options.Period = obj["period"]
+	options.Year = obj["year"]
+	options.Month = obj["month"]
+	options.Type = obj["type"]
+	options.Status = obj["status"]
+	options.Describe = obj["describe"]
 
 	var prefix string
 	var results []map[string]interface{}
@@ -452,7 +473,7 @@ func exportCSV(c *gin.Context) {
 		}
 		switch query {
 		case "records", nil:
-			records, _, err := getRecords(nil, user.ID, nil, year, month, Type, status, describe, nil, nil, nil)
+			records, _, err := getRecords(&idOptions{UserID: user.ID}, &options)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -462,11 +483,11 @@ func exportCSV(c *gin.Context) {
 				results = append(results, i.format())
 			}
 			sendCSV(c,
-				fmt.Sprintf("EmplRecords-%s%v%v.csv", user.Realname, year, month),
+				fmt.Sprintf("EmplRecords-%s%v%v.csv", user.Realname, options.Year, options.Month),
 				[]string{"Date", "Type", "Duration", "Describe", "Created", "Status"},
 				results)
 		case "stats":
-			stats, _, err := getStats(user.ID, nil, period, year, month, nil, nil, nil)
+			stats, _, err := getStats(&idOptions{UserID: user.ID}, &options)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
@@ -476,7 +497,7 @@ func exportCSV(c *gin.Context) {
 				results = append(results, i.format())
 			}
 			sendCSV(c,
-				fmt.Sprintf("EmplStats-%s%v%v.csv", user.Realname, year, month),
+				fmt.Sprintf("EmplStats-%s%v%v.csv", user.Realname, options.Year, options.Month),
 				[]string{"Period", "DeptName", "Name", "Overtime", "Leave", "Summary"},
 				results)
 		default:
@@ -492,7 +513,7 @@ func exportCSV(c *gin.Context) {
 			var records []record
 			if userID != nil {
 				if checkPermission(c, nil, userID) {
-					records, _, err = getRecords(nil, userID, nil, year, month, Type, status, describe, nil, nil, nil)
+					records, _, err = getRecords(&idOptions{UserID: userID}, &options)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -509,7 +530,7 @@ func exportCSV(c *gin.Context) {
 				}
 			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					records, _, err = getRecords(nil, nil, []string{fmt.Sprintf("%v", deptID)}, year, month, Type, status, describe, nil, nil, nil)
+					records, _, err = getRecords(&idOptions{DeptIDs: []string{fmt.Sprintf("%v", deptID)}}, &options)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -525,7 +546,7 @@ func exportCSV(c *gin.Context) {
 					return
 				}
 			} else {
-				records, _, err = getRecords(nil, nil, strings.Split(user.Permission, ","), year, month, Type, status, describe, nil, nil, nil)
+				records, _, err = getRecords(&idOptions{DeptIDs: strings.Split(user.Permission, ",")}, &options)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -536,14 +557,14 @@ func exportCSV(c *gin.Context) {
 				results = append(results, i.format())
 			}
 			sendCSV(c,
-				fmt.Sprintf("DeptRecords%s%v%v.csv", prefix, year, month),
+				fmt.Sprintf("DeptRecords%s%v%v.csv", prefix, options.Year, options.Month),
 				[]string{"DeptName", "Name", "Date", "Type", "Duration", "Describe", "Created", "Status"},
 				results)
 		case "stats":
 			var stats []stat
 			if userID != nil {
 				if checkPermission(c, nil, userID) {
-					stats, _, err = getStats(userID, nil, period, year, month, nil, nil, nil)
+					stats, _, err = getStats(&idOptions{UserID: userID}, &options)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -560,7 +581,7 @@ func exportCSV(c *gin.Context) {
 				}
 			} else if deptID != nil {
 				if checkPermission(c, deptID) {
-					stats, _, err = getStats(nil, []string{fmt.Sprintf("%v", deptID)}, period, year, month, nil, nil, nil)
+					stats, _, err = getStats(&idOptions{DeptIDs: []string{fmt.Sprintf("%v", deptID)}}, &options)
 					if err != nil {
 						log.Println(err)
 						c.String(500, "")
@@ -576,7 +597,7 @@ func exportCSV(c *gin.Context) {
 					return
 				}
 			} else {
-				stats, _, err = getStats(nil, strings.Split(user.Permission, ","), period, year, month, nil, nil, nil)
+				stats, _, err = getStats(&idOptions{DeptIDs: strings.Split(user.Permission, ",")}, &options)
 				if err != nil {
 					log.Println(err)
 					c.String(500, "")
@@ -587,7 +608,7 @@ func exportCSV(c *gin.Context) {
 				results = append(results, i.format())
 			}
 			sendCSV(c,
-				fmt.Sprintf("DeptStats%s%v%v.csv", prefix, year, month),
+				fmt.Sprintf("DeptStats%s%v%v.csv", prefix, options.Year, options.Month),
 				[]string{"Period", "DeptName", "Name", "Overtime", "Leave", "Summary"},
 				results)
 		default:

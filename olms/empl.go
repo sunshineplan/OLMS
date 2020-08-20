@@ -20,7 +20,7 @@ type empl struct {
 	Permission string
 }
 
-func getEmpls(id interface{}, deptIDs []string, role, page, sort, order interface{}) (empls []empl, total int, err error) {
+func getEmpls(id *idOptions, options *searchOptions) (empls []empl, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -29,25 +29,38 @@ func getEmpls(id interface{}, deptIDs []string, role, page, sort, order interfac
 	defer db.Close()
 
 	stmt := "SELECT %s FROM employee WHERE"
+
 	var args []interface{}
 	var orderBy, limit string
 	bc := make(chan bool, 1)
-	if id != nil {
+	if id.UserID != nil {
 		stmt += " id = ?"
-		args = append(args, id)
+		args = append(args, id.UserID)
 		bc <- true
 	} else {
-		marks := make([]string, len(deptIDs))
+		marks := make([]string, len(id.DeptIDs))
 		for i := range marks {
 			marks[i] = "?"
 		}
 		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
-		for _, i := range deptIDs {
+		for _, i := range id.DeptIDs {
 			args = append(args, i)
 		}
-		if r, ok := role.(float64); ok {
-			stmt += " AND role = ?"
-			args = append(args, r)
+
+		if options != nil {
+			if r, ok := options.Role.(float64); ok {
+				stmt += " AND role = ?"
+				args = append(args, r)
+			}
+			if p, ok := options.Page.(float64); ok {
+				limit = fmt.Sprintf(" LIMIT ?, ?")
+				args = append(args, int(p-1)*perPage, perPage)
+			}
+			if options.Sort != nil {
+				orderBy = fmt.Sprintf(" ORDER BY %v %v", options.Sort, options.Order)
+			} else {
+				orderBy = " ORDER BY dept_name, realname"
+			}
 		}
 		go func() {
 			if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)"), args...).Scan(&total); err != nil {
@@ -56,16 +69,6 @@ func getEmpls(id interface{}, deptIDs []string, role, page, sort, order interfac
 			}
 			bc <- true
 		}()
-
-		if p, ok := page.(float64); ok {
-			limit = fmt.Sprintf(" LIMIT ?, ?")
-			args = append(args, int(p-1)*perPage, perPage)
-		}
-	}
-	if sort != nil {
-		orderBy = fmt.Sprintf(" ORDER BY %v %v", sort, order)
-	} else {
-		orderBy = " ORDER BY dept_name, realname"
 	}
 	rows, err := db.Query(fmt.Sprintf(stmt+orderBy+limit, "id, username, realname, dept_id, dept_name, role, permission"), args...)
 	if err != nil {
@@ -206,7 +209,7 @@ func doEditEmpl(c *gin.Context) {
 
 func doDeleteEmpl(c *gin.Context) {
 	id := c.Param("id")
-	empls, _, err := getEmpls(id, nil, nil, nil, nil, nil)
+	empls, _, err := getEmpls(&idOptions{UserID: id}, nil)
 	if err != nil {
 		log.Printf("Failed to get empl: %v", err)
 		c.String(400, "")

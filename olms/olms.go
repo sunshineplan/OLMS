@@ -66,7 +66,7 @@ func checkPermission(c *gin.Context, ids ...interface{}) bool {
 	if userID == "0" {
 		return true
 	}
-	users, _, err := getEmpls(userID, nil, nil, nil, nil, nil)
+	users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
 	if err != nil {
 		return false
 	}
@@ -80,7 +80,7 @@ func checkPermission(c *gin.Context, ids ...interface{}) bool {
 		}
 	case 2:
 		id := fmt.Sprintf("%v", ids[0])
-		empls, _, err := getEmpls(ids[1], nil, nil, nil, nil, nil)
+		empls, _, err := getEmpls(&idOptions{UserID: ids[1]}, nil)
 		if err != nil {
 			return false
 		}

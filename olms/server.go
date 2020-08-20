@@ -93,7 +93,7 @@ func Run() {
 		case "0":
 			user = empl{ID: 0, Realname: "root", Role: true}
 		default:
-			users, _, err := getEmpls(userID, nil, nil, nil, nil, nil)
+			users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
 			if err != nil {
 				log.Printf("Failed to get users: %v", err)
 				c.String(500, "")

@@ -15,7 +15,7 @@ type stat struct {
 	Summary  int
 }
 
-func getStats(id interface{}, deptIDs []string, period, year, month, page, sort, order interface{}) (stats []stat, total int, err error) {
+func getStats(id *idOptions, options *searchOptions) (stats []stat, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -23,42 +23,42 @@ func getStats(id interface{}, deptIDs []string, period, year, month, page, sort,
 	}
 	defer db.Close()
 
-	stmt := "SELECT %s FROM statistics WHERE "
-	var fields, group, orderBy, limit string
+	stmt := "SELECT %s FROM statistics WHERE"
+
 	var args []interface{}
-	if period == "month" {
+	var fields, group, orderBy, limit string
+	bc := make(chan bool, 1)
+	if id.UserID != nil {
+		stmt += " user_id = ?"
+		args = append(args, id.UserID)
+	} else {
+		marks := make([]string, len(id.DeptIDs))
+		for i := range marks {
+			marks[i] = "?"
+		}
+		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
+		for _, i := range id.DeptIDs {
+			args = append(args, i)
+		}
+	}
+
+	if options.Period == "month" {
 		fields = "period, dept_name, realname, overtime, leave, summary"
-		if month == nil {
-			if year != nil {
-				stmt += "substr(period,1,4) = ? AND "
-				args = append(args, year)
+		if options.Month == nil {
+			if options.Year != nil {
+				stmt += " AND substr(period,1,4) = ?"
+				args = append(args, options.Year)
 			}
 		} else {
-			stmt += "period = ? AND "
-			args = append(args, fmt.Sprintf("%v-%v", year, month))
+			stmt += " AND period = ?"
+			args = append(args, fmt.Sprintf("%v-%v", options.Year, options.Month))
 		}
 	} else {
 		fields = "substr(period,1,4) period, dept_name, realname, sum(overtime), sum(leave), sum(summary)"
 		group = " GROUP BY period, dept_id, user_id"
 		orderBy = " ORDER BY period DESC"
 	}
-
-	if id != nil {
-		stmt += " user_id = ?"
-		args = append(args, id)
-	} else {
-		marks := make([]string, len(deptIDs))
-		for i := range marks {
-			marks[i] = "?"
-		}
-		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
-		for _, i := range deptIDs {
-			args = append(args, i)
-		}
-	}
-
-	bc := make(chan bool, 1)
-	if p, ok := page.(float64); ok {
+	if p, ok := options.Page.(float64); ok {
 		go func() {
 			if err := db.QueryRow(fmt.Sprintf("SELECT count(*) FROM (%s)",
 				fmt.Sprintf(stmt+group, "substr(period,1,4) period")), args...).Scan(&total); err != nil {
@@ -72,8 +72,8 @@ func getStats(id interface{}, deptIDs []string, period, year, month, page, sort,
 	} else {
 		bc <- true
 	}
-	if sort != nil {
-		orderBy = fmt.Sprintf(" ORDER BY %v %v", sort, order)
+	if options.Sort != nil {
+		orderBy = fmt.Sprintf(" ORDER BY %v %v", options.Sort, options.Order)
 	}
 	rows, err := db.Query(fmt.Sprintf(stmt+group+orderBy+limit, fields), args...)
 	if err != nil {
