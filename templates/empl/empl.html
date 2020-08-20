@@ -20,11 +20,13 @@
     </select>
   </div>
   {{ if eq .user "0" }}
+  {{ if ne .id "0" }}
   <div class='form-group'>
     <label for='password'>Password</label>
     <input class='form-control' type='password' name='password' id='password' maxlength=20>
     <small class='form-text text-muted'>Leave blank if you don't want to change password</small>
   </div>
+  {{ end }}
   <div class='form-group'>
     <label for='role'>Role</label>
     <select class='form-control' name='role' id='Role'>
