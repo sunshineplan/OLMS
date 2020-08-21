@@ -5,16 +5,17 @@ function getData(mode, type) {
 };
 
 function getDepts(element) {
-    postJSON('/get', { mode: 'admin', query: 'depts' }, json =>
+    return postJSON('/get', { mode: 'admin', query: 'depts' }, json =>
         $.each(json.rows, (i, item) => $(element).append($('<option>').text(item.Name).val(item.ID))));
 };
 
 function getEmpls(element, deptID, all = true) {
     if (all) $(element).empty().append($('<option>').text('All').val(''));
     else $(element).empty().append($('<option>').text(' -- select an employee -- ').prop('disabled', true).val(''));
-    postJSON('/get', cleanObj({ mode: 'admin', query: 'empls', dept: deptID }), json =>
-        $.each(json.rows, (i, item) => $(element).append($('<option>').text(item.Realname).val(item.ID))));
-    $(element).val('');
+    return postJSON('/get', cleanObj({ mode: 'admin', query: 'empls', dept: deptID }), json => {
+        $.each(json.rows, (i, item) => $(element).append($('<option>').text(item.Realname).val(item.ID)));
+        $(element).val('');
+    });
 };
 
 function getYears(mode, userID, deptID) {
@@ -22,13 +23,14 @@ function getYears(mode, userID, deptID) {
     if (mode === undefined) data = { query: 'years' }
     else data = cleanObj({ mode: 'admin', query: 'years', empl: userID, dept: deptID });
     $('#year').empty().append($('<option>').text('All').val(''));
-    postJSON('/get', data, json =>
-        $.each(json.rows, (i, item) => $('#year').append($('<option>').text(item).val(item))));
-    $('#year').val('');
+    return postJSON('/get', data, json => {
+        $.each(json.rows, (i, item) => $('#year').append($('<option>').text(item).val(item)));
+        $('#year').val('');
+    });
 };
 
 function getInfo() {
-    postJSON('/get', { mode: 'admin', query: 'info' }, json => {
+    return postJSON('/get', { mode: 'admin', query: 'info' }, json => {
         $.each(json.depts, (i, item) => $("#dept").append($('<option>').text(item.Name).val(item.ID)));
         $.each(json.empls, (i, item) => $("#empl").append($('<option>').text(item.Realname).val(item.ID)));
         $.each(json.years, (i, item) => $('#year').append($('<option>').text(item).val(item)));
@@ -241,12 +243,11 @@ function dept(id = 0) {
         } else {
             document.title = 'Edit Department - OLMS';
             $('.title').text('Edit Department');
-            postJSON('/get', { mode: 'admin', query: 'depts', id: id }, json => {
-                loading(false);
-                $.each(json.dept, (k, v) => $('#' + k).val(v));
-                $('#dept').focus();
-            });
+            postJSON('/get', { mode: 'admin', query: 'depts', id: id }, json =>
+                $.each(json.dept, (k, v) => $('#' + k).val(v)))
+                .then(() => loading(false));
         };
+        $('#Name').focus();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
 
@@ -272,11 +273,10 @@ function empl(id = 0) {
                 if (json.empl.Role) {
                     $('#Role').val(1);
                     $('#permission-selector').prop('hidden', false);
-                    $('#Permission').val(json.empl.Permission.split(',')); // need improve run order
+                    $('#Permission').val(json.empl.Permission.split(','));
                 } else $('#Role').val(0);
-            });
-        };
-        loading(false);
+            }).then(() => loading(false));
+        } else loading(false);
         $('#Username').focus();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -307,29 +307,29 @@ function record(mode = '', id = 0) {
                 $.each(json.record, (k, v) => $('#' + k).val(v));
                 if (mode != '') {
                     $('#Dept').val(json.record.DeptID);
-                    getEmpls('#Empl', json.record.DeptID, false);
-                    $('#Empl').val(json.record.UserID);
-                }
+                    getEmpls('#Empl', json.record.DeptID, false)
+                        .then(() => $('#Empl').val(json.record.UserID))
+                        .then(() => loading(false));
+                } else loading(false);
                 $('#Date').val(json.record.Date.replace(':00Z', ''));
                 if (json.record.Type) $('#Type').val('1');
                 else $('#Type').val('0');
             });
-        else if (mode != '') getEmpls('#Empl', undefined, false);
-        loading(false);
+        else if (mode != '') getEmpls('#Empl', undefined, false).then(() => loading(false));
+        else loading(false);
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
 
 function verify(id) {
     loading();
     $.get('/record/verify/' + id, html => $('.content').html(html)).done(() => {
-        loading(false);
         document.title = 'Verify Record - OLMS';
         postJSON('/get', { mode: 'admin', id: id }, json => {
             $.each(json.record, (k, v) => $('#' + k).val(v));
             $('#Date').val(json.record.Date.replace(':00Z', '').replace('T', ' '));
             if (json.record.Type) $('#Type').val('Overtime');
             else $('#Type').val('Leave');
-        });
+        }).then(() => loading(false));
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
 

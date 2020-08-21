@@ -103,13 +103,13 @@ function postJSON(url, data, success) {
     if ($('.g-recaptcha-response').length)
         return grecaptcha.execute(sitekey, { action: url.replace('/', '') })
             .then(token => {
-                data['g-recaptcha-response'] = token
-                $.ajax({
+                data['g-recaptcha-response'] = token;
+                return $.ajax({
                     url: url,
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(data),
-                    success: success
+                    success: success,
                 });
             });
     return $.ajax({
