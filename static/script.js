@@ -62,6 +62,12 @@ $(document).on('click', '.content', () => {
         $('.sidebar').toggle('slide');
 });
 
+$(document).on('keyup', event => {
+    if (event.key == 'Enter') {
+        $('#submit').click();
+    };
+});
+
 function loading(show = true) {
     if (show) {
         $('.loading').css('display', 'flex');
