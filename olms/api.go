@@ -113,7 +113,7 @@ func get(c *gin.Context) {
 				c.JSON(200, gin.H{"record": records[0]})
 				return
 			}
-			records, total, err = getRecords(&idOptions{RecordID: user.ID}, &options)
+			records, total, err = getRecords(&idOptions{UserID: user.ID}, &options)
 			if err != nil {
 				log.Println(err)
 				c.String(500, "")
