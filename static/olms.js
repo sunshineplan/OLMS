@@ -105,7 +105,8 @@ function loadRecords(mode, page = 1, data) {
             $tr.append('<td>' + item.Date.replace(':00Z', '').replace(/-/g, '/').replace('T', ' ') + '</td>');
             if (item.Type == true) $tr.append('<td>Overtime</td>');
             else $tr.append('<td>Leave</td>');
-            if (item.Duration == 1) $tr.append('<td>1 Hour</td>');
+            if (item.Duration == 0 || Math.abs(item.Duration) == 1)
+                $tr.append('<td>' + item.Duration + ' Hour</td>');
             else $tr.append('<td>' + item.Duration + ' Hours</td>');
             $tr.append("<td class='describe'>" + item.Describe + '</td>');
             $tr.append('<td>' + item.Created.split('T')[0] + '</td>');
@@ -141,11 +142,14 @@ function loadStats(mode, page = 1, data) {
                 $tr.append('<td>' + item.DeptName + '</td>');
                 $tr.append('<td>' + item.Name + '</td>');
             };
-            if (item.Overtime == 1) $tr.append('<td>1 Hour</td>');
+            if (item.Overtime == 0 || Math.abs(item.Overtime) == 1)
+                $tr.append('<td>' + item.Overtime + ' Hour</td>');
             else $tr.append('<td>' + item.Overtime + ' Hours</td>');
-            if (item.Leave == 1) $tr.append('<td>1 Hour</td>');
+            if (item.Leave == 0 || Math.abs(item.Leave) == 1)
+                $tr.append('<td>' + item.Leave + ' Hour</td>');
             else $tr.append('<td>' + item.Leave + ' Hours</td>');
-            if (item.Summary == 1) $tr.append('<td>1 Hour</td>');
+            if (item.Summary == 0 || Math.abs(item.Summary) == 1)
+                $tr.append('<td>' + item.Summary + ' Hour</td>');
             else $tr.append('<td>' + item.Summary + ' Hours</td>');
             $tr.appendTo('tbody');
         });
