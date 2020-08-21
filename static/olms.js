@@ -407,7 +407,6 @@ function doDelete(type, id) {
     if (type == 'dept') url = '/dept/delete/' + id;
     else if (type == 'empl') url = '/empl/delete/' + id;
     else if (type == 'record') url = '/record/delete/' + id;
-    else return false;
     Swal.fire({
         title: 'Are you sure?',
         text: 'This ' + type + ' will be deleted permanently.',
