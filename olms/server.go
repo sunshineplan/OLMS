@@ -3,7 +3,6 @@ package olms
 import (
 	"crypto/rand"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"net/http"
@@ -57,8 +56,9 @@ func Run() {
 		if err != nil {
 			log.Fatalf("Failed to open log file: %v", err)
 		}
-		gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
-		log.SetOutput(gin.DefaultWriter)
+		gin.DefaultWriter = f
+		gin.DefaultErrorWriter = f
+		log.SetOutput(f)
 	}
 
 	secret := make([]byte, 16)
