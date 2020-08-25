@@ -45,7 +45,7 @@ func superRequired(c *gin.Context) {
 
 func login(c *gin.Context) {
 	if !verifyResponse("login", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
-		c.HTML(200, "login.html", gin.H{"error": "reCAPTCHA challenge failed", "recaptcha": SiteKey})
+		c.HTML(200, "login.html", gin.H{"localize": localize(c), "error": "reCAPTCHA challenge failed", "recaptcha": SiteKey})
 		return
 	}
 	session := sessions.Default(c)
@@ -99,10 +99,10 @@ func login(c *gin.Context) {
 		return
 	}
 	if SiteKey != "" && SecretKey != "" {
-		c.HTML(200, "login.html", gin.H{"error": message, "recaptcha": SiteKey})
+		c.HTML(200, "login.html", gin.H{"localize": localize(c), "error": message, "recaptcha": SiteKey})
 		return
 	}
-	c.HTML(200, "login.html", gin.H{"error": message})
+	c.HTML(200, "login.html", gin.H{"localize": localize(c), "error": message})
 }
 
 func setting(c *gin.Context) {

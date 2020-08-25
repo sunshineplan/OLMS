@@ -1,18 +1,24 @@
 <header style='padding-left: 20px;'>
-  <a class='h3 title'></a>
+  <a class='h3 title'>
+    {{ if eq .id "0" }}
+    {{index .localize "AddRecord"}}
+    {{ else }}
+    {{index .localize "EditRecord"}}
+    {{ end }}
+  </a>
   <hr>
 </header>
 <div class='form'>
   {{ if ne .mode "" }}
   <div class='form-row'>
     <div class='form-group'>
-      <label for='dept'>Department</label>
+      <label for='dept'>{{index .localize "Department"}}</label>
       <select class='form-control' name='dept' id='Dept' required>
         <option disabled selected value> -- select an department -- </option>
       </select>
     </div>
     <div class='form-group'>
-      <label for='empl'>Employee</label>
+      <label for='empl'>{{index .localize "Employee"}}</label>
       <select class='form-control' name='empl' id='Empl' required>
         <option disabled selected value> -- select an employee -- </option>
       </select>
@@ -20,34 +26,34 @@
   </div>
   {{ end }}
   <div class='form-group'>
-    <label for='date'>Date</label>
+    <label for='date'>{{index .localize "Date"}}</label>
     <input class='form-control' type='datetime-local' name='date' id='Date' required>
   </div>
   <div class='form-row'>
     <div class='form-group'>
-      <label for='type'>Type</label>
+      <label for='type'>{{index .localize "Type"}}</label>
       <select class='form-control' name='type' id='Type'>
-        <option value='1'>Overtime</option>
-        <option value='0'>Leave</option>
+        <option value='1'>{{index .localize "Overtime"}}</option>
+        <option value='0'>{{index .localize "Leave"}}</option>
       </select>
     </div>
     <div class='form-group'>
-      <label for='duration'>Duration</label>
+      <label for='duration'>{{index .localize "Duration"}}</label>
       <input class='form-control' type='number' min=1 name='duration' id='Duration' required>
     </div>
   </div>
   {{ if eq .user "0" }}
   <div class='form-group'>
-    <label for='status'>Status</label>
+    <label for='status'>{{index .localize "Status"}}</label>
     <select class='form-control' name='status' id='Status'>
-      <option value='0'>Unverified</option>
-      <option value='1'>Verified</option>
-      <option value='2'>Rejected</option>
+      <option value='0'>{{index .localize "Unverified"}}</option>
+      <option value='1'>{{index .localize "Verified"}}</option>
+      <option value='2'>{{index .localize "Rejected"}}</option>
     </select>
   </div>
   {{ end }}
   <div class='form-group'>
-    <label for='describe'>Describe</label>
+    <label for='describe'>{{index .localize "Describe"}}</label>
     <textarea class='form-control' name='describe' id='Describe' rows='3'></textarea>
   </div>
   {{ if eq .user "0" }}
@@ -55,10 +61,10 @@
   {{ else }}
   <button class='btn btn-primary' onclick="doRecord('{{ .mode }}', '{{ .id }}')">{{ if eq .id "0" }}Add{{ else }}Save{{ end }}</button>
   {{ end }}
-  <button class='btn btn-primary' onclick="goback('{{ .mode }}')">Cancel</button>
+  <button class='btn btn-primary' onclick="goback('{{ .mode }}')">{{index .localize "Cancel"}}</button>
 </div>
 {{ if ne .id "0" }}
 <div class='form'>
-  <button class='btn btn-danger delete' onclick="doDelete('record', '{{ .id }}')">Delete</button>
+  <button class='btn btn-danger delete' onclick="doDelete('record', '{{ .id }}')">{{index .localize "Delete"}}</button>
 </div>
 {{ end }}

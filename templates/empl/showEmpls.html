@@ -1,12 +1,12 @@
 <header style='padding-left: 20px;'>
   <div style='height: 50px;'>
-    <a class='h3 title'>Employees List</a>
+    <a class='h3 title'>{{index .localize "EmployeesList"}}</a>
   </div>
   <div class='toolbar'>
     <div class='form-inline'>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='dept'>Dept</label>
+          <label class='input-group-text' for='dept'>{{index .localize "Dept"}}</label>
         </div>
         <select class='custom-select' name='dept' id='dept'>
           <option value=''>All</option>
@@ -15,22 +15,22 @@
       {{ if eq .user "0" }}
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='type'>Type</label>
+          <label class='input-group-text' for='type'>{{index .localize "Type"}}</label>
         </div>
         <select class='custom-select' name='type' id='type'>
           <option value=''>All</option>
-          <option value='0'>General Employee</option>
-          <option value='1'>Administrator</option>
+          <option value='0'>{{index .localize "GeneralEmployee"}}</option>
+          <option value='1'>{{index .localize "Administrator"}}</option>
         </select>
       </div>
       {{ end }}
       <div class='input-group'>
-        <a class='btn btn-primary btn-sm' id='filter' onclick="loadEmpls('{{ .user }}')">Filter</a>
-        <a class='btn btn-primary btn-sm' onclick="showEmpls('{{ .user }}')">Reset</a>
+        <a class='btn btn-primary btn-sm' id='filter' onclick="loadEmpls('{{ .user }}')">{{index .localize "Filter"}}</a>
+        <a class='btn btn-primary btn-sm' onclick="showEmpls('{{ .user }}')">{{index .localize "Reset"}}</a>
       </div>
     </div>
   </div>
-  <a class='btn btn-primary' onclick='empl()'>Add</a>
+  <a class='btn btn-primary' onclick='empl()'>{{index .localize "Add"}}</a>
   <p>
 </header>
 <a class='text-secondary' style='padding-left: 15px'>Total: <span id='total'></span></a>
@@ -38,13 +38,13 @@
   <table class='table table-hover table-sm'>
     <thead>
       <tr>
-        <th class='sortable' data-name='username'>Username</th>
-        <th class='sortable' data-name='realname'>Realname</th>
-        <th class='sortable' data-name='dept_name'>Department</th>
+        <th class='sortable' data-name='username'>{{index .localize "Username"}}</th>
+        <th class='sortable' data-name='realname'>{{index .localize "Realname"}}</th>
+        <th class='sortable' data-name='dept_name'>{{index .localize "Department"}}</th>
         {{ if eq .user "0" }}
-        <th class='sortable' data-name='role'>Role</th>
-        <th class='sortable' data-name='permission'>Permission</th>
-        <th>Operation</th>
+        <th class='sortable' data-name='role'>{{index .localize "Role"}}</th>
+        <th class='sortable' data-name='permission'>{{index .localize "Permission"}}</th>
+        <th>{{index .localize "Operation"}}</th>
         {{ end }}
       </tr>
     </thead>

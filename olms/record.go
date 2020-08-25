@@ -393,7 +393,7 @@ func verifyRecord(c *gin.Context) {
 		c.String(403, "")
 		return
 	}
-	c.HTML(200, "verifyRecord.html", gin.H{"record": records[0]})
+	c.HTML(200, "verifyRecord.html", gin.H{"localize": localize(c), "record": records[0]})
 }
 
 func doVerifyRecord(c *gin.Context) {

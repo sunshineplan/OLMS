@@ -12,41 +12,47 @@ import (
 	"github.com/sunshineplan/utils/export"
 )
 
-func (r record) format() (f map[string]interface{}) {
+func (r *record) format(localize map[string]string) (f map[string]interface{}) {
 	b, _ := json.Marshal(r)
 	json.Unmarshal(b, &f)
-	f["Date"] = strings.Split(f["Date"].(string), "T")[0]
 	for k, v := range f {
 		switch k {
+		case "Date":
+			f[localize[k]] = strings.Split(f["Date"].(string), "T")[0]
 		case "Type":
 			switch v.(bool) {
 			case false:
-				f[k] = "Leave"
+				f[localize[k]] = localize["Leave"]
 			case true:
-				f[k] = "Overtime"
+				f[localize[k]] = localize["Overtime"]
 			}
 		case "Status":
 			switch int(v.(float64)) {
 			case 0:
-				f[k] = "Unverified"
+				f[localize[k]] = localize["Unverified"]
 			case 1:
-				f[k] = "Verified"
+				f[localize[k]] = localize["Verified"]
 			case 2:
-				f[k] = "Rejected"
+				f[localize[k]] = localize["Rejected"]
 			}
+		default:
+			f[localize[k]] = v
 		}
 	}
 	return
 }
 
-func (s stat) format() (f map[string]interface{}) {
+func (s *stat) format(localize map[string]string) (f map[string]interface{}) {
 	b, _ := json.Marshal(s)
 	json.Unmarshal(b, &f)
+	for k, v := range f {
+		f[localize[k]] = v
+	}
 	return
 }
 
-func (d dept) format() map[string]interface{} { return nil }
-func (e empl) format() map[string]interface{} { return nil }
+func (d *dept) format() map[string]interface{} { return nil }
+func (e *empl) format() map[string]interface{} { return nil }
 
 func sendCSV(c *gin.Context, filename string, fieldnames []string, r []map[string]interface{}) {
 	if len(r) == 0 {

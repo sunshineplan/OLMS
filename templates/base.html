@@ -1,6 +1,6 @@
 <!doctype html>
 <meta name='viewport' content='width=device-width, initial-scale=.75'>
-<title>OLMS</title>
+<title>{{index .localize "OLMS"}}</title>
 <link rel='icon' href='/static/favicon.ico'>
 {{ if .recaptcha }}
 <script src='https://www.recaptcha.net/recaptcha/api.js?render={{ .recaptcha }}'></script>
@@ -25,16 +25,16 @@
     {{ if .user }}
     <a class='toggle'><i class='material-icons menu'>menu</i></a>
     {{ end }}
-    <a class='brand full' href='/'>Overtime and Leave Management System</a>
-    <a class='brand short' href='/'>OLMS</a>
+    <a class='brand full' href='/'>{{index .localize "OvertimeAndLeaveManagementSystem"}}</a>
+    <a class='brand short' href='/'>{{index .localize "OLMS"}}</a>
   </div>
   <div class='navbar-nav flex-row'>
     {{ if .user }}
     <a class='nav-link'>{{ .user.Realname }}</a>
-    <a class='nav-link link' onclick='setting()'>Setting</a>
-    <a class='nav-link link' href='/auth/logout'>Logout</a>
+    <a class='nav-link link' onclick='setting()'>{{index .localize "Setting"}}</a>
+    <a class='nav-link link' href='/auth/logout'>{{index .localize "Logout"}}</a>
     {{ else }}
-    <a class='nav-link'>Login</a></li>
+    <a class='nav-link'>{{index .localize "Login"}}</a>
     {{ end }}
   </div>
 </nav>
@@ -43,30 +43,30 @@
   <div class='panel'>
     {{ if ne .user.ID 0 }}
     <div>
-      <a class='navbar-brand'>Employee Panel</a>
+      <a class='navbar-brand'>{{index .localize "EmployeePanel"}}</a>
       <ul class='navbar-nav'>
-        <li><a class='nav-link {{ if ne .user.Role true }}selected{{ end }}' onclick="showRecords('')">Employee Records</a></li>
-        <li><a class='nav-link' onclick="showStats('')">Employee Statistics</a></li>
+        <li><a class='nav-link {{ if ne .user.Role true }}selected{{ end }}' onclick="showRecords('')">{{index .localize "EmployeeRecords"}}</a></li>
+        <li><a class='nav-link' onclick="showStats('')">{{index .localize "EmployeeStatistics"}}</a></li>
       </ul>
     </div>
     {{ end }}
     {{ if eq .user.Role true }}
     <div>
-      <a class='navbar-brand'>Department Panel</a>
+      <a class='navbar-brand'>{{index .localize "DepartmentPanel"}}</a>
       <ul class='navbar-nav'>
         {{ if ne .user.ID 0 }}
-        <li><a class='nav-link selected' onclick="showRecords('admin')">Department Records</a></li>
+        <li><a class='nav-link selected' onclick="showRecords('admin')">{{index .localize "DepartmentRecords"}}</a></li>
         {{ end }}
-        <li><a class='nav-link' onclick="showStats('admin')">Department Statistics</a></li>
+        <li><a class='nav-link' onclick="showStats('admin')">{{index .localize "DepartmentStatistics"}}</a></li>
       </ul>
     </div>
     <div>
-      <a class='navbar-brand'>Control Panel</a>
+      <a class='navbar-brand'>{{index .localize "ControlPanel"}}</a>
       <ul class='navbar-nav'>
-        <li><a class='nav-link' onclick="showEmpls('{{ .user.ID }}')">Manage Employee</a></li>
+        <li><a class='nav-link' onclick="showEmpls('{{ .user.ID }}')">{{index .localize "ManageEmployee"}}</a></li>
         {{ if eq .user.ID 0 }}
-        <li><a class='nav-link' onclick='showDepts()'>Manage Department</a></li>
-        <li><a class='nav-link' onclick="showRecords('super')">Manage Records</a></li>
+        <li><a class='nav-link' onclick='showDepts()'>{{index .localize "ManageDepartment"}}</a></li>
+        <li><a class='nav-link selected' onclick="showRecords('super')">{{index .localize "ManageRecords"}}</a></li>
         {{ end }}
       </ul>
     </div>

@@ -1,13 +1,19 @@
 <header style='padding-left: 20px;'>
   <div style='height: 50px;'>
-    <a class='h3 title'></a>
+    <a class='h3 title'>
+      {{ if eq .mode "admin" }}
+      {{index .localize "DepartmentStatistics"}}
+      {{ else }}
+      {{index .localize "EmployeeStatistics"}}
+      {{ end }}
+    </a>
   </div>
   <div class='toolbar'>
     {{ if ne .mode "" }}
     <div class='form-inline'>
       <div class='input-group input-group-sm' id='dept-selector'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='dept'>Dept</label>
+          <label class='input-group-text' for='dept'>{{index .localize "Dept"}}</label>
         </div>
         <select class='custom-select' name='dept' id='dept'>
           <option value=''>All</option>
@@ -15,7 +21,7 @@
       </div>
       <div class='input-group input-group-sm' id='empl-selector'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='empl'>Name</label>
+          <label class='input-group-text' for='empl'>{{index .localize "Name"}}</label>
         </div>
         <select class='custom-select' name='empl' id='empl'>
           <option value=''>All</option>
@@ -26,16 +32,16 @@
     <div class='form-inline'>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='period'>Period</label>
+          <label class='input-group-text' for='period'>{{index .localize "Period"}}</label>
         </div>
         <select class='custom-select' name='period' id='period'>
-          <option value='month'>Month</option>
-          <option value='year'>Year</option>
+          <option value='month'>{{index .localize "Month"}}</option>
+          <option value='year'>{{index .localize "Year"}}</option>
         </select>
       </div>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='year'>Year</label>
+          <label class='input-group-text' for='year'>{{index .localize "Year"}}</label>
         </div>
         <select class='custom-select' name='year' id='year'>
           <option value=''>All</option>
@@ -43,7 +49,7 @@
       </div>
       <div class='input-group input-group-sm' id='month-selector'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='month'>Month</label>
+          <label class='input-group-text' for='month'>{{index .localize "Month"}}</label>
         </div>
         <select class='custom-select' name='month' id='month' disabled>
           <option value=''>All</option>
@@ -62,9 +68,9 @@
         </select>
       </div>
       <div class='input-group'>
-        <a class='btn btn-primary btn-sm' id='filter' onclick="loadStats('{{ .mode }}')">Filter</a>
-        <a class='btn btn-primary btn-sm' onclick="showStats('{{ .mode }}')">Reset</a>
-        <a class='btn btn-info btn-sm' onclick="exportCSV('{{ .mode }}', 'stats')">Export</a>
+        <a class='btn btn-primary btn-sm' id='filter' onclick="loadStats('{{ .mode }}')">{{index .localize "Filter"}}</a>
+        <a class='btn btn-primary btn-sm' onclick="showStats('{{ .mode }}')">{{index .localize "Reset"}}</a>
+        <a class='btn btn-info btn-sm' onclick="exportCSV('{{ .mode }}', 'stats')">{{index .localize "Export"}}</a>
       </div>
     </div>
   </div>
@@ -73,14 +79,14 @@
   <table class='table table-hover table-sm'>
     <thead>
       <tr>
-        <th class='sortable' data-name='period'>Period</th>
+        <th class='sortable' data-name='period'>{{index .localize "Period"}}</th>
         {{ if ne .mode "" }}
-        <th class='sortable' data-name='dept_name'>Department</th>
-        <th class='sortable' data-name='realname'>Realname</th>
+        <th class='sortable' data-name='dept_name'>{{index .localize "Department"}}</th>
+        <th class='sortable' data-name='realname'>{{index .localize "Realname"}}</th>
         {{ end }}
-        <th class='sortable' data-name='overtime'>Overtime</th>
-        <th class='sortable' data-name='leave'>Leave</th>
-        <th class='sortable' data-name='summary'>Summary</th>
+        <th class='sortable' data-name='overtime'>{{index .localize "Overtime"}}</th>
+        <th class='sortable' data-name='leave'>{{index .localize "Leave"}}</th>
+        <th class='sortable' data-name='summary'>{{index .localize "Summary"}}</th>
       </tr>
     </thead>
     <tbody></tbody>

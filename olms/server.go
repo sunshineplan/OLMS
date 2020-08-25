@@ -102,10 +102,10 @@ func Run() {
 			user = users[0]
 		}
 		if SiteKey != "" && SecretKey != "" {
-			c.HTML(200, "index.html", gin.H{"user": user, "recaptcha": SiteKey})
+			c.HTML(200, "index.html", gin.H{"localize": localize(c), "user": user, "recaptcha": SiteKey})
 			return
 		}
-		c.HTML(200, "index.html", gin.H{"user": user})
+		c.HTML(200, "index.html", gin.H{"localize": localize(c), "user": user})
 	})
 
 	auth := router.Group("/auth")
@@ -116,10 +116,10 @@ func Run() {
 			return
 		}
 		if SiteKey != "" && SecretKey != "" {
-			c.HTML(200, "login.html", gin.H{"error": "", "recaptcha": SiteKey})
+			c.HTML(200, "login.html", gin.H{"localize": localize(c), "error": "", "recaptcha": SiteKey})
 			return
 		}
-		c.HTML(200, "login.html", gin.H{"error": ""})
+		c.HTML(200, "login.html", gin.H{"localize": localize(c), "error": ""})
 	})
 	auth.POST("/login", login)
 	auth.GET("/logout", authRequired, func(c *gin.Context) {
@@ -129,7 +129,7 @@ func Run() {
 		c.Redirect(302, "/auth/login")
 	})
 	auth.GET("/setting", authRequired, func(c *gin.Context) {
-		c.HTML(200, "setting.html", nil)
+		c.HTML(200, "setting.html", gin.H{"localize": localize(c)})
 	})
 	auth.POST("/setting", authRequired, setting)
 
@@ -141,52 +141,52 @@ func Run() {
 	record := router.Group("/record")
 	record.Use(authRequired)
 	record.GET("", func(c *gin.Context) {
-		c.HTML(200, "showRecords.html", gin.H{"mode": ""})
+		c.HTML(200, "showRecords.html", gin.H{"localize": localize(c), "mode": ""})
 	})
 	record.GET("/admin", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "showRecords.html", gin.H{"mode": "admin"})
+		c.HTML(200, "showRecords.html", gin.H{"localize": localize(c), "mode": "admin"})
 	})
 	record.GET("/super", superRequired, func(c *gin.Context) {
-		c.HTML(200, "showRecords.html", gin.H{"mode": "super"})
+		c.HTML(200, "showRecords.html", gin.H{"localize": localize(c), "mode": "super"})
 	})
 	record.GET("/add", func(c *gin.Context) {
-		c.HTML(200, "record.html", gin.H{"mode": "", "id": "0", "user": "1"})
+		c.HTML(200, "record.html", gin.H{"localize": localize(c), "mode": "", "id": "0", "user": "1"})
 	})
 	record.GET("/admin/add", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "record.html", gin.H{"mode": "admin", "id": "0", "user": sessions.Default(c).Get("userID")})
+		c.HTML(200, "record.html", gin.H{"localize": localize(c), "mode": "admin", "id": "0", "user": sessions.Default(c).Get("userID")})
 	})
 	record.POST("/add", doAddRecord)
 	record.GET("/edit/:id", func(c *gin.Context) {
-		c.HTML(200, "record.html", gin.H{"mode": "", "id": c.Param("id"), "user": "1"})
+		c.HTML(200, "record.html", gin.H{"localize": localize(c), "mode": "", "id": c.Param("id"), "user": "1"})
 	})
 	record.GET("/super/edit/:id", superRequired, func(c *gin.Context) {
-		c.HTML(200, "record.html", gin.H{"mode": "super", "id": c.Param("id"), "user": sessions.Default(c).Get("userID")})
+		c.HTML(200, "record.html", gin.H{"localize": localize(c), "mode": "super", "id": c.Param("id"), "user": sessions.Default(c).Get("userID")})
 	})
 	record.POST("/edit/:id", doEditRecord)
 	record.GET("/verify/:id", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "verify.html", gin.H{"id": c.Param("id")})
+		c.HTML(200, "verify.html", gin.H{"localize": localize(c), "id": c.Param("id")})
 	})
 	record.POST("/verify/:id", adminRequired, doVerifyRecord)
 	record.POST("/delete/:id", doDeleteRecord)
 
 	stat := router.Group("/stat")
 	stat.GET("", authRequired, func(c *gin.Context) {
-		c.HTML(200, "showStats.html", gin.H{"mode": ""})
+		c.HTML(200, "showStats.html", gin.H{"localize": localize(c), "mode": ""})
 	})
 	stat.GET("/admin", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "showStats.html", gin.H{"mode": "admin"})
+		c.HTML(200, "showStats.html", gin.H{"localize": localize(c), "mode": "admin"})
 	})
 
 	empl := router.Group("/empl")
 	empl.GET("", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "showEmpls.html", gin.H{"user": sessions.Default(c).Get("userID")})
+		c.HTML(200, "showEmpls.html", gin.H{"localize": localize(c), "user": sessions.Default(c).Get("userID")})
 	})
 	empl.GET("/add", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "empl.html", gin.H{"id": "0", "user": sessions.Default(c).Get("userID")})
+		c.HTML(200, "empl.html", gin.H{"localize": localize(c), "id": "0", "user": sessions.Default(c).Get("userID")})
 	})
 	empl.POST("/add", adminRequired, doAddEmpl)
 	empl.GET("/edit/:id", superRequired, func(c *gin.Context) {
-		c.HTML(200, "empl.html", gin.H{"id": c.Param("id"), "user": sessions.Default(c).Get("userID")})
+		c.HTML(200, "empl.html", gin.H{"localize": localize(c), "id": c.Param("id"), "user": sessions.Default(c).Get("userID")})
 	})
 	empl.POST("/edit/:id", superRequired, doEditEmpl)
 	empl.POST("/delete/:id", superRequired, doDeleteEmpl)
@@ -194,14 +194,14 @@ func Run() {
 	dept := router.Group("/dept")
 	dept.Use(superRequired)
 	dept.GET("", func(c *gin.Context) {
-		c.HTML(200, "showDepts.html", nil)
+		c.HTML(200, "showDepts.html", gin.H{"localize": localize(c)})
 	})
 	dept.GET("/add", func(c *gin.Context) {
-		c.HTML(200, "dept.html", gin.H{"id": "0"})
+		c.HTML(200, "dept.html", gin.H{"localize": localize(c), "id": "0"})
 	})
 	dept.POST("/add", doAddDept)
 	dept.GET("/edit/:id", func(c *gin.Context) {
-		c.HTML(200, "dept.html", gin.H{"id": c.Param("id")})
+		c.HTML(200, "dept.html", gin.H{"localize": localize(c), "id": c.Param("id")})
 	})
 	dept.POST("/edit/:id", doEditDept)
 	dept.POST("/delete/:id", doDeleteDept)

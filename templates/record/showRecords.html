@@ -1,13 +1,21 @@
 <header style='padding-left: 20px;'>
   <div style='height: 50px;'>
-    <a class='h3 title'></a>
+    <a class='h3 title'>
+      {{ if eq .mode "admin" }}
+      {{index .localize "DepartmentRecords"}}
+      {{ else if eq .mode "super" }}
+      {{index .localize "AllRecords"}}
+      {{ else }}
+      {{index .localize "EmployeeRecords"}}
+      {{ end }}
+    </a>
   </div>
   <div class='toolbar'>
     {{ if ne .mode "" }}
     <div class='form-inline'>
       <div class='input-group input-group-sm' id='dept-selector'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='dept'>Dept</label>
+          <label class='input-group-text' for='dept'>{{index .localize "Dept"}}</label>
         </div>
         <select class='custom-select' name='dept' id='dept'>
           <option value=''>All</option>
@@ -15,7 +23,7 @@
       </div>
       <div class='input-group input-group-sm' id='empl-selector'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='empl'>Name</label>
+          <label class='input-group-text' for='empl'>{{index .localize "Name"}}</label>
         </div>
         <select class='custom-select' name='empl' id='empl'>
           <option value=''>All</option>
@@ -26,7 +34,7 @@
     <div class='form-inline'>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='year'>Year</label>
+          <label class='input-group-text' for='year'>{{index .localize "Year"}}</label>
         </div>
         <select class='custom-select' name='year' id='year'>
           <option value=''>All</option>
@@ -34,7 +42,7 @@
       </div>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='month'>Month</label>
+          <label class='input-group-text' for='month'>{{index .localize "Month"}}</label>
         </div>
         <select class='custom-select' name='month' id='month' disabled>
           <option value=''>All</option>
@@ -54,44 +62,44 @@
       </div>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='type'>Type</label>
+          <label class='input-group-text' for='type'>{{index .localize "Type"}}</label>
         </div>
         <select class='custom-select' name='type' id='type'>
           <option value=''>All</option>
-          <option value='1'>Overtime</option>
-          <option value='0'>Leave</option>
+          <option value='1'>{{index .localize "Overtime"}}</option>
+          <option value='0'>{{index .localize "Leave"}}</option>
         </select>
       </div>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='status'>Status</label>
+          <label class='input-group-text' for='status'>{{index .localize "Status"}}</label>
         </div>
         <select class='custom-select' name='status' id='status'>
           <option value=''>All</option>
-          <option value='0'>Unverified</option>
-          <option value='1'>Verified</option>
-          <option value='2'>Rejected</option>
+          <option value='0'>{{index .localize "Unverified"}}</option>
+          <option value='1'>{{index .localize "Verified"}}</option>
+          <option value='2'>{{index .localize "Rejected"}}</option>
         </select>
       </div>
     </div>
     <div class='form-inline'>
       <div class='input-group input-group-sm'>
         <div class='input-group-prepend'>
-          <label class='input-group-text' for='describe'>Describe</label>
+          <label class='input-group-text' for='describe'>{{index .localize "Describe"}}</label>
         </div>
         <input class='form-control' name='describe' id='describe'>
       </div>
       <div class='input-group'>
-        <a class='btn btn-primary btn-sm' id='filter' onclick="loadRecords('{{ .mode }}')">Filter</a>
-        <a class='btn btn-primary btn-sm' onclick="showRecords('{{ .mode }}')">Reset</a>
-        <a class='btn btn-info btn-sm' onclick="exportCSV('{{ .mode }}', 'records')">Export</a>
+        <a class='btn btn-primary btn-sm' id='filter' onclick="loadRecords('{{ .mode }}')">{{index .localize "Filter"}}</a>
+        <a class='btn btn-primary btn-sm' onclick="showRecords('{{ .mode }}')">{{index .localize "Reset"}}</a>
+        <a class='btn btn-info btn-sm' onclick="exportCSV('{{ .mode }}', 'records')">{{index .localize "Export"}}</a>
       </div>
     </div>
   </div>
   {{ if ne .mode "" }}
-  <a class='btn btn-primary' onclick="record('{{ .mode }}')">New</a>
+  <a class='btn btn-primary' onclick="record('{{ .mode }}')">{{index .localize "New"}}</a>
   {{ else }}
-  <a class='btn btn-primary' onclick='record()'>New</a>
+  <a class='btn btn-primary' onclick='record()'>{{index .localize "New"}}</a>
   {{ end }}
   <p>
 </header>
@@ -101,16 +109,16 @@
     <thead>
       <tr>
         {{ if ne .mode "" }}
-        <th class='sortable' data-name='dept_name' style='width: 150px'>Department</th>
-        <th class='sortable' data-name='realname' style='width: 100px'>Realname</th>
+        <th class='sortable' data-name='dept_name' style='width: 150px'>{{index .localize "Department"}}</th>
+        <th class='sortable' data-name='realname' style='width: 100px'>{{index .localize "Realname"}}</th>
         {{ end }}
-        <th class='sortable' data-name='date' style='width: 150px'>Date</th> 
-        <th class='sortable' data-name='type' style='width: 80px'>Type</th>
-        <th class='sortable' data-name='duration' style='width: 100px'>Duration</th>
-        <th class='describe sortable' data-name='describe'>Describe</th>
-        <th class='sortable' data-name='created' style='width: 100px'>Created</th>
-        <th class='sortable' data-name='status' style='width: 100px'>Status</th>
-        <th style='width: 100px'>Operation</th>
+        <th class='sortable' data-name='date' style='width: 150px'>{{index .localize "Date"}}</th> 
+        <th class='sortable' data-name='type' style='width: 80px'>{{index .localize "Type"}}</th>
+        <th class='sortable' data-name='duration' style='width: 100px'>{{index .localize "Duration"}}</th>
+        <th class='describe sortable' data-name='describe'>{{index .localize "Describe"}}</th>
+        <th class='sortable' data-name='created' style='width: 100px'>{{index .localize "Created"}}</th>
+        <th class='sortable' data-name='status' style='width: 100px'>{{index .localize "Status"}}</th>
+        <th style='width: 100px'>{{index .localize "Operation"}}</th>
       </tr>
     </thead>
     <tbody></tbody>

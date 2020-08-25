@@ -166,7 +166,7 @@ function showDepts() {
     loading();
     $.get(url, html => {
         $('.content').html(html);
-        document.title = 'Departments List - OLMS';
+        document.title = $('.title').text() + ' - OLMS';
     }).done(() => loadDepts('admin').then(() => loading(false)))
         .fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -177,7 +177,7 @@ function showEmpls(mode) {
     loading();
     $.get(url, html => {
         $('.content').html(html);
-        document.title = 'Employees List - OLMS';
+        document.title = $('.title').text() + ' - OLMS';
     }).done(() => {
         loadEmpls(mode).then(() => loading(false));
         $('.sortable').addClass('default');
@@ -194,16 +194,7 @@ function showRecords(mode) {
     loading();
     $.get(url, html => {
         $('.content').html(html);
-        if (mode == 'admin') {
-            document.title = 'Department Records - OLMS';
-            $('.title').text('Department Records');
-        } else if (mode == 'super') {
-            document.title = 'All Records - OLMS';
-            $('.title').text('All Records');
-        } else {
-            document.title = 'Employee Records - OLMS';
-            $('.title').text('Employee Records');
-        };
+        document.title = $('.title').text() + ' - OLMS';
     }).done(() => {
         loadRecords(mode).then(() => loading(false));
         $('.sortable').addClass('default');
@@ -219,13 +210,7 @@ function showStats(mode) {
     loading();
     $.get(url, html => {
         $('.content').html(html);
-        if (mode == '') {
-            document.title = 'Employee Statistics - OLMS';
-            $('.title').text('Employee Statistics');
-        } else {
-            document.title = 'Department Statistics - OLMS';
-            $('.title').text('Department Statistics');
-        };
+        document.title = $('.title').text() + ' - OLMS';
     }).done(() => {
         loadStats(mode).then(() => loading(false));
         $('.sortable').addClass('default');
@@ -240,17 +225,11 @@ function dept(id = 0) {
     else url = '/dept/edit/' + id;
     loading();
     $.get(url, html => $('.content').html(html)).done(() => {
-        if (id == 0) {
-            document.title = 'Add Department - OLMS';
-            $('.title').text('Add Department');
-            loading(false);
-        } else {
-            document.title = 'Edit Department - OLMS';
-            $('.title').text('Edit Department');
-            postJSON('/get', { mode: 'admin', query: 'depts', id: id }, json =>
-                $.each(json.dept, (k, v) => $('#' + k).val(v)))
-                .then(() => loading(false));
-        };
+        document.title = $('.title').text() + ' - OLMS';
+        if (id == 0) loading(false);
+        else postJSON('/get', { mode: 'admin', query: 'depts', id: id }, json =>
+            $.each(json.dept, (k, v) => $('#' + k).val(v)))
+            .then(() => loading(false));
         $('#Name').focus();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -262,13 +241,7 @@ function empl(id = 0) {
     loading();
     $.get(url, html => $('.content').html(html)).done(() => {
         getDepts('#Dept, #Permission');
-        if (id == 0) {
-            document.title = 'Add Employee - OLMS';
-            $('.title').text('Add Employee');
-        } else {
-            document.title = 'Edit Employee - OLMS';
-            $('.title').text('Edit Employee');
-        };
+        document.title = $('.title').text() + ' - OLMS';
     }).done(() => {
         if (id != 0) {
             postJSON('/get', { mode: 'super', query: 'empls', id: id }, json => {
@@ -297,13 +270,7 @@ function record(mode = '', id = 0) {
     loading();
     $.get(url, html => $('.content').html(html)).done(() => {
         if (mode != '') getDepts('#Dept');
-        if (id == 0) {
-            document.title = 'Add Record - OLMS';
-            $('.title').text('Add Record');
-        } else {
-            document.title = 'Edit Record - OLMS';
-            $('.title').text('Edit Record');
-        };
+        document.title = $('.title').text() + ' - OLMS';
     }).done(() => {
         if (mode != '') mode = 'admin';
         if (id != 0)
@@ -327,7 +294,7 @@ function record(mode = '', id = 0) {
 function verify(id) {
     loading();
     $.get('/record/verify/' + id, html => $('.content').html(html)).done(() => {
-        document.title = 'Verify Record - OLMS';
+        document.title = $('.title').text() + ' - OLMS';
         postJSON('/get', { mode: 'admin', id: id }, json => {
             $.each(json.record, (k, v) => $('#' + k).val(v));
             $('#Date').val(json.record.Date.replace(':00Z', '').replace('T', ' '));
@@ -344,7 +311,7 @@ function setting() {
     $.get('/auth/setting', html => {
         loading(false);
         $('.content').html(html);
-        document.title = 'Setting - OLMS';
+        document.title = $('.title').text() + ' - OLMS';
         $('#password').focus();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };

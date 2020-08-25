@@ -1,24 +1,24 @@
 <header style='padding-left: 20px;'>
-  <h3>Setting</h3>
+  <h3>{{index .localize "Setting"}}</h3>
   <hr>
 </header>
 <div class='form'>
   <div class='form-group'>
-    <label for='password'>Current Password</label>
+    <label for='password'>{{index .localize "CurrentPassword"}}</label>
     <input class='form-control' type='password' name='password' id='password' maxlength=20 required>
     <div class='invalid-feedback'>This field is required.</div>
   </div>
   <div class='form-group'>
-    <label for='password1'>New Password</label>
+    <label for='password1'>{{index .localize "NewPassword"}}</label>
     <input class='form-control' type='password' name='password1' id='password1' maxlength=20 required>
     <div class='invalid-feedback'>This field is required.</div>
   </div>
   <div class='form-group'>
-    <label for='password2'>Confirm Password</label>
+    <label for='password2'>{{index .localize "ConfirmPassword"}}</label>
     <input class='form-control' type='password' name='password2' id='password2' maxlength=20 required>
     <div class='invalid-feedback'>This field is required.</div>
     <small class='form-text text-muted'>Max password length: 20 characters.</small>
   </div>
-  <button class='btn btn-primary' onclick='doSetting()' id='submit'>Change</button>
-  <button class='btn btn-primary' onclick='goback()'>Cancel</button>
+  <button class='btn btn-primary' onclick='doSetting()' id='submit'>{{index .localize "Change"}}</button>
+  <button class='btn btn-primary' onclick='goback()'>{{index .localize "Cancel"}}</button>
 </div>

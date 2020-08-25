@@ -1,8 +1,8 @@
 <header style='padding-left: 20px;'>
   <div style='height: 50px;'>
-    <a class='h3 title'>Departments List</a>
+    <a class='h3 title'>{{index .localize "DepartmentsList"}}</a>
   </div>
-  <a class='btn btn-primary' onclick='dept()'>Add</a>
+  <a class='btn btn-primary' onclick='dept()'>{{index .localize "Add"}}</a>
   <p>
 </header>
 <div class='table-responsive'>
@@ -10,8 +10,8 @@
     <thead>
       <tr>
         <th>ID</th>
-        <th>Department</th>
-        <th>Operation</th>
+        <th>{{index .localize "Department"}}</th>
+        <th>{{index .localize "Operation"}}</th>
       </tr>
     </thead>
     <tbody></tbody>
