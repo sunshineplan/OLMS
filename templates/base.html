@@ -73,12 +73,22 @@
     {{ end }}
   </div>
 </nav>
+{{ if .recaptcha }}
 {{ if ne .user.Role true }}
 <script>grecaptcha.ready(() => showRecords(''))</script>
 {{ else if ne .user.ID 0 }}
 <script>grecaptcha.ready(() => showRecords('admin'))</script>
 {{ else }}
 <script>grecaptcha.ready(() => showRecords('super'))</script>
+{{ end }}
+{{ else }}
+{{ if ne .user.Role true }}
+<script>$(() => showRecords(''))</script>
+{{ else if ne .user.ID 0 }}
+<script>$(() => showRecords('admin'))</script>
+{{ else }}
+<script>$(() => showRecords('super'))</script>
+{{ end }}
 {{ end }}
 {{ end }}
 <div class='loading'>
