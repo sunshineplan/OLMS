@@ -66,9 +66,8 @@ function loadEmpls(mode, page = 1, data) {
     if (mode == 0 || mode == 'super') mode = 'super'; else mode = 'admin';
     if (data === undefined) data = getData(mode, 'empls');
     return postJSON('/get', $.extend(data, { page: page }), json => {
-        pagination(json.total, page);
         $('tbody').empty();
-        $("#total").text(json.total);
+        $("#total").text(pagination(json.total, page));
         $.each(json.rows, (index, i) => {
             var $tr = $('<tr></tr>');
             $tr.append('<td>' + i.Username + '</td>');
@@ -95,9 +94,8 @@ function loadRecords(mode, page = 1, data) {
         if (mode == 'super') data = getData('admin', 'records');
         else data = getData(mode, 'records');
     return postJSON('/get', $.extend(data, { page: page }), json => {
-        pagination(json.total, page);
         $('tbody').empty();
-        $("#total").text(json.total);
+        $("#total").text(pagination(json.total, page));
         $.each(json.rows, (index, i) => {
             var $tr = $('<tr></tr>');
             if (mode != '') {

@@ -23,6 +23,11 @@ function pagination(total, current = 1) {
         if (current < page) $next.append(`<a class='page-link' data-page='${current + 1}'>${$.i18n('Next')}</a>`);
         else $next.addClass('disabled').append(`<a class='page-link'>${$.i18n('Next')}</a>`);
         $('.pagination').append($next);
+        if (total == 1 && current == 1) return `${$.i18n('Showing')} 1 ${$.i18n('row')}`
+        else if (page == current)
+        return `${$.i18n('Showing')} ${(current - 1) * 10 + 1}-${total} ${$.i18n('of')} ${total} ${$.i18n('rows')}`
+        else if (page >= current && current >= 1)
+            return `${$.i18n('Showing')} ${(current - 1) * 10 + 1}-${current * 10} ${$.i18n('of')} ${total} ${$.i18n('rows')}`
     };
 };
 
