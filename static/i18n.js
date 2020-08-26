@@ -1,4 +1,4 @@
-$.i18n({ locale: 'en' });
+$.i18n({ locale: document.documentElement.lang });
 $.i18n().load({
     'en': {
         'Administrator': 'Administrator',
