@@ -63,9 +63,9 @@ $(document).on('click', '.content', () => {
 });
 
 $(document).on('keyup', event => {
-    if (event.key == 'Enter') {
-        $('#submit').click();
-    };
+    if (event.key == 'Enter')
+        if (!$('.swal2-container').length)
+            $('#submit').click()
 });
 
 function loading(show = true) {
