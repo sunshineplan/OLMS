@@ -2,6 +2,7 @@ BootstrapButtons = Swal.mixin({
     customClass: {
         confirmButton: 'swal btn btn-primary'
     },
+    confirmButtonText: $.i18n('OK'),
     buttonsStyling: false
 });
 
