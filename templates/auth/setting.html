@@ -1,23 +1,23 @@
 <header style='padding-left: 20px;'>
-  <h3>{{index .localize "Setting"}}</h3>
+  <a class='h3 title'>{{index .localize "Setting"}}</a>
   <hr>
 </header>
 <div class='form'>
   <div class='form-group'>
     <label for='password'>{{index .localize "CurrentPassword"}}</label>
     <input class='form-control' type='password' name='password' id='password' maxlength=20 required>
-    <div class='invalid-feedback'>This field is required.</div>
+    <div class='invalid-feedback'>{{index .localize "RequiredField"}}</div>
   </div>
   <div class='form-group'>
     <label for='password1'>{{index .localize "NewPassword"}}</label>
     <input class='form-control' type='password' name='password1' id='password1' maxlength=20 required>
-    <div class='invalid-feedback'>This field is required.</div>
+    <div class='invalid-feedback'>{{index .localize "RequiredField"}}</div>
   </div>
   <div class='form-group'>
     <label for='password2'>{{index .localize "ConfirmPassword"}}</label>
     <input class='form-control' type='password' name='password2' id='password2' maxlength=20 required>
-    <div class='invalid-feedback'>This field is required.</div>
-    <small class='form-text text-muted'>Max password length: 20 characters.</small>
+    <div class='invalid-feedback'>{{index .localize "RequiredField"}}</div>
+    <small class='form-text text-muted'>{{index .localize "MaxPasswordLength"}}</small>
   </div>
   <button class='btn btn-primary' onclick='doSetting()' id='submit'>{{index .localize "Change"}}</button>
   <button class='btn btn-primary' onclick='goback()'>{{index .localize "Cancel"}}</button>

@@ -60,7 +60,7 @@ func doAddDept(c *gin.Context) {
 	if dept == "" {
 		message = "Department name is required."
 	} else if err := db.QueryRow("SELECT id FROM department WHERE dept_name = ?", dept).Scan(&exist); err == nil {
-		message = fmt.Sprintf("Department %s is already existed.", dept)
+		message = fmt.Sprintf(localize(c)["DepartmentExist"], dept)
 	} else {
 		if _, err := db.Exec("INSERT INTO department (dept_name) VALUES (?)", dept); err != nil {
 			log.Printf("Failed to add department: %v", err)
@@ -88,13 +88,14 @@ func doEditDept(c *gin.Context) {
 	defer db.Close()
 	dept := strings.TrimSpace(c.PostForm("dept"))
 	id := c.Param("id")
+	localize := localize(c)
 	var old, exist, message string
 	if dept == "" {
 		message = "Department name is required."
 	} else if db.QueryRow("SELECT dept_name FROM department WHERE id = ?", id).Scan(&old); old == dept {
-		message = "New department name is same as old one."
+		message = localize["SameDepartment"]
 	} else if err := db.QueryRow("SELECT id FROM department WHERE dept_name = ? AND id != ?", id, dept).Scan(&exist); err == nil {
-		message = fmt.Sprintf("Department %s is already existed.", dept)
+		message = fmt.Sprintf(localize["DepartmentExist"], dept)
 	} else {
 		if _, err := db.Exec("UPDATE department SET dept_name = ? WHERE id = ?", dept, id); err != nil {
 			log.Printf("Failed to edit department: %v", err)

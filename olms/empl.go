@@ -109,15 +109,16 @@ func doAddEmpl(c *gin.Context) {
 	if realname == "" {
 		realname = username
 	}
+	localize := localize(c)
 	var exist, message string
 	var code int
 	if username == "" {
 		message = "Username is required."
 	} else if err := db.QueryRow("SELECT id FROM user WHERE username = ?", strings.ToLower(username)).Scan(&exist); err == nil {
-		message = fmt.Sprintf("Username %s is already existed.", username)
+		message = fmt.Sprintf(localize["UsernameExist"], username)
 		code = 1
 	} else if deptID == "" {
-		message = "Department is required."
+		message = localize["DepartmentRequired"]
 	} else {
 		if checkSuper(c) {
 			role := c.PostForm("role")
@@ -170,14 +171,15 @@ func doEditEmpl(c *gin.Context) {
 	if role == "1" {
 		permission = c.PostFormArray("permission")
 	}
+	localize := localize(c)
 	var exist, message string
 	if username == "" {
 		message = "Username is required."
 	} else if err := db.QueryRow("SELECT id FROM user WHERE username = ? AND id != ?",
 		strings.ToLower(username), id).Scan(&exist); err == nil {
-		message = fmt.Sprintf("Username %s is already existed.", username)
+		message = fmt.Sprintf(localize["UsernameExist"], username)
 	} else if deptID == "" {
-		message = "Department is required."
+		message = localize["DepartmentRequired"]
 	} else {
 		if password := c.PostForm("password"); password == "" {
 			if _, err = db.Exec("UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ?, permission = ? WHERE id = ?",

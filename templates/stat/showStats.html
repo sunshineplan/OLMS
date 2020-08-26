@@ -16,7 +16,7 @@
           <label class='input-group-text' for='dept'>{{index .localize "Dept"}}</label>
         </div>
         <select class='custom-select' name='dept' id='dept'>
-          <option value=''>All</option>
+          <option value=''>{{index .localize "All"}}</option>
         </select>
       </div>
       <div class='input-group input-group-sm' id='empl-selector'>
@@ -24,7 +24,7 @@
           <label class='input-group-text' for='empl'>{{index .localize "Name"}}</label>
         </div>
         <select class='custom-select' name='empl' id='empl'>
-          <option value=''>All</option>
+          <option value=''>{{index .localize "All"}}</option>
         </select>
       </div>
     </div>
@@ -44,7 +44,7 @@
           <label class='input-group-text' for='year'>{{index .localize "Year"}}</label>
         </div>
         <select class='custom-select' name='year' id='year'>
-          <option value=''>All</option>
+          <option value=''>{{index .localize "All"}}</option>
         </select>
       </div>
       <div class='input-group input-group-sm' id='month-selector'>
@@ -52,7 +52,7 @@
           <label class='input-group-text' for='month'>{{index .localize "Month"}}</label>
         </div>
         <select class='custom-select' name='month' id='month' disabled>
-          <option value=''>All</option>
+          <option value=''>{{index .localize "All"}}</option>
           <option value='01'>1</option>
           <option value='02'>2</option>
           <option value='03'>3</option>

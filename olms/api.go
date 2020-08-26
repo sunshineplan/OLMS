@@ -450,7 +450,7 @@ func exportCSV(c *gin.Context) {
 		user = users[0]
 	}
 
-	translate := localize(c)
+	localize := localize(c)
 
 	var options searchOptions
 	query := obj["query"]
@@ -482,17 +482,17 @@ func exportCSV(c *gin.Context) {
 				return
 			}
 			for _, i := range records {
-				results = append(results, i.format(translate))
+				results = append(results, i.format(localize))
 			}
 			sendCSV(c,
-				fmt.Sprintf("%s-%s%v%v.csv", translate["EmplRecords"], user.Realname, options.Year, options.Month),
+				fmt.Sprintf("%s-%s%v%v.csv", localize["EmplRecords"], user.Realname, options.Year, options.Month),
 				[]string{
-					translate["Date"],
-					translate["Type"],
-					translate["Duration"],
-					translate["Describe"],
-					translate["Created"],
-					translate["Status"]},
+					localize["Date"],
+					localize["Type"],
+					localize["Duration"],
+					localize["Describe"],
+					localize["Created"],
+					localize["Status"]},
 				results)
 		case "stats":
 			stats, _, err := getStats(&idOptions{UserID: user.ID}, &options)
@@ -502,17 +502,17 @@ func exportCSV(c *gin.Context) {
 				return
 			}
 			for _, i := range stats {
-				results = append(results, i.format(translate))
+				results = append(results, i.format(localize))
 			}
 			sendCSV(c,
-				fmt.Sprintf("%s-%s%v%v.csv", translate["EmplStats"], user.Realname, options.Year, options.Month),
+				fmt.Sprintf("%s-%s%v%v.csv", localize["EmplStats"], user.Realname, options.Year, options.Month),
 				[]string{
-					translate["Period"],
-					translate["DeptName"],
-					translate["Name"],
-					translate["Overtime"],
-					translate["Leave"],
-					translate["Summary"]},
+					localize["Period"],
+					localize["DeptName"],
+					localize["Name"],
+					localize["Overtime"],
+					localize["Leave"],
+					localize["Summary"]},
 				results)
 		default:
 			c.String(400, "Unknown query")
@@ -568,19 +568,19 @@ func exportCSV(c *gin.Context) {
 				}
 			}
 			for _, i := range records {
-				results = append(results, i.format(translate))
+				results = append(results, i.format(localize))
 			}
 			sendCSV(c,
-				fmt.Sprintf("%s%s%v%v.csv", translate["DeptRecords"], prefix, options.Year, options.Month),
+				fmt.Sprintf("%s%s%v%v.csv", localize["DeptRecords"], prefix, options.Year, options.Month),
 				[]string{
-					translate["DeptName"],
-					translate["Name"],
-					translate["Date"],
-					translate["Type"],
-					translate["Duration"],
-					translate["Describe"],
-					translate["Created"],
-					translate["Status"]},
+					localize["DeptName"],
+					localize["Name"],
+					localize["Date"],
+					localize["Type"],
+					localize["Duration"],
+					localize["Describe"],
+					localize["Created"],
+					localize["Status"]},
 				results)
 		case "stats":
 			var stats []stat
@@ -627,17 +627,17 @@ func exportCSV(c *gin.Context) {
 				}
 			}
 			for _, i := range stats {
-				results = append(results, i.format(translate))
+				results = append(results, i.format(localize))
 			}
 			sendCSV(c,
-				fmt.Sprintf("%s%s%v%v.csv", translate["DeptStats"], prefix, options.Year, options.Month),
+				fmt.Sprintf("%s%s%v%v.csv", localize["DeptStats"], prefix, options.Year, options.Month),
 				[]string{
-					translate["Period"],
-					translate["DeptName"],
-					translate["Name"],
-					translate["Overtime"],
-					translate["Leave"],
-					translate["Summary"]},
+					localize["Period"],
+					localize["DeptName"],
+					localize["Name"],
+					localize["Overtime"],
+					localize["Leave"],
+					localize["Summary"]},
 				results)
 		default:
 			c.String(400, "Unknown query")

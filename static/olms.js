@@ -10,8 +10,8 @@ function getDepts(element) {
 };
 
 function getEmpls(element, deptID, all = true) {
-    if (all) $(element).empty().append($('<option>').text('All').val(''));
-    else $(element).empty().append($('<option>').text(' -- select an employee -- ').prop('disabled', true).val(''));
+    if (all) $(element).empty().append($('<option>').text($.i18n('All')).val(''));
+    else $(element).empty().append($('<option>').text(` -- ${$.i18n('SelectEmployee')} -- `).prop('disabled', true).val(''));
     return postJSON('/get', cleanObj({ mode: 'admin', query: 'empls', dept: deptID }), json => {
         $.each(json.rows, (i, item) => $(element).append($('<option>').text(item.Realname).val(item.ID)));
         $(element).val('');
@@ -22,7 +22,7 @@ function getYears(mode, userID, deptID) {
     var data;
     if (mode === undefined) data = { query: 'years' }
     else data = cleanObj({ mode: 'admin', query: 'years', empl: userID, dept: deptID });
-    $('#year').empty().append($('<option>').text('All').val(''));
+    $('#year').empty().append($('<option>').text($.i18n('All')).val(''));
     return postJSON('/get', data, json => {
         $.each(json.rows, (i, item) => $('#year').append($('<option>').text(item).val(item)));
         $('#year').val('');
@@ -45,17 +45,18 @@ function exportCSV(mode, type) {
         link.href = window.URL.createObjectURL(blob);
         link.download = decodeURI(jqXHR.getResponseHeader('Content-Disposition').split('filename=')[1].replace(/"/g, ''));
         link.click();
-    }).catch(jqXHR => { if (jqXHR.status == 404) BootstrapButtons.fire('Info', 'No result.', 'info'); });
+    }).catch(jqXHR => { if (jqXHR.status == 404) BootstrapButtons.fire($.i18n('Info'), $.i18n('NoResult'), 'info'); });
 };
 
 function loadDepts(mode) {
     return postJSON('/get', getData(mode, 'depts'), json => {
         $('tbody').empty();
-        $.each(json.rows, (i, item) => {
+        $.each(json.rows, (index, i) => {
             var $tr = $('<tr></tr>');
-            $tr.append('<td>' + item.ID + '</td>');
-            $tr.append('<td>' + item.Name + '</td>');
-            $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='dept(" + item.ID + ")'>Edit</a></td>");
+            $tr.append('<td>' + i.ID + '</td>');
+            $tr.append('<td>' + i.Name + '</td>');
+            $tr.append(
+                `<td><a class='btn btn-outline-primary btn-sm' onclick='dept("${i.ID}")'>${$.i18n('Edit')}</a></td>`);
             $tr.appendTo('tbody');
         });
     });
@@ -68,16 +69,17 @@ function loadEmpls(mode, page = 1, data) {
         pagination(json.total, page);
         $('tbody').empty();
         $("#total").text(json.total);
-        $.each(json.rows, (i, item) => {
+        $.each(json.rows, (index, i) => {
             var $tr = $('<tr></tr>');
-            $tr.append('<td>' + item.Username + '</td>');
-            $tr.append('<td>' + item.Realname + '</td>');
-            $tr.append('<td>' + item.DeptName + '</td>');
+            $tr.append('<td>' + i.Username + '</td>');
+            $tr.append('<td>' + i.Realname + '</td>');
+            $tr.append('<td>' + i.DeptName + '</td>');
             if (mode == 'super') {
-                if (item.Role == 0) $tr.append('<td>General Employee</td>');
-                else $tr.append('<td>Administrator</td>');
-                $tr.append('<td>' + item.Permission + '</td>');
-                $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='empl(" + item.ID + ")'>Edit</a></td>");
+                if (i.Role == 0) $tr.append('<td>' + $.i18n('GeneralEmployee') + '</td>');
+                else $tr.append('<td>' + $.i18n('Administrator') + '</td>');
+                $tr.append('<td>' + i.Permission + '</td>');
+                $tr.append(
+                    `<td><a class='btn btn-outline-primary btn-sm' onclick='empl("${i.ID}")'>${$.i18n('Edit')}</a></td>`);
             };
             $tr.appendTo('tbody');
         });
@@ -96,31 +98,33 @@ function loadRecords(mode, page = 1, data) {
         pagination(json.total, page);
         $('tbody').empty();
         $("#total").text(json.total);
-        $.each(json.rows, (i, item) => {
+        $.each(json.rows, (index, i) => {
             var $tr = $('<tr></tr>');
             if (mode != '') {
-                $tr.append('<td>' + item.DeptName + '</td>');
-                $tr.append('<td>' + item.Name + '</td>');
+                $tr.append('<td>' + i.DeptName + '</td>');
+                $tr.append('<td>' + i.Name + '</td>');
             };
-            $tr.append('<td>' + item.Date.replace(':00Z', '').replace(/-/g, '/').replace('T', ' ') + '</td>');
-            if (item.Type == true) $tr.append('<td>Overtime</td>');
-            else $tr.append('<td>Leave</td>');
-            if (item.Duration == 0 || Math.abs(item.Duration) == 1)
-                $tr.append('<td>' + item.Duration + ' Hour</td>');
-            else $tr.append('<td>' + item.Duration + ' Hours</td>');
-            $tr.append("<td class='describe'>" + item.Describe + '</td>');
-            $tr.append('<td>' + item.Created.split('T')[0] + '</td>');
-            if (item.Status == 0) $tr.append("<td><a class='text-muted'>Unverified</a></td>");
-            else if (item.Status == 1) $tr.append("<td><a class='text-success'>Verified</a></td>");
-            else if (item.Status == 2) $tr.append("<td><a class='text-danger'>Rejected</a></td>");
+            $tr.append('<td>' + i.Date.replace(':00Z', '').replace(/-/g, '/').replace('T', ' ') + '</td>');
+            if (i.Type == true) $tr.append('<td>' + $.i18n('Overtime') + '</td>');
+            else $tr.append('<td>' + $.i18n('Leave') + '</td>');
+            if (i.Duration == 0 || Math.abs(i.Duration) == 1)
+                $tr.append('<td>' + i.Duration + ' ' + $.i18n('Hour') + '</td>');
+            else $tr.append('<td>' + i.Duration + ' ' + $.i18n('Hours') + '</td>');
+            $tr.append("<td class='describe'>" + i.Describe + '</td>');
+            $tr.append('<td>' + i.Created.split('T')[0] + '</td>');
+            if (i.Status == 0) $tr.append(`<td><a class='text-muted'>${$.i18n('Unverified')}</a></td>`);
+            else if (i.Status == 1) $tr.append(`<td><a class='text-success'>${$.i18n('Verified')}</a></td>`);
+            else if (i.Status == 2) $tr.append(`<td><a class='text-danger'>${$.i18n('Rejected')}</a></td>`);
             if (mode == 'admin')
-                if (item.Status == 0)
-                    $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='verify(" + item.ID + ")'>Verify</a></td>");
-                else $tr.append("<td><a class='btn btn-outline-primary btn-sm disabled'>Verify</a></td>");
-            else if (mode == '' && item.Status != 0)
-                $tr.append("<td><a class='btn btn-outline-primary btn-sm disabled'>Edit</a></td>");
+                if (i.Status == 0)
+                    $tr.append(
+                        `<td><a class='btn btn-outline-primary btn-sm' onclick='verify("${i.ID}")'>${$.i18n('Verify')}</a></td>`);
+                else $tr.append(`<td><a class='btn btn-outline-primary btn-sm disabled'>${$.i18n('Verify')}</a></td>`);
+            else if (mode == '' && i.Status != 0)
+                $tr.append(`<td><a class='btn btn-outline-primary btn-sm disabled'>${$.i18n('Edit')}</a></td>`);
             else
-                $tr.append("<td><a class='btn btn-outline-primary btn-sm' onclick='record(\"" + mode + "\"," + item.ID + ")'>Edit</a></td>");
+                $tr.append(
+                    `<td><a class='btn btn-outline-primary btn-sm' onclick='record("${mode}","${i.ID}")'>${$.i18n('Edit')}</a></td>`);
             $tr.appendTo('tbody');
         });
     }).then(() => {
@@ -135,22 +139,22 @@ function loadStats(mode, page = 1, data) {
     return postJSON('/get', $.extend(data, { page: page }), json => {
         pagination(json.total, page);
         $('tbody').empty();
-        $.each(json.rows, (i, item) => {
+        $.each(json.rows, (index, i) => {
             var $tr = $('<tr></tr>');
-            $tr.append('<td>' + item.Period + '</td>');
+            $tr.append('<td>' + i.Period + '</td>');
             if (mode != '') {
-                $tr.append('<td>' + item.DeptName + '</td>');
-                $tr.append('<td>' + item.Name + '</td>');
+                $tr.append('<td>' + i.DeptName + '</td>');
+                $tr.append('<td>' + i.Name + '</td>');
             };
-            if (item.Overtime == 0 || Math.abs(item.Overtime) == 1)
-                $tr.append('<td>' + item.Overtime + ' Hour</td>');
-            else $tr.append('<td>' + item.Overtime + ' Hours</td>');
-            if (item.Leave == 0 || Math.abs(item.Leave) == 1)
-                $tr.append('<td>' + item.Leave + ' Hour</td>');
-            else $tr.append('<td>' + item.Leave + ' Hours</td>');
-            if (item.Summary == 0 || Math.abs(item.Summary) == 1)
-                $tr.append('<td>' + item.Summary + ' Hour</td>');
-            else $tr.append('<td>' + item.Summary + ' Hours</td>');
+            if (i.Overtime == 0 || Math.abs(i.Overtime) == 1)
+                $tr.append('<td>' + i.Overtime + ' ' + $.i18n('Hour') + '</td>');
+            else $tr.append('<td>' + i.Overtime + ' ' + $.i18n('Hours') + '</td>');
+            if (i.Leave == 0 || Math.abs(i.Leave) == 1)
+                $tr.append('<td>' + i.Leave + ' ' + $.i18n('Hour') + '</td>');
+            else $tr.append('<td>' + i.Leave + ' ' + $.i18n('Hours') + '</td>');
+            if (i.Summary == 0 || Math.abs(i.Summary) == 1)
+                $tr.append('<td>' + i.Summary + ' ' + $.i18n('Hour') + '</td>');
+            else $tr.append('<td>' + i.Summary + ' ' + $.i18n('Hours') + '</td>');
             $tr.appendTo('tbody');
         });
     }).then(() => {
@@ -166,7 +170,7 @@ function showDepts() {
     loading();
     $.get(url, html => {
         $('.content').html(html);
-        document.title = $('.title').text() + ' - OLMS';
+        document.title = $('.title').text() + ' - ' + $.i18n('OLMS');
     }).done(() => loadDepts('admin').then(() => loading(false)))
         .fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -177,7 +181,7 @@ function showEmpls(mode) {
     loading();
     $.get(url, html => {
         $('.content').html(html);
-        document.title = $('.title').text() + ' - OLMS';
+        document.title = $('.title').text() + ' - ' + $.i18n('OLMS');
     }).done(() => {
         loadEmpls(mode).then(() => loading(false));
         $('.sortable').addClass('default');
@@ -194,7 +198,7 @@ function showRecords(mode) {
     loading();
     $.get(url, html => {
         $('.content').html(html);
-        document.title = $('.title').text() + ' - OLMS';
+        document.title = $('.title').text() + ' - ' + $.i18n('OLMS');
     }).done(() => {
         loadRecords(mode).then(() => loading(false));
         $('.sortable').addClass('default');
@@ -210,7 +214,7 @@ function showStats(mode) {
     loading();
     $.get(url, html => {
         $('.content').html(html);
-        document.title = $('.title').text() + ' - OLMS';
+        document.title = $('.title').text() + ' - ' + $.i18n('OLMS');
     }).done(() => {
         loadStats(mode).then(() => loading(false));
         $('.sortable').addClass('default');
@@ -225,7 +229,7 @@ function dept(id = 0) {
     else url = '/dept/edit/' + id;
     loading();
     $.get(url, html => $('.content').html(html)).done(() => {
-        document.title = $('.title').text() + ' - OLMS';
+        document.title = $('.title').text() + ' - ' + $.i18n('OLMS');
         if (id == 0) loading(false);
         else postJSON('/get', { mode: 'admin', query: 'depts', id: id }, json =>
             $.each(json.dept, (k, v) => $('#' + k).val(v)))
@@ -241,7 +245,7 @@ function empl(id = 0) {
     loading();
     $.get(url, html => $('.content').html(html)).done(() => {
         getDepts('#Dept, #Permission');
-        document.title = $('.title').text() + ' - OLMS';
+        document.title = $('.title').text() + ' - ' + $.i18n('OLMS');
     }).done(() => {
         if (id != 0) {
             postJSON('/get', { mode: 'super', query: 'empls', id: id }, json => {
@@ -270,7 +274,7 @@ function record(mode = '', id = 0) {
     loading();
     $.get(url, html => $('.content').html(html)).done(() => {
         if (mode != '') getDepts('#Dept');
-        document.title = $('.title').text() + ' - OLMS';
+        document.title = $('.title').text() + ' - ' + $.i18n('OLMS');
     }).done(() => {
         if (mode != '') mode = 'admin';
         if (id != 0)
@@ -294,12 +298,12 @@ function record(mode = '', id = 0) {
 function verify(id) {
     loading();
     $.get('/record/verify/' + id, html => $('.content').html(html)).done(() => {
-        document.title = $('.title').text() + ' - OLMS';
+        document.title = $('.title').text() + ' - ' + $.i18n('OLMS');
         postJSON('/get', { mode: 'admin', id: id }, json => {
             $.each(json.record, (k, v) => $('#' + k).val(v));
             $('#Date').val(json.record.Date.replace(':00Z', '').replace('T', ' '));
-            if (json.record.Type) $('#Type').val('Overtime');
-            else $('#Type').val('Leave');
+            if (json.record.Type) $('#Type').val($.i18n('Overtime'));
+            else $('#Type').val($.i18n('Leave'));
         }).then(() => loading(false));
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -311,7 +315,7 @@ function setting() {
     $.get('/auth/setting', html => {
         loading(false);
         $('.content').html(html);
-        document.title = $('.title').text() + ' - OLMS';
+        document.title = $('.title').text() + ' - ' + $.i18n('OLMS');
         $('#password').focus();
     }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -324,7 +328,8 @@ function doDept(id) {
         $.post(url, $('input').serialize(), json => {
             $('.form').removeClass('was-validated');
             if (json.status == 0)
-                BootstrapButtons.fire('Error', json.message, 'error').then(() => $('#dept').val(''));
+                BootstrapButtons.fire($.i18n('Error'), json.message, 'error')
+                    .then(() => $('#dept').val(''));
             else showDepts();
         }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
 };
@@ -337,7 +342,7 @@ function doEmpl(mode, id) {
         $.post(url, $('input, select').serialize(), json => {
             $('.form').removeClass('was-validated');
             if (json.status == 0)
-                BootstrapButtons.fire('Error', json.message, 'error').then(() => {
+                BootstrapButtons.fire($.i18n('Error'), json.message, 'error').then(() => {
                     if (json.error == 1) $('#username').val('');
                 });
             else showEmpls(mode);
@@ -356,7 +361,7 @@ function doRecord(mode, id) {
         jqXHR.then(json => {
             $('.form').removeClass('was-validated');
             if (json.status == 0)
-                BootstrapButtons.fire('Error', json.message, 'error')
+                BootstrapButtons.fire($.i18n('Error'), json.message, 'error')
                     .then(() => $('#duration').val(''));
             else showRecords(mode);
         }).catch(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
@@ -379,10 +384,11 @@ function doDelete(type, id) {
     else if (type == 'empl') url = '/empl/delete/' + id;
     else if (type == 'record') url = '/record/delete/' + id;
     Swal.fire({
-        title: 'Are you sure?',
-        text: 'This ' + type + ' will be deleted permanently.',
+        title: $.i18n('AreYouSure'),
+        text: $.i18n('DeleteWarning').replace('%s', $.i18n(type)),
         icon: 'warning',
-        confirmButtonText: 'Delete',
+        confirmButtonText: $.i18n('Delete'),
+        cancelButtonText: $.i18n('Cancel'),
         showCancelButton: true,
         focusCancel: true,
         customClass: {
@@ -394,7 +400,7 @@ function doDelete(type, id) {
         if (confirm.isConfirmed)
             $.post(url, json => {
                 if (json.status == 0)
-                    BootstrapButtons.fire('Error', json.message, 'error');
+                    BootstrapButtons.fire($.i18n('Error'), json.message, 'error');
                 else window.location = '/';
             }).fail(jqXHR => { if (jqXHR.status == 401) window.location = '/auth/login' });
     });
@@ -410,9 +416,9 @@ function doSetting() {
         jqXHR.then(json => {
             $('.form').removeClass('was-validated');
             if (json.status == 1)
-                BootstrapButtons.fire('Success', 'Your password has changed. Please Re-login!', 'success')
+                BootstrapButtons.fire($.i18n('Success'), $.i18n('PasswordChanged'), 'success')
                     .then(() => window.location = '/auth/login');
-            else BootstrapButtons.fire('Error', json.message, 'error').then(() => {
+            else BootstrapButtons.fire($.i18n('Error'), json.message, 'error').then(() => {
                 if (json.error == 1) $('#password').val('');
                 else if (json.error == 2) {
                     $('#password1').val('');

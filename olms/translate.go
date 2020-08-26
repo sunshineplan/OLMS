@@ -30,9 +30,13 @@ func localize(c *gin.Context) map[string]string {
 	localizer := i18n.NewLocalizer(bundle, lang, c.GetHeader("Accept-Language"))
 	if i18nMessageFile != nil {
 		translate := make(map[string]string, len(i18nMessageFile.Messages))
-		for _, message := range i18nMessageFile.Messages {
-			translate[message.ID] = localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: message.ID})
+		var tag language.Tag
+		for _, Message := range i18nMessageFile.Messages {
+			var message string
+			message, tag, _ = localizer.LocalizeWithTag(&i18n.LocalizeConfig{MessageID: Message.ID})
+			translate[Message.ID] = message
 		}
+		c.Header("Content-Language", tag.String())
 		return translate
 	}
 	return nil

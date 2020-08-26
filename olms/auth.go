@@ -44,8 +44,9 @@ func superRequired(c *gin.Context) {
 }
 
 func login(c *gin.Context) {
+	localize := localize(c)
 	if !verifyResponse("login", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
-		c.HTML(200, "login.html", gin.H{"localize": localize(c), "error": "reCAPTCHA challenge failed", "recaptcha": SiteKey})
+		c.HTML(200, "login.html", gin.H{"localize": localize, "error": "reCAPTCHA challenge failed", "recaptcha": SiteKey})
 		return
 	}
 	session := sessions.Default(c)
@@ -64,19 +65,19 @@ func login(c *gin.Context) {
 		username).Scan(&id, &realname, &pw); err != nil {
 		if strings.Contains(err.Error(), "no such table") {
 			Restore("")
-			message = "Detected first time running. Initialized the database."
+			message = "InitDatabase"
 		} else if strings.Contains(err.Error(), "no rows") {
-			message = "Incorrect username"
+			message = "IncorrectUsername"
 		} else {
 			log.Println(err)
-			message = "Critical Error! Please contact your system administrator."
+			message = "CriticalError"
 		}
 	} else if err = bcrypt.CompareHashAndPassword([]byte(pw), []byte(password)); err != nil {
 		if (strings.Contains(err.Error(), "too short") && pw != password) || strings.Contains(err.Error(), "is not") {
-			message = "Incorrect password"
+			message = "IncorrectPassword"
 		} else if pw != password {
 			log.Println(err)
-			message = "Critical Error! Please contact your system administrator."
+			message = "CriticalError"
 		}
 	}
 	if message == "" {
@@ -99,10 +100,10 @@ func login(c *gin.Context) {
 		return
 	}
 	if SiteKey != "" && SecretKey != "" {
-		c.HTML(200, "login.html", gin.H{"localize": localize(c), "error": message, "recaptcha": SiteKey})
+		c.HTML(200, "login.html", gin.H{"localize": localize, "error": localize[message], "recaptcha": SiteKey})
 		return
 	}
-	c.HTML(200, "login.html", gin.H{"localize": localize(c), "error": message})
+	c.HTML(200, "login.html", gin.H{"localize": localize, "error": localize[message]})
 }
 
 func setting(c *gin.Context) {
@@ -137,7 +138,7 @@ func setting(c *gin.Context) {
 	switch {
 	case err != nil:
 		if (strings.Contains(err.Error(), "too short") && password != oldPassword) || strings.Contains(err.Error(), "is not") {
-			message = "Incorrect password."
+			message = "IncorrectPassword"
 			errorCode = 1
 			break
 		} else if password != oldPassword {
@@ -147,13 +148,13 @@ func setting(c *gin.Context) {
 		}
 		fallthrough
 	case password1 == password:
-		message = "New password cannot be the same as your current password."
+		message = "SamePassword"
 		errorCode = 2
 	case password1 != password2:
-		message = "Confirm password doesn't match new password."
+		message = "ConfirmPasswordNoMatch"
 		errorCode = 2
 	case password1 == "":
-		message = "New password cannot be blank."
+		message = "NewPasswordBlank"
 	}
 
 	if message == "" {
@@ -178,5 +179,5 @@ func setting(c *gin.Context) {
 		c.JSON(200, gin.H{"status": 1})
 		return
 	}
-	c.JSON(200, gin.H{"status": 0, "message": message, "error": errorCode})
+	c.JSON(200, gin.H{"status": 0, "message": localize(c)[message], "error": errorCode})
 }

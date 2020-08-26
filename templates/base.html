@@ -10,11 +10,14 @@
 {{ end }}
 <script src='https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/jquery-ui-dist@1/jquery-ui.min.js'></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9/dist/sweetalert2.all.min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/sweetalert2@9/dist/sweetalert2.all.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/@wikimedia/jquery.i18n@1/src/jquery.i18n.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/@wikimedia/jquery.i18n@1.0.7/src/jquery.i18n.messagestore.min.js'></script>
 <script src='/static/olms.js'></script>
 <script src='/static/script.js'></script>
 <script src='/static/pagination.js'></script>
 <script src='/static/sortable.js'></script>
+<script src='/static/i18n.js'></script>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css'>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/spinkit@2/spinkit.min.css'>
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/gh/google/material-design-icons@3/iconfont/material-icons.min.css'>
@@ -45,7 +48,11 @@
     <div>
       <a class='navbar-brand'>{{index .localize "EmployeePanel"}}</a>
       <ul class='navbar-nav'>
-        <li><a class='nav-link {{ if ne .user.Role true }}selected{{ end }}' onclick="showRecords('')">{{index .localize "EmployeeRecords"}}</a></li>
+        <li>
+          <a class='nav-link {{ if ne .user.Role true }}selected{{ end }}' onclick="showRecords('')">
+            {{index .localize "EmployeeRecords"}}
+          </a>
+        </li>
         <li><a class='nav-link' onclick="showStats('')">{{index .localize "EmployeeStatistics"}}</a></li>
       </ul>
     </div>

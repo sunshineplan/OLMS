@@ -13,7 +13,13 @@
     <label for='dept'>{{index .localize "Department"}}</label>
     <input class='form-control' name='dept' id='Name' required>
   </div>
-  <button class='btn btn-primary' onclick="doDept('{{ .id }}')" id='submit'>{{ if eq .id "0" }}Add{{ else }}Save{{ end }}</button>
+  <button class='btn btn-primary' onclick="doDept('{{ .id }}')" id='submit'>
+    {{ if eq .id "0" }}
+    {{index .localize "Add"}}
+    {{ else }}
+    {{index .localize "Save"}}
+    {{ end }}
+  </button>
   <button class='btn btn-primary' onclick='goback()'>{{index .localize "Cancel"}}</button>
 </div>
 {{ if ne .id "0" }}

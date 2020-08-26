@@ -9,7 +9,7 @@
           <label class='input-group-text' for='dept'>{{index .localize "Dept"}}</label>
         </div>
         <select class='custom-select' name='dept' id='dept'>
-          <option value=''>All</option>
+          <option value=''>{{index .localize "All"}}</option>
         </select>
       </div>
       {{ if eq .user "0" }}
@@ -18,7 +18,7 @@
           <label class='input-group-text' for='type'>{{index .localize "Type"}}</label>
         </div>
         <select class='custom-select' name='type' id='type'>
-          <option value=''>All</option>
+          <option value=''>{{index .localize "All"}}</option>
           <option value='0'>{{index .localize "GeneralEmployee"}}</option>
           <option value='1'>{{index .localize "Administrator"}}</option>
         </select>
