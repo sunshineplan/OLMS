@@ -7,6 +7,10 @@ body {
                  'Microsoft YaHei New', 'Microsoft Yahei', 微软雅黑, 宋体, SimSun, STXihei, 华文细黑, sans-serif;
 }
 
+a:hover {
+    text-decoration: none;
+}
+
 .topbar {
     position: fixed;
     top: 0px;
@@ -214,6 +218,14 @@ td:hover {
 
 .short {
     display: none;
+}
+
+.page-item {
+    cursor: pointer;
+}
+
+.disabled, .active {
+    cursor: default;
 }
 
 @media (min-width: 1201px) {
