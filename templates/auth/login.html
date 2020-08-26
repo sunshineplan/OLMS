@@ -19,11 +19,7 @@
     <label class='form-check-label' for='rememberme'>{{index .localize "RememberMe"}}</label>
   </div>
   {{ if .recaptcha }}
-  <input type='hidden' name='g-recaptcha-response' id='recaptcha' form='login'>
-  <small class='form-text text-muted'>This site is protected by reCAPTCHA and the Google
-    <a href='https://policies.google.com/privacy'>Privacy Policy</a> and
-    <a href='https://policies.google.com/terms'>Terms of Service</a> apply.
-  </small>
+  <input type='hidden' name='g-recaptcha-response' id='recaptcha'>
   <script>
     grecaptcha.ready(() => grecaptcha.execute(sitekey, { action: 'login' }).then(token => $('#recaptcha').val(token)))
   </script>
