@@ -124,7 +124,7 @@ a:hover {
     overflow-y: auto;
 }
 
-.form {
+.form, .lang {
     padding: 0 20px;
 }
 

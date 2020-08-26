@@ -10,6 +10,12 @@ $(document).on('submit', '#login', () => {
     if ($('#username').val() != 'root') localStorage.setItem('username', $('#username').val());
 });
 
+$(document).on('change', '#lang', () => {
+    document.cookie = `lang=${$('#lang').val()}; Path=/; max-age=31536000`;
+    BootstrapButtons.fire($.i18n('Success'), $.i18n('LanguageChanged'), 'success')
+        .then(() => window.location = '/');
+});
+
 $(document).on('click', 'li>a.nav-link', function () {
     $('li>a.nav-link').removeClass('selected');
     $(this).addClass('selected');

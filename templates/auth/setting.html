@@ -2,7 +2,19 @@
   <a class='h3 title'>{{index .localize "Setting"}}</a>
   <hr>
 </header>
+<div class='lang'>
+  <h4>{{index .localize "LanguageSetting"}}</h4>
+  <div class='form-group'>
+    <label for='lang'>{{index .localize "Languages"}}</label>
+    <select class='form-control' name='lang' id='lang'>
+      <option value='en'>English</option>
+      <option value='zh'>简体中文</option>
+    </select>
+    <script>$(() => $('#lang').val(document.documentElement.lang))</script>
+  </div>
+</div>
 <div class='form'>
+  <h4>{{index .localize "ChangePassword"}}</h4>
   <div class='form-group'>
     <label for='password'>{{index .localize "CurrentPassword"}}</label>
     <input class='form-control' type='password' name='password' id='password' maxlength=20 required>
@@ -19,6 +31,6 @@
     <div class='invalid-feedback'>{{index .localize "RequiredField"}}</div>
     <small class='form-text text-muted'>{{index .localize "MaxPasswordLength"}}</small>
   </div>
-  <button class='btn btn-primary' onclick='doSetting()' id='submit'>{{index .localize "Change"}}</button>
+  <button class='btn btn-primary' onclick='doSetting()' id='submit'>{{index .localize "Save"}}</button>
   <button class='btn btn-primary' onclick='goback()'>{{index .localize "Cancel"}}</button>
 </div>

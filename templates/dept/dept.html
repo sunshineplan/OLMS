@@ -12,6 +12,7 @@
   <div class='form-group'>
     <label for='dept'>{{index .localize "Department"}}</label>
     <input class='form-control' name='dept' id='Name' required>
+    <div class='invalid-feedback'>{{index .localize "RequiredField"}}</div>
   </div>
   <button class='btn btn-primary' onclick="doDept('{{ .id }}')" id='submit'>
     {{ if eq .id "0" }}

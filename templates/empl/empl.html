@@ -13,6 +13,7 @@
     <div class='form-group'>
       <label for='username'>{{index .localize "Username"}}</label>
       <input class='form-control' name='username' id='Username' required>
+      <div class='invalid-feedback'>{{index .localize "RequiredField"}}</div>
     </div>
     <div class='form-group'>
       <label for='realname'>{{index .localize "Realname"}}</label>
@@ -21,7 +22,7 @@
   </div>
   <div class='form-group'>
     <label for='dept'>{{index .localize "Department"}}</label>
-    <select class='form-control' name='dept' id='Dept'>
+    <select class='form-control' name='dept' id='Dept' required>
       <option disabled selected value> -- {{index .localize "SelectDepartment"}} -- </option>
     </select>
   </div>
