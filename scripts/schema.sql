@@ -7,8 +7,8 @@ CREATE TABLE user (
   realname TEXT NOT NULL,
   dept_id INTEGER NOT NULL,
   role BOOLEAN NOT NULL DEFAULT 0,
-  permission TEXT NOT NULL DEFAULT '',
-  FOREIGN KEY (dept_id) REFERENCES department (id)
+  email TEXT NOT NULL DEFAULT '',
+  subscribe BOOLEAN NOT NULL DEFAULT 0
 );
 
 CREATE TABLE department (
@@ -27,15 +27,18 @@ CREATE TABLE record (
   status INTEGER NOT NULL DEFAULT 0,
   created TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')),
   createdby TEXT,
-  verifiedby TEXT,
-  FOREIGN KEY (user_id) REFERENCES user (id),
-  FOREIGN KEY (dept_id) REFERENCES department (id)
+  verifiedby TEXT
+);
+
+CREATE TABLE permission (
+  dept_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL
 );
 
 CREATE VIEW employee AS
-  SELECT u.id, username, realname, dept_id, dept_name, role, permission
-  FROM user u
-  JOIN department d ON d.id = dept_id
+  SELECT u.id, username, realname, u.dept_id, dept_name, role,
+  (SELECT group_concat(p.dept_id) FROM permission p WHERE u.id = p.user_id) permission
+  FROM user u JOIN department d ON d.id = dept_id
   ORDER BY dept_name, realname;
 
 CREATE VIEW statistics AS

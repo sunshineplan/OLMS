@@ -67,11 +67,6 @@ func doAddDept(c *gin.Context) {
 			c.String(500, "")
 			return
 		}
-		if _, err := db.Exec("UPDATE user SET permission = (SELECT group_concat(id) FROM department) WHERE id = 0"); err != nil {
-			log.Printf("Failed to add admin permission: %v", err)
-			c.String(500, "")
-			return
-		}
 		c.JSON(200, gin.H{"status": 1})
 		return
 	}

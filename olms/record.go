@@ -245,6 +245,7 @@ func doAddRecord(c *gin.Context) {
 		user = users[0]
 	}
 
+	localize := localize(c)
 	userID := c.PostForm("empl")
 	ip, _, _ := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
 	ip = ip + "-" + c.ClientIP()
@@ -255,6 +256,7 @@ func doAddRecord(c *gin.Context) {
 			c.String(500, "")
 			return
 		}
+		notify(&idOptions{DeptIDs: []string{strconv.Itoa(user.DeptID)}}, localize["AddRecordSubscribe"])
 		c.JSON(200, gin.H{"status": 1})
 		return
 	}
@@ -270,6 +272,7 @@ func doAddRecord(c *gin.Context) {
 			c.String(500, "")
 			return
 		}
+		notify(&idOptions{UserID: userID}, localize["AdminAddRecordSubscribe"])
 		c.JSON(200, gin.H{"status": 1})
 		return
 	}
@@ -351,6 +354,7 @@ func doEditRecord(c *gin.Context) {
 			c.String(500, "")
 			return
 		}
+		notify(&idOptions{DeptIDs: []string{strconv.Itoa(records[0].DeptID)}}, localize(c)["EditRecordSubscribe"])
 		c.JSON(200, gin.H{"status": 1})
 		return
 	}
@@ -457,6 +461,8 @@ func doVerifyRecord(c *gin.Context) {
 		c.String(500, "")
 		return
 	}
+	notify(&idOptions{UserID: user.ID, DeptIDs: []string{strconv.Itoa(user.DeptID)}},
+		fmt.Sprintf(localize(c)["VerifyRecordSubscribe"], status))
 	c.JSON(200, gin.H{"status": 1})
 }
 
@@ -498,6 +504,9 @@ func doDeleteRecord(c *gin.Context) {
 		log.Printf("Failed to delete record: %v", err)
 		c.String(500, "")
 		return
+	}
+	if user.ID != 0 {
+		notify(&idOptions{DeptIDs: []string{strconv.Itoa(user.DeptID)}}, localize(c)["DeleteRecordSubscribe"])
 	}
 	c.JSON(200, gin.H{"status": 1})
 }

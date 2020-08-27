@@ -70,7 +70,8 @@ func getEmpls(id *idOptions, options *searchOptions) (empls []empl, total int, e
 			bc <- true
 		}()
 	}
-	rows, err := db.Query(fmt.Sprintf(stmt+orderBy+limit, "id, username, realname, dept_id, dept_name, role, permission"), args...)
+	rows, err := db.Query(
+		fmt.Sprintf(stmt+orderBy+limit, "id, username, realname, dept_id, dept_name, role, permission"), args...)
 	if err != nil {
 		log.Printf("Failed to get employees: %v", err)
 		return
@@ -78,10 +79,13 @@ func getEmpls(id *idOptions, options *searchOptions) (empls []empl, total int, e
 	defer rows.Close()
 	for rows.Next() {
 		var empl empl
-		if err = rows.Scan(&empl.ID, &empl.Username, &empl.Realname, &empl.DeptID, &empl.DeptName, &empl.Role, &empl.Permission); err != nil {
+		var permission []byte
+		if err = rows.Scan(
+			&empl.ID, &empl.Username, &empl.Realname, &empl.DeptID, &empl.DeptName, &empl.Role, &permission); err != nil {
 			log.Printf("Failed to scan employee: %v", err)
 			return
 		}
+		empl.Permission = string(permission)
 		empls = append(empls, empl)
 	}
 	if v := <-bc; !v {
@@ -114,7 +118,8 @@ func doAddEmpl(c *gin.Context) {
 	var code int
 	if username == "" {
 		message = "Username is required."
-	} else if err := db.QueryRow("SELECT id FROM user WHERE username = ?", strings.ToLower(username)).Scan(&exist); err == nil {
+	} else if err := db.QueryRow(
+		"SELECT id FROM user WHERE username = ?", strings.ToLower(username)).Scan(&exist); err == nil {
 		message = fmt.Sprintf(localize["UsernameExist"], username)
 		code = 1
 	} else if deptID == "" {
@@ -122,20 +127,34 @@ func doAddEmpl(c *gin.Context) {
 	} else {
 		if checkSuper(c) {
 			role := c.PostForm("role")
-			var permission []string
-			if role == "1" {
-				permission = c.PostFormArray("permission")
-			}
-			if _, err = db.Exec("INSERT INTO user (username, realname, dept_id, role, permission) VALUES (?, ?, ?, ?, ?)",
-				strings.ToLower(username), realname, deptID, role, strings.Join(permission, ",")); err != nil {
+			res, err := db.Exec("INSERT INTO user (username, realname, dept_id, role) VALUES (?, ?, ?, ?)",
+				strings.ToLower(username), realname, deptID, role)
+			if err != nil {
 				log.Printf("Failed to add user: %v", err)
 				c.String(500, "")
 				return
 			}
+			id, err := res.LastInsertId()
+			if err != nil {
+				log.Printf("Failed to get last insert id: %v", err)
+				c.String(500, "")
+				return
+			}
+			if role == "1" {
+				for _, permission := range c.PostFormArray("permission") {
+					if _, err = db.Exec(
+						"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, id); err != nil {
+						log.Printf("Failed to add user permission: %v", err)
+						c.String(500, "")
+						return
+					}
+				}
+			}
 			c.JSON(200, gin.H{"status": 1})
 			return
 		}
-		if _, err = db.Exec("INSERT INTO user (username, realname, dept_id) VALUES (?, ?, ?)", username, realname, deptID); err != nil {
+		if _, err = db.Exec(
+			"INSERT INTO user (username, realname, dept_id) VALUES (?, ?, ?)", username, realname, deptID); err != nil {
 			log.Printf("Failed to add user: %v", err)
 			c.String(500, "")
 			return
@@ -167,10 +186,7 @@ func doEditEmpl(c *gin.Context) {
 		realname = username
 	}
 	role := c.PostForm("role")
-	var permission []string
-	if role == "1" {
-		permission = c.PostFormArray("permission")
-	}
+
 	localize := localize(c)
 	var exist, message string
 	if username == "" {
@@ -182,8 +198,9 @@ func doEditEmpl(c *gin.Context) {
 		message = localize["DepartmentRequired"]
 	} else {
 		if password := c.PostForm("password"); password == "" {
-			if _, err = db.Exec("UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ?, permission = ? WHERE id = ?",
-				strings.ToLower(username), realname, deptID, role, strings.Join(permission, ","), id); err != nil {
+			if _, err = db.Exec(
+				"UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ? WHERE id = ?",
+				strings.ToLower(username), realname, deptID, role, id); err != nil {
 				log.Printf("Failed to edit user: %v", err)
 				c.String(500, "")
 				return
@@ -196,11 +213,26 @@ func doEditEmpl(c *gin.Context) {
 				return
 			}
 			if _, err = db.Exec(
-				"UPDATE user SET username = ?, realname = ?, password = ?, dept_id = ?, role = ?, permission = ? WHERE id = ?",
-				strings.ToLower(username), realname, string(newPassword), deptID, role, strings.Join(permission, ","), id); err != nil {
+				"UPDATE user SET username = ?, realname = ?, password = ?, dept_id = ?, role = ? WHERE id = ?",
+				strings.ToLower(username), realname, string(newPassword), deptID, role, id); err != nil {
 				log.Printf("Failed to edit user: %v", err)
 				c.String(500, "")
 				return
+			}
+		}
+		if _, err = db.Exec("DELETE FROM permission WHERE user_id = ?", id); err != nil {
+			log.Printf("Failed to clear user permission: %v", err)
+			c.String(500, "")
+			return
+		}
+		if role == "1" {
+			for _, permission := range c.PostFormArray("permission") {
+				if _, err = db.Exec(
+					"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, id); err != nil {
+					log.Printf("Failed to add user permission: %v", err)
+					c.String(500, "")
+					return
+				}
 			}
 		}
 		c.JSON(200, gin.H{"status": 1})
