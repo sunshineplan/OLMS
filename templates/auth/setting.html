@@ -2,6 +2,19 @@
   <a class='h3 title'>{{index .localize "Setting"}}</a>
   <hr>
 </header>
+<div class='subscribe'>
+  <h4>{{index .localize "Subscribe"}}</h4>
+  <div class='form-group'>
+    <div class='form-group'>
+      <label for='email'>{{index .localize "Email"}}</label>
+      <input class='form-control' type='email' name='email' id='email' placeholder='{{index .localize "email"}}' value='{{ .email }}'>
+    </div>
+    <div class='form-group form-check'>
+      <input type='checkbox' class='form-check-input' name='subscribe' id='subscribe' {{ if eq .subscribe true }}checked{{ end }}>
+      <label class='form-check-label' for='subscribe'>{{index .localize "SubscribeNotification"}}</label>
+    </div>
+  </div>
+</div>
 <div class='lang'>
   <h4>{{index .localize "LanguageSetting"}}</h4>
   <div class='form-group'>
@@ -31,6 +44,6 @@
     <div class='invalid-feedback'>{{index .localize "RequiredField"}}</div>
     <small class='form-text text-muted'>{{index .localize "MaxPasswordLength"}}</small>
   </div>
-  <button class='btn btn-primary' onclick='doSetting()' id='submit'>{{index .localize "Save"}}</button>
-  <button class='btn btn-primary' onclick='goback()'>{{index .localize "Cancel"}}</button>
+  <button class='btn btn-primary' onclick='doSetting()' id='submit'>{{index .localize "SavePassword"}}</button>
+  <button class='btn btn-primary' onclick='goback()'>{{index .localize "Back"}}</button>
 </div>

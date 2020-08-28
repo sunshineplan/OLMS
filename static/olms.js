@@ -322,7 +322,7 @@ function doDept(id) {
     var url;
     if (id == 0) url = '/dept/add';
     else url = '/dept/edit/' + id;
-    if (valid())
+    if (validate())
         $.post(url, $('input').serialize(), json => {
             $('.form').removeClass('was-validated');
             if (json.status == 0)
@@ -336,7 +336,7 @@ function doEmpl(mode, id) {
     var url;
     if (id == 0) url = '/empl/add';
     else url = '/empl/edit/' + id;
-    if (valid())
+    if (validate())
         $.post(url, $('input, select').serialize(), json => {
             $('.form').removeClass('was-validated');
             if (json.status == 0)
@@ -351,7 +351,7 @@ function doRecord(mode, id) {
     var url, jqXHR;
     if (id == 0) url = '/record/add';
     else url = '/record/edit/' + id;
-    if (valid()) {
+    if (validate()) {
         if ($('.g-recaptcha-response').length)
             jqXHR = grecaptcha.execute(sitekey, { action: 'record' })
                 .then(() => $.post(url, $('input, select, textarea').serialize()));
@@ -405,7 +405,7 @@ function doDelete(type, id) {
 };
 
 function doSetting() {
-    if (valid()) {
+    if (validate()) {
         var jqXHR;
         if ($('.g-recaptcha-response').length)
             jqXHR = grecaptcha.execute(sitekey, { action: 'setting' })

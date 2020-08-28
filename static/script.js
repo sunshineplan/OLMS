@@ -16,6 +16,29 @@ $(document).on('change', '#lang', () => {
         .then(() => window.location = '/');
 });
 
+$(document).on('input', '#email', () => $('#subscribe').prop('checked', false));
+
+$(document).on('change', '#subscribe', () => {
+    var data;
+    if ($('#subscribe').is(':checked')) {
+        var email = $('#email').val();
+        if (validateEmail(email)) data = { subscribe: 1, email: email };
+        else BootstrapButtons.fire($.i18n('Error'), $.i18n('EmailNotValid'), 'error').then(() => {
+            $('#email').val('');
+            $('#subscribe').prop('checked', false);
+        });
+    } else data = { subscribe: 0 };
+    if (data === undefined) return false;
+    $.post('/subscribe', data).done(json => {
+        if (json.status == 1)
+            BootstrapButtons.fire($.i18n('Success'), $.i18n('SubscribeChanged'), 'success');
+        else BootstrapButtons.fire($.i18n('Error'), $.i18n('EmailNotValid'), 'error').then(() => {
+            $('#email').val('');
+            $('#subscribe').prop('checked', false);
+        });
+    });
+});
+
 $(document).on('click', 'li>a.nav-link', function () {
     $('li>a.nav-link').removeClass('selected');
     $(this).addClass('selected');
@@ -85,7 +108,7 @@ function loading(show = true) {
     };
 };
 
-function valid() {
+function validate() {
     var result = true;
     $('input').each(function () {
         if ($(this)[0].checkValidity() === false) {
@@ -95,6 +118,12 @@ function valid() {
     });
     return result;
 };
+
+function validateEmail(email) {
+    //https://www.w3.org/TR/2016/REC-html51-20161101/sec-forms.html#email-state-typeemail
+    const re = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    return re.test(email);
+}
 
 function goback(mode) {
     var last = document.cookie.split('Last=')[1];

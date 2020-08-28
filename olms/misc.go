@@ -27,9 +27,9 @@ func Backup() {
 	log.Println("Start!")
 	file := dump()
 	defer os.Remove(file)
-	MailSetting.To = strings.Split(To, ",")
-	if err := mail.SendMail(
-		&MailSetting,
+	backup := MailSetting
+	backup.To = strings.Split(To, ",")
+	if err := backup.Send(
 		fmt.Sprintf("OLMS Backup-%s", time.Now().Format("20060102")),
 		"",
 		&mail.Attachment{FilePath: file, Filename: "database"},

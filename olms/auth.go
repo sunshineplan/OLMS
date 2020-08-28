@@ -107,6 +107,25 @@ func login(c *gin.Context) {
 }
 
 func setting(c *gin.Context) {
+	db, err := getDB()
+	if err != nil {
+		log.Printf("Failed to connect to database: %v", err)
+		c.String(503, "")
+		return
+	}
+	defer db.Close()
+
+	var subscribe bool
+	var email string
+	if err := db.QueryRow(
+		"SELECT subscribe, email FROM user WHERE id = ?",
+		sessions.Default(c).Get("userID")).Scan(&subscribe, &email); err != nil {
+		log.Printf("Failed to get user subscribe: %v", err)
+	}
+	c.HTML(200, "setting.html", gin.H{"localize": localize(c), "subscribe": subscribe, "email": email})
+}
+
+func doSetting(c *gin.Context) {
 	if !verifyResponse("setting", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
 		c.JSON(200, gin.H{"status": 0, "message": "reCAPTCHA challenge failed"})
 		return

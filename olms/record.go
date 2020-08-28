@@ -256,8 +256,9 @@ func doAddRecord(c *gin.Context) {
 			c.String(500, "")
 			return
 		}
-		notify(&idOptions{DeptIDs: []string{strconv.Itoa(user.DeptID)}}, localize["AddRecordSubscribe"])
 		c.JSON(200, gin.H{"status": 1})
+		notify(&idOptions{DeptIDs: []string{strconv.Itoa(user.DeptID)}},
+			fmt.Sprintf(localize["AddRecordSubscribe"], user.Realname), localize)
 		return
 	}
 	deptID := c.PostForm("dept")
@@ -272,8 +273,11 @@ func doAddRecord(c *gin.Context) {
 			c.String(500, "")
 			return
 		}
-		notify(&idOptions{UserID: userID}, localize["AdminAddRecordSubscribe"])
 		c.JSON(200, gin.H{"status": 1})
+		notify(&idOptions{UserID: userID},
+			fmt.Sprintf(localize["AdminAddRecordSubscribe"], user.Realname), localize)
+		notify(&idOptions{DeptIDs: []string{deptID}},
+			fmt.Sprintf(localize["AdminAddRecordAdminSubscribe"], user.Realname), localize)
 		return
 	}
 	status := c.PostForm("status")
@@ -354,8 +358,10 @@ func doEditRecord(c *gin.Context) {
 			c.String(500, "")
 			return
 		}
-		notify(&idOptions{DeptIDs: []string{strconv.Itoa(records[0].DeptID)}}, localize(c)["EditRecordSubscribe"])
 		c.JSON(200, gin.H{"status": 1})
+		localize := localize(c)
+		notify(&idOptions{DeptIDs: []string{strconv.Itoa(records[0].DeptID)}},
+			fmt.Sprintf(localize["EditRecordSubscribe"], records[0].Name), localize)
 		return
 	}
 	userID := c.PostForm("empl")
@@ -461,9 +467,18 @@ func doVerifyRecord(c *gin.Context) {
 		c.String(500, "")
 		return
 	}
-	notify(&idOptions{UserID: user.ID, DeptIDs: []string{strconv.Itoa(user.DeptID)}},
-		fmt.Sprintf(localize(c)["VerifyRecordSubscribe"], status))
+	localize := localize(c)
+	var result string
+	if status == 1 {
+		result = localize["Verified"]
+	} else {
+		result = localize["Rejected"]
+	}
 	c.JSON(200, gin.H{"status": 1})
+	notify(&idOptions{UserID: records[0].UserID},
+		fmt.Sprintf(localize["VerifyRecordSubscribe"], user.Realname, result), localize)
+	notify(&idOptions{DeptIDs: []string{strconv.Itoa(records[0].DeptID)}},
+		fmt.Sprintf(localize["VerifyRecordAdminSubscribe"], user.Realname, result), localize)
 }
 
 func doDeleteRecord(c *gin.Context) {
@@ -505,8 +520,10 @@ func doDeleteRecord(c *gin.Context) {
 		c.String(500, "")
 		return
 	}
-	if user.ID != 0 {
-		notify(&idOptions{DeptIDs: []string{strconv.Itoa(user.DeptID)}}, localize(c)["DeleteRecordSubscribe"])
-	}
 	c.JSON(200, gin.H{"status": 1})
+	if user.ID != 0 {
+		localize := localize(c)
+		notify(&idOptions{DeptIDs: []string{strconv.Itoa(user.DeptID)}},
+			fmt.Sprintf(localize["DeleteRecordSubscribe"], user.Realname), localize)
+	}
 }
