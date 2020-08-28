@@ -128,15 +128,14 @@ func Run() {
 		session.Save()
 		c.Redirect(302, "/auth/login")
 	})
-	auth.GET("/setting", authRequired, func(c *gin.Context) {
-		c.HTML(200, "setting.html", gin.H{"localize": localize(c)})
-	})
-	auth.POST("/setting", authRequired, setting)
+	auth.GET("/setting", authRequired, setting)
+	auth.POST("/setting", authRequired, doSetting)
 
 	api := router.Group("/")
 	api.Use(authRequired)
 	api.POST("/get", get)
 	api.POST("/export", exportCSV)
+	api.POST("/subscribe", subscribe)
 
 	record := router.Group("/record")
 	record.Use(authRequired)

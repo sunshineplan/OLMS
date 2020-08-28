@@ -13,6 +13,8 @@ import (
 var bundle *i18n.Bundle
 var i18nMessageFile *i18n.MessageFile
 
+type translate map[string]string
+
 func init() {
 	bundle = i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
@@ -25,11 +27,11 @@ func init() {
 	}
 }
 
-func localize(c *gin.Context) map[string]string {
+func localize(c *gin.Context) translate {
 	lang, _ := c.Cookie("lang")
 	localizer := i18n.NewLocalizer(bundle, lang, c.GetHeader("Accept-Language"))
 	if i18nMessageFile != nil {
-		translate := make(map[string]string, len(i18nMessageFile.Messages))
+		translate := make(translate, len(i18nMessageFile.Messages))
 		var tag language.Tag
 		for _, Message := range i18nMessageFile.Messages {
 			var message string
