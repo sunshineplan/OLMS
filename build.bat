@@ -1,3 +1,2 @@
 @echo off
-go build
-go build -ldflags "-H windowsgui" -o olms.exe
+go build -ldflags "-s -w" -o olms.exe

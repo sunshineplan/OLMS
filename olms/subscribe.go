@@ -108,8 +108,7 @@ func notify(id *idOptions, message string, localize translate) {
 	} else {
 		return
 	}
-	workers.New(5).Run(emails, func(c chan bool, _ int, email interface{}) {
-		defer func() { <-c }()
+	workers.Slice(emails, func(_ int, email interface{}) {
 		subscribe := MailSetting
 		subscribe.To = []string{email.(string)}
 		if err := subscribe.Send(

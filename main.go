@@ -8,10 +8,19 @@ import (
 	"path/filepath"
 	"strings"
 
+	"olms-go/olms"
+
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/sunshineplan/olms-go/olms"
+	"github.com/sunshineplan/utils"
+	"github.com/sunshineplan/utils/winsvc"
 	"github.com/vharitonsky/iniflags"
 )
+
+func init() {
+	winsvc.SetServiceName("OLMS")
+	winsvc.SetDescription("Overtime and Leave Management System")
+	winsvc.SetExecution(olms.Run)
+}
 
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
@@ -40,28 +49,49 @@ func main() {
 	iniflags.SetAllowMissingConfigFile(true)
 	iniflags.Parse()
 
+	if winsvc.IsWindowsService() {
+		winsvc.RunService(false)
+		return
+	}
+
+	var err error
 	switch flag.NArg() {
 	case 0:
 		olms.Run()
 	case 1:
 		switch flag.Arg(0) {
-		case "run":
+		case "run", "debug":
 			olms.Run()
+		case "install":
+			err = winsvc.InstallService()
+		case "remove":
+			err = winsvc.RemoveService()
+		case "start":
+			err = winsvc.StartService()
+		case "stop":
+			err = winsvc.StopService()
 		case "backup":
 			olms.Backup()
 		case "init":
-			olms.Restore("")
+			if utils.Confirm("Do you want to initialize database?", 3) {
+				olms.Restore("")
+			}
 		default:
 			log.Fatalf("Unknown argument: %s", flag.Arg(0))
 		}
 	case 2:
 		switch flag.Arg(0) {
 		case "restore":
-			olms.Restore(flag.Arg(1))
+			if utils.Confirm("Do you want to restore database?", 3) {
+				olms.Restore(flag.Arg(1))
+			}
 		default:
 			log.Fatalf("Unknown arguments: %s", strings.Join(flag.Args(), " "))
 		}
 	default:
 		log.Fatalf("Unknown arguments: %s", strings.Join(flag.Args(), " "))
+	}
+	if err != nil {
+		log.Fatalf("failed to %s OLMS: %v", flag.Arg(0), err)
 	}
 }
