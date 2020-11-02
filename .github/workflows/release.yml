@@ -42,8 +42,11 @@ jobs:
             })
 
       - name: Get Current Date
+        uses: actions/github-script@v3
         id: date
-        run: echo "::set-output name=date::$(TZ=CST date +'%Y-%m-%d')"
+        with:
+          script: |
+            core.setOutput("date", new Date(new Date().getTime()+(8*3600*1000)).toISOString().split('T')[0])
 
       - name: Create Release
         uses: actions/create-release@v1
