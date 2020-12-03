@@ -48,45 +48,7 @@
     </div>
   </nav>
   {{ if .user }}
-  <nav class='nav flex-column navbar-light sidebar'>
-    <div class='panel'>
-      {{ if ne .user.ID 0 }}
-      <div>
-        <a class='navbar-brand'>{{index .localize "EmployeePanel"}}</a>
-        <ul class='navbar-nav'>
-          <li>
-            <a class='nav-link {{ if ne .user.Role true }}selected{{ end }}' onclick="showRecords('')">
-              {{index .localize "EmployeeRecords"}}
-            </a>
-          </li>
-          <li><a class='nav-link' onclick="showStats('')">{{index .localize "EmployeeStatistics"}}</a></li>
-        </ul>
-      </div>
-      {{ end }}
-      {{ if eq .user.Role true }}
-      <div>
-        <a class='navbar-brand'>{{index .localize "DepartmentPanel"}}</a>
-        <ul class='navbar-nav'>
-          {{ if ne .user.ID 0 }}
-          <li><a class='nav-link selected' onclick="showRecords('admin')">{{index .localize "DepartmentRecords"}}</a>
-          </li>
-          {{ end }}
-          <li><a class='nav-link' onclick="showStats('admin')">{{index .localize "DepartmentStatistics"}}</a></li>
-        </ul>
-      </div>
-      <div>
-        <a class='navbar-brand'>{{index .localize "ControlPanel"}}</a>
-        <ul class='navbar-nav'>
-          <li><a class='nav-link' onclick="showEmpls('{{ .user.ID }}')">{{index .localize "ManageEmployee"}}</a></li>
-          {{ if eq .user.ID 0 }}
-          <li><a class='nav-link' onclick='showDepts()'>{{index .localize "ManageDepartment"}}</a></li>
-          <li><a class='nav-link selected' onclick="showRecords('super')">{{index .localize "ManageRecords"}}</a></li>
-          {{ end }}
-        </ul>
-      </div>
-      {{ end }}
-    </div>
-  </nav>
+  
   {{ if .recaptcha }}
   {{ if ne .user.Role true }}
   <script>grecaptcha.ready(() => showRecords(''))</script>

@@ -1,20 +1,21 @@
 package olms
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/sunshineplan/utils/requests"
 )
 
 type reCAPTCHA struct {
-	Success     bool      `json:"success"`
-	Score       float64   `json:"score"`
-	Action      string    `json:"action"`
+	Success     bool
+	Score       float64
+	Action      string
 	ChallengeTS time.Time `json:"challenge_ts"`
-	Hostname    string    `json:"hostname"`
-	ErrorCodes  []string  `json:"error-codes"`
+	Hostname    string
+	ErrorCodes  []string `json:"error-codes"`
 }
 
 // SiteKey reCAPTCHA
@@ -29,9 +30,23 @@ func challenge(action, remoteip string, response interface{}) bool {
 		return false
 	}
 	data := url.Values{"secret": {SecretKey}, "remoteip": {remoteip}, "response": {token}}
+
+	resp, err := http.PostForm("https://www.recaptcha.net/recaptcha/api/siteverify", data)
+	if err != nil {
+		log.Println("Failed to verify response:", err)
+		return false
+	}
+
+	defer resp.Body.Close()
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("Failed to read response:", err)
+		return false
+	}
 	var r reCAPTCHA
-	if err := requests.Post("https://www.recaptcha.net/recaptcha/api/siteverify", nil, data).JSON(&r); err != nil {
-		log.Printf("Failed to verify response: %v", err)
+	if err := json.Unmarshal(b, &r); err != nil {
+		log.Println("Failed to unmarshal response:", err)
 		return false
 	}
 	if !r.Success || r.Score < 0.5 || action != r.Action {

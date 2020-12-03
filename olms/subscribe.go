@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/sunshineplan/utils/mail"
 	"github.com/sunshineplan/utils/workers"
 )
 
@@ -109,12 +110,11 @@ func notify(id *idOptions, message string, localize translate) {
 		return
 	}
 	workers.Slice(emails, func(_ int, email interface{}) {
-		subscribe := MailSetting
-		subscribe.To = []string{email.(string)}
-		if err := subscribe.Send(
-			fmt.Sprintf("%s-%s", localize["NotificationSubject"], time.Now().Format("20060102 15:04")),
-			fmt.Sprintf("%s\n\n    %s", title, message),
-		); err != nil {
+		if err := Dialer.Send(&mail.Message{
+			To:      []string{email.(string)},
+			Subject: fmt.Sprintf("%s-%s", localize["NotificationSubject"], time.Now().Format("20060102 15:04")),
+			Body:    fmt.Sprintf("%s\n\n    %s", title, message),
+		}); err != nil {
 			log.Printf("Failed to send mail: %v", err)
 		}
 	})

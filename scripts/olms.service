@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Environment=GIN_MODE=release
-ExecStart=/var/www/olms-go/olms-go
+ExecStart=/var/www/olms/olms
 
 [Install]
 WantedBy=multi-user.target

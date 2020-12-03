@@ -11,8 +11,8 @@ import (
 	"github.com/sunshineplan/utils/mail"
 )
 
-// MailSetting contain backup account information
-var MailSetting mail.Setting
+// Dialer contain backup account information
+var Dialer mail.Dialer
 
 // To is backup receiver
 var To string
@@ -27,13 +27,11 @@ func Backup() {
 	log.Println("Start!")
 	file := dump()
 	defer os.Remove(file)
-	backup := MailSetting
-	backup.To = strings.Split(To, ",")
-	if err := backup.Send(
-		fmt.Sprintf("OLMS Backup-%s", time.Now().Format("20060102")),
-		"",
-		&mail.Attachment{FilePath: file, Filename: "database"},
-	); err != nil {
+	if err := Dialer.Send(&mail.Message{
+		To:          strings.Split(To, ","),
+		Subject:     fmt.Sprintf("OLMS Backup-%s", time.Now().Format("20060102")),
+		Attachments: []*mail.Attachment{{Path: file, Filename: "database"}},
+	}); err != nil {
 		log.Fatalf("Failed to send mail: %v", err)
 	}
 	log.Println("Done!")

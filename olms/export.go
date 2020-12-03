@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sunshineplan/utils/export"
+	"github.com/sunshineplan/utils"
 )
 
 func (r *record) format(localize map[string]string) (f map[string]interface{}) {
@@ -64,16 +63,10 @@ func sendCSV(c *gin.Context, filename string, fieldnames []string, r []map[strin
 		rows = append(rows, i)
 	}
 	var b bytes.Buffer
-	b.Write([]byte{0xEF, 0xBB, 0xBF})
-	if err := export.CSV(fieldnames, rows, &b); err != nil {
+	if err := utils.ExportUTF8CSV(fieldnames, rows, &b); err != nil {
 		c.String(500, "Failed to save csv: "+err.Error())
 		return
 	}
-	body, err := ioutil.ReadAll(&b)
-	if err != nil {
-		c.String(500, "Failed to read csv bytes: "+err.Error())
-		return
-	}
 	c.Header("content-disposition", fmt.Sprintf("attachment; filename=\"%s\"", url.PathEscape(strings.ReplaceAll(filename, "<nil>", ""))))
-	c.Data(200, "text/csv", body)
+	c.Data(200, "text/csv", b.Bytes())
 }

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"olms-go/olms"
+	"olms/olms"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sunshineplan/utils"
@@ -16,10 +16,12 @@ import (
 	"github.com/vharitonsky/iniflags"
 )
 
+var svc winsvc.Service
+
 func init() {
-	winsvc.SetServiceName("OLMS")
-	winsvc.SetDescription("Overtime and Leave Management System")
-	winsvc.SetExecution(olms.Run)
+	svc.Name = "OLMS"
+	svc.Desc = "Overtime and Leave Management System"
+	svc.Exec = olms.Run
 }
 
 func usage() {
@@ -38,11 +40,11 @@ func main() {
 	flag.StringVar(&olms.Port, "port", "12345", "Server Port")
 	flag.StringVar(&olms.SiteKey, "sitekey", "", "reCAPTCHA Site Key")
 	flag.StringVar(&olms.SecretKey, "secretkey", "", "reCAPTCHA Secret Key")
-	flag.StringVar(&olms.MailSetting.From, "from", "", "Backup sender")
+	flag.StringVar(&olms.Dialer.Account, "from", "", "Backup sender")
 	flag.StringVar(&olms.To, "to", "", "Backup receiver")
-	flag.StringVar(&olms.MailSetting.Password, "password", "", "Backup sender password")
-	flag.StringVar(&olms.MailSetting.SMTPServer, "server", "", "Backup sender server")
-	flag.IntVar(&olms.MailSetting.SMTPServerPort, "bport", 587, "Backup sender server port")
+	flag.StringVar(&olms.Dialer.Password, "password", "", "Backup sender password")
+	flag.StringVar(&olms.Dialer.Host, "server", "", "Backup sender server")
+	flag.IntVar(&olms.Dialer.Port, "bport", 587, "Backup sender server port")
 	flag.StringVar(&olms.LogPath, "log", "", "Log Path")
 	//flag.StringVar(&olms.LogPath, "log", filepath.Join(filepath.Dir(olms.Self), "access.log"), "Log Path")
 	iniflags.SetConfigFile(filepath.Join(filepath.Dir(olms.Self), "config.ini"))
@@ -50,7 +52,7 @@ func main() {
 	iniflags.Parse()
 
 	if winsvc.IsWindowsService() {
-		winsvc.RunService(false)
+		svc.Run(false)
 		return
 	}
 
@@ -63,13 +65,13 @@ func main() {
 		case "run", "debug":
 			olms.Run()
 		case "install":
-			err = winsvc.InstallService()
+			err = svc.Install()
 		case "remove":
-			err = winsvc.RemoveService()
+			err = svc.Remove()
 		case "start":
-			err = winsvc.StartService()
+			err = svc.Start()
 		case "stop":
-			err = winsvc.StopService()
+			err = svc.Stop()
 		case "backup":
 			olms.Backup()
 		case "init":
