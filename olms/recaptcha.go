@@ -9,15 +9,6 @@ import (
 	"time"
 )
 
-type reCAPTCHA struct {
-	Success     bool
-	Score       float64
-	Action      string
-	ChallengeTS time.Time `json:"challenge_ts"`
-	Hostname    string
-	ErrorCodes  []string `json:"error-codes"`
-}
-
 // SiteKey reCAPTCHA
 var SiteKey string
 
@@ -44,13 +35,21 @@ func challenge(action, remoteip string, response interface{}) bool {
 		log.Println("Failed to read response:", err)
 		return false
 	}
-	var r reCAPTCHA
-	if err := json.Unmarshal(b, &r); err != nil {
+
+	var result struct {
+		Success     bool
+		Score       float64
+		Action      string
+		ChallengeTS time.Time `json:"challenge_ts"`
+		Hostname    string
+		ErrorCodes  []string `json:"error-codes"`
+	}
+	if err := json.Unmarshal(b, &result); err != nil {
 		log.Println("Failed to unmarshal response:", err)
 		return false
 	}
-	if !r.Success || r.Score < 0.5 || action != r.Action {
-		log.Println("Challenge failed.", r)
+	if !result.Success || result.Score < 0.5 || action != result.Action {
+		log.Println("Challenge failed.", result)
 		return false
 	}
 	return true

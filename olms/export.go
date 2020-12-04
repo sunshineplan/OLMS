@@ -41,7 +41,7 @@ func (r *record) format(localize map[string]string) (f map[string]interface{}) {
 	return
 }
 
-func (s *stat) format(localize map[string]string) (f map[string]interface{}) {
+func (s *statistic) format(localize map[string]string) (f map[string]interface{}) {
 	b, _ := json.Marshal(s)
 	json.Unmarshal(b, &f)
 	for k, v := range f {
@@ -50,8 +50,8 @@ func (s *stat) format(localize map[string]string) (f map[string]interface{}) {
 	return
 }
 
-func (d *dept) format() map[string]interface{} { return nil }
-func (e *empl) format() map[string]interface{} { return nil }
+func (d *department) format() map[string]interface{} { return nil }
+func (e *employee) format() map[string]interface{}   { return nil }
 
 func sendCSV(c *gin.Context, filename string, fieldnames []string, r []map[string]interface{}) {
 	if len(r) == 0 {

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os/exec"
+	"runtime"
 )
 
 func getDB() (*sql.DB, error) {
@@ -14,7 +15,7 @@ func getDB() (*sql.DB, error) {
 
 func execScript(file string) {
 	var cmd string
-	switch OS {
+	switch runtime.GOOS {
 	case "windows":
 		cmd = "python"
 	case "linux":
@@ -45,7 +46,7 @@ func dump() string {
 	tmpfile.Close()
 
 	var cmd string
-	switch OS {
+	switch runtime.GOOS {
 	case "windows":
 		cmd = "python"
 	case "linux":

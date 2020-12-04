@@ -35,9 +35,9 @@ func usage() {
 
 func main() {
 	flag.Usage = usage
-	flag.StringVar(&olms.UNIX, "unix", "", "UNIX-domain Socket")
-	flag.StringVar(&olms.Host, "host", "0.0.0.0", "Server Host")
-	flag.StringVar(&olms.Port, "port", "12345", "Server Port")
+	flag.StringVar(&olms.Server.Unix, "unix", "", "UNIX-domain Socket")
+	flag.StringVar(&olms.Server.Host, "host", "0.0.0.0", "Server Host")
+	flag.StringVar(&olms.Server.Port, "port", "12345", "Server Port")
 	flag.StringVar(&olms.SiteKey, "sitekey", "", "reCAPTCHA Site Key")
 	flag.StringVar(&olms.SecretKey, "secretkey", "", "reCAPTCHA Secret Key")
 	flag.StringVar(&olms.Dialer.Account, "from", "", "Backup sender")

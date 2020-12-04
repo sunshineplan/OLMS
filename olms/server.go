@@ -4,50 +4,13 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
-	"os/signal"
-	"path/filepath"
-	"syscall"
 	"time"
 
-	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
-
-func loadTemplates() multitemplate.Renderer {
-	r := multitemplate.NewRenderer()
-	r.AddFromFiles("index.html", joinPath(dir(Self), "templates/base.html"), joinPath(dir(Self), "templates/index.html"))
-	r.AddFromFiles("login.html", joinPath(dir(Self), "templates/base.html"), joinPath(dir(Self), "templates/auth/login.html"))
-	r.AddFromFiles("setting.html", joinPath(dir(Self), "templates/auth/setting.html"))
-
-	dept, err := filepath.Glob(joinPath(dir(Self), "templates/dept/*"))
-	if err != nil {
-		log.Fatalf("Failed to glob dept templates: %v", err)
-	}
-	empl, err := filepath.Glob(joinPath(dir(Self), "templates/empl/*"))
-	if err != nil {
-		log.Fatalf("Failed to glob empl templates: %v", err)
-	}
-	record, err := filepath.Glob(joinPath(dir(Self), "templates/record/*"))
-	if err != nil {
-		log.Fatalf("Failed to glob record templates: %v", err)
-	}
-	stat, err := filepath.Glob(joinPath(dir(Self), "templates/stat/*"))
-	if err != nil {
-		log.Fatalf("Failed to glob stat templates: %v", err)
-	}
-	var includes []string
-	for _, i := range [][]string{dept, empl, record, stat} {
-		includes = append(includes, i...)
-	}
-	for _, include := range includes {
-		r.AddFromFiles(filepath.Base(include), include)
-	}
-	return r
-}
 
 // Run server
 func Run() {
@@ -68,6 +31,7 @@ func Run() {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
+	Server.Handler = router
 	router.Use(gin.Recovery())
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
@@ -83,17 +47,19 @@ func Run() {
 		)
 	}))
 	router.Use(sessions.Sessions("session", sessions.NewCookieStore(secret)))
-	router.StaticFS("/static", http.Dir(joinPath(dir(Self), "static")))
-	router.HTMLRender = loadTemplates()
+	router.StaticFS("/js", http.Dir(joinPath(dir(Self), "dist/js")))
+	router.StaticFS("/css", http.Dir(joinPath(dir(Self), "dist/css")))
+	router.StaticFile("favicon.ico", joinPath(dir(Self), "dist/favicon.ico"))
+	router.LoadHTMLFiles(joinPath(dir(Self), "dist/index.html"))
 	router.GET("/", func(c *gin.Context) {
-		var user empl
+		var user employee
 		switch userID := sessions.Default(c).Get("userID"); userID {
 		case nil:
 			c.Redirect(302, "/auth/login")
 		case "0":
-			user = empl{ID: 0, Realname: "root", Role: true}
+			user = employee{ID: 0, Realname: "root", Role: true}
 		default:
-			users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
+			users, _, err := getEmployees(&idOptions{User: userID}, nil)
 			if err != nil {
 				log.Printf("Failed to get users: %v", err)
 				c.String(500, "")
@@ -108,7 +74,7 @@ func Run() {
 		c.HTML(200, "index.html", gin.H{"localize": localize(c), "user": user})
 	})
 
-	auth := router.Group("/auth")
+	auth := router.Group("/")
 	auth.GET("/login", func(c *gin.Context) {
 		user := sessions.Default(c).Get("userID")
 		if user != nil {
@@ -126,7 +92,7 @@ func Run() {
 		session := sessions.Default(c)
 		session.Clear()
 		session.Save()
-		c.Redirect(302, "/auth/login")
+		c.Redirect(302, "/login")
 	})
 	auth.GET("/setting", authRequired, setting)
 	auth.POST("/setting", authRequired, doSetting)
@@ -139,108 +105,27 @@ func Run() {
 
 	record := router.Group("/record")
 	record.Use(authRequired)
-	record.GET("", func(c *gin.Context) {
-		c.HTML(200, "showRecords.html", gin.H{"localize": localize(c), "mode": ""})
-	})
-	record.GET("/admin", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "showRecords.html", gin.H{"localize": localize(c), "mode": "admin"})
-	})
-	record.GET("/super", superRequired, func(c *gin.Context) {
-		c.HTML(200, "showRecords.html", gin.H{"localize": localize(c), "mode": "super"})
-	})
-	record.GET("/add", func(c *gin.Context) {
-		c.HTML(200, "record.html", gin.H{"localize": localize(c), "mode": "", "id": "0", "user": "1"})
-	})
-	record.GET("/admin/add", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "record.html", gin.H{"localize": localize(c), "mode": "admin", "id": "0", "user": sessions.Default(c).Get("userID")})
-	})
-	record.POST("/add", doAddRecord)
-	record.GET("/edit/:id", func(c *gin.Context) {
-		c.HTML(200, "record.html", gin.H{"localize": localize(c), "mode": "", "id": c.Param("id"), "user": "1"})
-	})
-	record.GET("/super/edit/:id", superRequired, func(c *gin.Context) {
-		c.HTML(200, "record.html", gin.H{"localize": localize(c), "mode": "super", "id": c.Param("id"), "user": sessions.Default(c).Get("userID")})
-	})
-	record.POST("/edit/:id", doEditRecord)
-	record.GET("/verify/:id", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "verify.html", gin.H{"localize": localize(c), "id": c.Param("id")})
-	})
-	record.POST("/verify/:id", adminRequired, doVerifyRecord)
-	record.POST("/delete/:id", doDeleteRecord)
+	record.POST("/add", addRecord)
+	record.POST("/edit", editRecord)
+	record.POST("/verify", adminRequired, verifyRecord)
+	record.POST("/delete", deleteRecord)
 
-	stat := router.Group("/stat")
-	stat.GET("", authRequired, func(c *gin.Context) {
-		c.HTML(200, "showStats.html", gin.H{"localize": localize(c), "mode": ""})
-	})
-	stat.GET("/admin", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "showStats.html", gin.H{"localize": localize(c), "mode": "admin"})
-	})
+	empl := router.Group("/employee")
+	empl.POST("/add", adminRequired, addEmployee)
+	empl.POST("/edit", superRequired, editEmployee)
+	empl.POST("/delete", superRequired, deleteEmployee)
 
-	empl := router.Group("/empl")
-	empl.GET("", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "showEmpls.html", gin.H{"localize": localize(c), "user": sessions.Default(c).Get("userID")})
-	})
-	empl.GET("/add", adminRequired, func(c *gin.Context) {
-		c.HTML(200, "empl.html", gin.H{"localize": localize(c), "id": "0", "user": sessions.Default(c).Get("userID")})
-	})
-	empl.POST("/add", adminRequired, doAddEmpl)
-	empl.GET("/edit/:id", superRequired, func(c *gin.Context) {
-		c.HTML(200, "empl.html", gin.H{"localize": localize(c), "id": c.Param("id"), "user": sessions.Default(c).Get("userID")})
-	})
-	empl.POST("/edit/:id", superRequired, doEditEmpl)
-	empl.POST("/delete/:id", superRequired, doDeleteEmpl)
-
-	dept := router.Group("/dept")
+	dept := router.Group("/department")
 	dept.Use(superRequired)
-	dept.GET("", func(c *gin.Context) {
-		c.HTML(200, "showDepts.html", gin.H{"localize": localize(c)})
+	dept.POST("/add", addDepartment)
+	dept.POST("/edit", editDepartment)
+	dept.POST("/delete", deleteDepartment)
+
+	router.NoRoute(func(c *gin.Context) {
+		c.Redirect(302, "/")
 	})
-	dept.GET("/add", func(c *gin.Context) {
-		c.HTML(200, "dept.html", gin.H{"localize": localize(c), "id": "0"})
-	})
-	dept.POST("/add", doAddDept)
-	dept.GET("/edit/:id", func(c *gin.Context) {
-		c.HTML(200, "dept.html", gin.H{"localize": localize(c), "id": c.Param("id")})
-	})
-	dept.POST("/edit/:id", doEditDept)
-	dept.POST("/delete/:id", doDeleteDept)
 
-	if UNIX != "" && OS == "linux" {
-		if _, err := os.Stat(UNIX); err == nil {
-			if err := os.Remove(UNIX); err != nil {
-				log.Fatalf("Failed to remove socket file: %v", err)
-			}
-		}
-
-		listener, err := net.Listen("unix", UNIX)
-		if err != nil {
-			log.Fatalf("Failed to listen socket file: %v", err)
-		}
-
-		idleConnsClosed := make(chan struct{})
-		go func() {
-			quit := make(chan os.Signal, 1)
-			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-			<-quit
-
-			if err := listener.Close(); err != nil {
-				log.Printf("Failed to close listener: %v", err)
-			}
-			if _, err := os.Stat(UNIX); err == nil {
-				if err := os.Remove(UNIX); err != nil {
-					log.Printf("Failed to remove socket file: %v", err)
-				}
-			}
-			close(idleConnsClosed)
-		}()
-
-		if err := os.Chmod(UNIX, 0666); err != nil {
-			log.Fatalf("Failed to chmod socket file: %v", err)
-		}
-
-		http.Serve(listener, router)
-		<-idleConnsClosed
-	} else {
-		router.Run(Host + ":" + Port)
+	if err := Server.Run(); err != nil {
+		log.Fatal(err)
 	}
 }

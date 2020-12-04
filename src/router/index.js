@@ -1,19 +1,42 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
+
 
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: Home
+    component: () => import(/* webpackChunkName: 'records' */ '../views/ShowRecords.vue')
   },
   {
-    path: '/about',
-    name: 'About',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
+    path: '/departments',
+    component: () => import(/* webpackChunkName: 'departments' */ '../views/ShowDepartments.vue')
+  },
+  {
+    path: '/employees',
+    component: () => import(/* webpackChunkName: 'employees' */ '../views/ShowEmployees.vue')
+  },
+  {
+    path: '/statistics',
+    component: () => import(/* webpackChunkName: 'statistics' */ '../views/ShowStatistics.vue')
+  },
+  {
+    path: '/setting',
+    component: () => import(/* webpackChunkName: 'setting' */ '../views/Setting.vue')
+  },
+  {
+    path: '/department/:mode',
+    component: () => import(/* webpackChunkName: 'department' */ '../views/Department.vue')
+  },
+  {
+    path: '/employee/:mode',
+    component: () => import(/* webpackChunkName: 'employee' */ '../views/Employee.vue')
+  },
+  {
+    path: '/record/:mode',
+    component: () => import(/* webpackChunkName: 'record' */ '../views/Record.vue')
+  },
+  {
+    path: '/record/verify',
+    component: () => import(/* webpackChunkName: 'verify' */ '../views/Verify.vue')
   }
 ]
 

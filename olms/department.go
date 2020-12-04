@@ -8,12 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type dept struct {
-	ID   int
-	Name string
+type department struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
-func getDepts(ids []string) ([]dept, error) {
+func getDepartments(ids []string) ([]department, error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -25,7 +25,7 @@ func getDepts(ids []string) ([]dept, error) {
 	for i := range marks {
 		marks[i] = "?"
 	}
-	var depts []dept
+	var departments []department
 	var args []interface{}
 	for _, i := range ids {
 		args = append(args, i)
@@ -37,17 +37,17 @@ func getDepts(ids []string) ([]dept, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var dept dept
-		if err := rows.Scan(&dept.ID, &dept.Name); err != nil {
+		var department department
+		if err := rows.Scan(&department.ID, &department.Name); err != nil {
 			log.Printf("Failed to scan department: %v", err)
 			return nil, err
 		}
-		depts = append(depts, dept)
+		departments = append(departments, department)
 	}
-	return depts, nil
+	return departments, nil
 }
 
-func doAddDept(c *gin.Context) {
+func addDepartment(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -73,7 +73,7 @@ func doAddDept(c *gin.Context) {
 	c.JSON(200, gin.H{"status": 0, "message": message})
 }
 
-func doEditDept(c *gin.Context) {
+func editDepartment(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -103,9 +103,9 @@ func doEditDept(c *gin.Context) {
 	c.JSON(200, gin.H{"status": 0, "message": message})
 }
 
-func doDeleteDept(c *gin.Context) {
+func deleteDepartment(c *gin.Context) {
 	id := c.Param("id")
-	if _, err := getDepts([]string{id}); err != nil {
+	if _, err := getDepartments([]string{id}); err != nil {
 		log.Printf("Failed to get dept id: %v", err)
 		c.String(400, "")
 		return

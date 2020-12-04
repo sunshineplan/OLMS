@@ -67,12 +67,12 @@ func notify(id *idOptions, message string, localize translate) {
 
 	var emails []interface{}
 	var title string
-	if id.UserID != nil {
+	if id.User != nil {
 		var subscribe bool
 		var realname, email string
 		if err := db.QueryRow(
 			"SELECT subscribe, realname, email FROM user WHERE id = ?",
-			id.UserID).Scan(&subscribe, &realname, &email); err != nil {
+			id.User).Scan(&subscribe, &realname, &email); err != nil {
 			log.Printf("Failed to get user subscribe: %v", err)
 		}
 		if subscribe {
@@ -81,16 +81,16 @@ func notify(id *idOptions, message string, localize translate) {
 		} else {
 			return
 		}
-	} else if len(id.DeptIDs) == 1 {
+	} else if len(id.Departments) == 1 {
 		var deptName string
 		if err := db.QueryRow("SELECT dept_name FROM department WHERE id = ?",
-			id.DeptIDs[0]).Scan(&deptName); err != nil {
+			id.Departments[0]).Scan(&deptName); err != nil {
 			log.Printf("Failed to get department: %v", err)
 			return
 		}
 		rows, err := db.Query(
 			"SELECT email FROM user LEFT JOIN permission p ON id = user_id WHERE subscribe = 1 AND (p.dept_id = ? OR id = 0)",
-			id.DeptIDs[0])
+			id.Departments[0])
 		if err != nil {
 			log.Printf("Failed to get employees: %v", err)
 			return

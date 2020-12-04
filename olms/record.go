@@ -13,17 +13,17 @@ import (
 )
 
 type record struct {
-	ID       int
-	DeptID   int
-	DeptName string
-	UserID   int
-	Name     string
-	Date     time.Time
-	Duration int
-	Type     bool
-	Status   int
-	Describe string
-	Created  time.Time
+	ID       int       `json:"id"`
+	DeptID   int       `json:"deptid"`
+	DeptName string    `json:"deptname"`
+	UserID   int       `json:"userid"`
+	Realname string    `json:"realname"`
+	Date     time.Time `json:"date"`
+	Duration int       `json:"duration"`
+	Type     bool      `json:"type"`
+	Status   int       `json:"status"`
+	Describe string    `json:"describe"`
+	Created  time.Time `json:"created"`
 }
 
 func getRecords(id *idOptions, options *searchOptions) (records []record, total int, err error) {
@@ -39,21 +39,21 @@ func getRecords(id *idOptions, options *searchOptions) (records []record, total 
 	var args []interface{}
 	var orderBy, limit string
 	bc := make(chan bool, 1)
-	if id.RecordID != nil {
+	if id.Record != nil {
 		stmt += " record.id = ?"
-		args = append(args, id.RecordID)
+		args = append(args, id.Record)
 		bc <- true
 	} else {
-		if id.UserID != nil {
+		if id.User != nil {
 			stmt += " user_id = ?"
-			args = append(args, id.UserID)
+			args = append(args, id.User)
 		} else {
-			marks := make([]string, len(id.DeptIDs))
+			marks := make([]string, len(id.Departments))
 			for i := range marks {
 				marks[i] = "?"
 			}
 			stmt += " record.dept_id IN (" + strings.Join(marks, ", ") + ")"
-			for _, i := range id.DeptIDs {
+			for _, i := range id.Departments {
 				args = append(args, i)
 			}
 		}
@@ -110,7 +110,7 @@ func getRecords(id *idOptions, options *searchOptions) (records []record, total 
 	for rows.Next() {
 		var r record
 		if err = rows.Scan(
-			&r.ID, &r.DeptID, &r.DeptName, &r.UserID, &r.Name, &r.Date, &r.Duration, &r.Type, &r.Status, &r.Describe, &r.Created); err != nil {
+			&r.ID, &r.DeptID, &r.DeptName, &r.UserID, &r.Realname, &r.Date, &r.Duration, &r.Type, &r.Status, &r.Describe, &r.Created); err != nil {
 			log.Printf("Failed to scan record: %v", err)
 			return
 		}
@@ -133,16 +133,16 @@ func getYears(id *idOptions) (years []string, err error) {
 	stmt := "SELECT DISTINCT strftime('%Y', date) year FROM record WHERE"
 
 	var args []interface{}
-	if id.UserID != nil {
+	if id.User != nil {
 		stmt += " user_id = ?"
-		args = append(args, id.UserID)
+		args = append(args, id.User)
 	} else {
-		marks := make([]string, len(id.DeptIDs))
+		marks := make([]string, len(id.Departments))
 		for i := range marks {
 			marks[i] = "?"
 		}
 		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
-		for _, i := range id.DeptIDs {
+		for _, i := range id.Departments {
 			args = append(args, i)
 		}
 	}
@@ -168,7 +168,7 @@ func checkRecord(c *gin.Context, record record, super bool) bool {
 	if userID == "0" {
 		return true
 	}
-	users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
+	users, _, err := getEmployees(&idOptions{User: userID}, nil)
 	if err != nil {
 		return false
 	}
@@ -186,7 +186,7 @@ func checkRecord(c *gin.Context, record record, super bool) bool {
 	return false
 }
 
-func doAddRecord(c *gin.Context) {
+func addRecord(c *gin.Context) {
 	if !verifyResponse("record", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
 		c.String(403, "reCAPTCHA challenge failed")
 		return
@@ -231,12 +231,12 @@ func doAddRecord(c *gin.Context) {
 	}
 	describe := c.PostForm("describe")
 
-	var user empl
+	var user employee
 	switch userID := sessions.Default(c).Get("userID"); userID {
 	case "0":
-		user = empl{ID: 0}
+		user = employee{ID: 0}
 	default:
-		users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
+		users, _, err := getEmployees(&idOptions{User: userID}, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -257,7 +257,7 @@ func doAddRecord(c *gin.Context) {
 			return
 		}
 		c.JSON(200, gin.H{"status": 1})
-		notify(&idOptions{DeptIDs: []string{strconv.Itoa(user.DeptID)}},
+		notify(&idOptions{Departments: []string{strconv.Itoa(user.DeptID)}},
 			fmt.Sprintf(localize["AddRecordSubscribe"], user.Realname), localize)
 		return
 	}
@@ -274,9 +274,9 @@ func doAddRecord(c *gin.Context) {
 			return
 		}
 		c.JSON(200, gin.H{"status": 1})
-		notify(&idOptions{UserID: userID},
+		notify(&idOptions{User: userID},
 			fmt.Sprintf(localize["AdminAddRecordSubscribe"], user.Realname), localize)
-		notify(&idOptions{DeptIDs: []string{deptID}},
+		notify(&idOptions{Departments: []string{deptID}},
 			fmt.Sprintf(localize["AdminAddRecordAdminSubscribe"], user.Realname), localize)
 		return
 	}
@@ -290,7 +290,7 @@ func doAddRecord(c *gin.Context) {
 	c.JSON(200, gin.H{"status": 1})
 }
 
-func doEditRecord(c *gin.Context) {
+func editRecord(c *gin.Context) {
 	if !verifyResponse("record", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
 		c.String(403, "reCAPTCHA challenge failed")
 		return
@@ -336,7 +336,7 @@ func doEditRecord(c *gin.Context) {
 	describe := c.PostForm("describe")
 
 	id := c.Param("id")
-	records, _, err := getRecords(&idOptions{RecordID: id}, nil)
+	records, _, err := getRecords(&idOptions{Record: id}, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -360,8 +360,8 @@ func doEditRecord(c *gin.Context) {
 		}
 		c.JSON(200, gin.H{"status": 1})
 		localize := localize(c)
-		notify(&idOptions{DeptIDs: []string{strconv.Itoa(records[0].DeptID)}},
-			fmt.Sprintf(localize["EditRecordSubscribe"], records[0].Name), localize)
+		notify(&idOptions{Departments: []string{strconv.Itoa(records[0].DeptID)}},
+			fmt.Sprintf(localize["EditRecordSubscribe"], records[0].Realname), localize)
 		return
 	}
 	userID := c.PostForm("empl")
@@ -371,7 +371,7 @@ func doEditRecord(c *gin.Context) {
 		c.String(400, "")
 		return
 	}
-	users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
+	users, _, err := getEmployees(&idOptions{User: userID}, nil)
 	if err != nil {
 		log.Printf("Failed to get users: %v", err)
 		c.String(400, "")
@@ -392,27 +392,12 @@ func doEditRecord(c *gin.Context) {
 }
 
 func verifyRecord(c *gin.Context) {
-	id := c.Param("id")
-	records, _, err := getRecords(&idOptions{RecordID: id}, nil)
-	if err != nil {
-		log.Printf("Failed to get record: %v", err)
-		c.String(400, "")
-		return
-	}
-	if !checkRecord(c, records[0], false) {
-		c.String(403, "")
-		return
-	}
-	c.HTML(200, "verifyRecord.html", gin.H{"localize": localize(c), "record": records[0]})
-}
-
-func doVerifyRecord(c *gin.Context) {
 	if !verifyResponse("verify", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
 		c.String(403, "reCAPTCHA challenge failed")
 		return
 	}
 	id := c.Param("id")
-	records, _, err := getRecords(&idOptions{RecordID: id}, nil)
+	records, _, err := getRecords(&idOptions{Record: id}, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
@@ -447,12 +432,12 @@ func doVerifyRecord(c *gin.Context) {
 	}
 	defer db.Close()
 
-	var user empl
+	var user employee
 	switch userID := sessions.Default(c).Get("userID"); userID {
 	case "0":
-		user = empl{ID: 0}
+		user = employee{ID: 0}
 	default:
-		users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
+		users, _, err := getEmployees(&idOptions{User: userID}, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -475,26 +460,26 @@ func doVerifyRecord(c *gin.Context) {
 		result = localize["Rejected"]
 	}
 	c.JSON(200, gin.H{"status": 1})
-	notify(&idOptions{UserID: records[0].UserID},
+	notify(&idOptions{User: records[0].UserID},
 		fmt.Sprintf(localize["VerifyRecordSubscribe"], user.Realname, result), localize)
-	notify(&idOptions{DeptIDs: []string{strconv.Itoa(records[0].DeptID)}},
+	notify(&idOptions{Departments: []string{strconv.Itoa(records[0].DeptID)}},
 		fmt.Sprintf(localize["VerifyRecordAdminSubscribe"], user.Realname, result), localize)
 }
 
-func doDeleteRecord(c *gin.Context) {
+func deleteRecord(c *gin.Context) {
 	id := c.Param("id")
-	records, _, err := getRecords(&idOptions{RecordID: id}, nil)
+	records, _, err := getRecords(&idOptions{Record: id}, nil)
 	if err != nil {
 		log.Printf("Failed to get record: %v", err)
 		c.String(400, "")
 		return
 	}
-	var user empl
+	var user employee
 	switch userID := sessions.Default(c).Get("userID"); userID {
 	case "0":
-		user = empl{ID: 0}
+		user = employee{ID: 0}
 	default:
-		users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
+		users, _, err := getEmployees(&idOptions{User: userID}, nil)
 		if err != nil {
 			log.Printf("Failed to get user: %v", err)
 			c.String(500, "")
@@ -523,7 +508,7 @@ func doDeleteRecord(c *gin.Context) {
 	c.JSON(200, gin.H{"status": 1})
 	if user.ID != 0 {
 		localize := localize(c)
-		notify(&idOptions{DeptIDs: []string{strconv.Itoa(user.DeptID)}},
+		notify(&idOptions{Departments: []string{strconv.Itoa(user.DeptID)}},
 			fmt.Sprintf(localize["DeleteRecordSubscribe"], user.Realname), localize)
 	}
 }

@@ -10,17 +10,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type empl struct {
-	ID         int
-	Username   string
-	Realname   string
-	DeptID     int
-	DeptName   string
-	Role       bool
-	Permission string
+type employee struct {
+	ID         int    `json:"id"`
+	Username   string `json:"username"`
+	Realname   string `json:"realname"`
+	DeptID     int    `json:"deptid"`
+	DeptName   string `json:"deptname"`
+	Role       bool   `json:"role"`
+	Permission string `json:"permission"`
 }
 
-func getEmpls(id *idOptions, options *searchOptions) (empls []empl, total int, err error) {
+func getEmployees(id *idOptions, options *searchOptions) (employees []employee, total int, err error) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -33,17 +33,17 @@ func getEmpls(id *idOptions, options *searchOptions) (empls []empl, total int, e
 	var args []interface{}
 	var orderBy, limit string
 	bc := make(chan bool, 1)
-	if id.UserID != nil {
+	if id.User != nil {
 		stmt += " id = ?"
-		args = append(args, id.UserID)
+		args = append(args, id.User)
 		bc <- true
 	} else {
-		marks := make([]string, len(id.DeptIDs))
+		marks := make([]string, len(id.Departments))
 		for i := range marks {
 			marks[i] = "?"
 		}
 		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
-		for _, i := range id.DeptIDs {
+		for _, i := range id.Departments {
 			args = append(args, i)
 		}
 
@@ -78,15 +78,15 @@ func getEmpls(id *idOptions, options *searchOptions) (empls []empl, total int, e
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var empl empl
+		var employee employee
 		var permission []byte
 		if err = rows.Scan(
-			&empl.ID, &empl.Username, &empl.Realname, &empl.DeptID, &empl.DeptName, &empl.Role, &permission); err != nil {
+			&employee.ID, &employee.Username, &employee.Realname, &employee.DeptID, &employee.DeptName, &employee.Role, &permission); err != nil {
 			log.Printf("Failed to scan employee: %v", err)
 			return
 		}
-		empl.Permission = string(permission)
-		empls = append(empls, empl)
+		employee.Permission = string(permission)
+		employees = append(employees, employee)
 	}
 	if v := <-bc; !v {
 		err = fmt.Errorf("Failed to get total records")
@@ -94,7 +94,7 @@ func getEmpls(id *idOptions, options *searchOptions) (empls []empl, total int, e
 	return
 }
 
-func doAddEmpl(c *gin.Context) {
+func addEmployee(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -165,7 +165,7 @@ func doAddEmpl(c *gin.Context) {
 	c.JSON(200, gin.H{"status": 0, "message": message, "error": code})
 }
 
-func doEditEmpl(c *gin.Context) {
+func editEmployee(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
@@ -241,9 +241,9 @@ func doEditEmpl(c *gin.Context) {
 	c.JSON(200, gin.H{"status": 0, "message": message})
 }
 
-func doDeleteEmpl(c *gin.Context) {
+func deleteEmployee(c *gin.Context) {
 	id := c.Param("id")
-	empls, _, err := getEmpls(&idOptions{UserID: id}, nil)
+	empls, _, err := getEmployees(&idOptions{User: id}, nil)
 	if err != nil {
 		log.Printf("Failed to get empl: %v", err)
 		c.String(400, "")

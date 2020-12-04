@@ -4,28 +4,19 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/sunshineplan/utils/httpsvr"
 )
-
-// OS is the running program's operating system
-const OS = runtime.GOOS
 
 // Self execute file location
 var Self string
 
-// UNIX file
-var UNIX string
-
-// Host address
-var Host string
-
-// Port number
-var Port string
+// Server is an HTTP server
+var Server httpsvr.Server
 
 // LogPath log file location
 var LogPath string
@@ -66,7 +57,7 @@ func checkPermission(c *gin.Context, ids ...interface{}) bool {
 	if userID == "0" {
 		return true
 	}
-	users, _, err := getEmpls(&idOptions{UserID: userID}, nil)
+	users, _, err := getEmployees(&idOptions{User: userID}, nil)
 	if err != nil {
 		return false
 	}
@@ -80,7 +71,7 @@ func checkPermission(c *gin.Context, ids ...interface{}) bool {
 		}
 	case 2:
 		id := fmt.Sprintf("%v", ids[0])
-		empls, _, err := getEmpls(&idOptions{UserID: ids[1]}, nil)
+		empls, _, err := getEmployees(&idOptions{User: ids[1]}, nil)
 		if err != nil {
 			return false
 		}
