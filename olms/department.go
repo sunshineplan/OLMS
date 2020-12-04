@@ -1,6 +1,7 @@
 package olms
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"strings"
@@ -13,44 +14,38 @@ type department struct {
 	Name string `json:"name"`
 }
 
-func getDepartments(ids []string) ([]department, error) {
-	db, err := getDB()
-	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
-		return nil, err
-	}
-	defer db.Close()
-
-	marks := make([]string, len(ids))
-	for i := range marks {
-		marks[i] = "?"
-	}
-	var departments []department
-	var args []interface{}
-	for _, i := range ids {
-		args = append(args, i)
-	}
-	rows, err := db.Query("SELECT * FROM department WHERE id IN ("+strings.Join(marks, ", ")+")", args...)
-	if err != nil {
-		log.Printf("Failed to get departments: %v", err)
-		return nil, err
+func getDepartments(db *sql.DB, ids []string, super bool) (departments []department, err error) {
+	var rows *sql.Rows
+	if super {
+		rows, err = db.Query("SELECT * FROM department")
+		if err != nil {
+			log.Println("Failed to get departments:", err)
+			return
+		}
+	} else {
+		rows, err = db.Query("SELECT * FROM department WHERE id IN (" + strings.Join(ids, ", ") + ")")
+		if err != nil {
+			log.Println("Failed to get departments:", err)
+			return
+		}
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		var department department
-		if err := rows.Scan(&department.ID, &department.Name); err != nil {
-			log.Printf("Failed to scan department: %v", err)
-			return nil, err
+		if err = rows.Scan(&department.ID, &department.Name); err != nil {
+			log.Println("Failed to scan department:", err)
+			return
 		}
 		departments = append(departments, department)
 	}
-	return departments, nil
+	return
 }
 
 func addDepartment(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
@@ -63,7 +58,7 @@ func addDepartment(c *gin.Context) {
 		message = fmt.Sprintf(localize(c)["DepartmentExist"], dept)
 	} else {
 		if _, err := db.Exec("INSERT INTO department (dept_name) VALUES (?)", dept); err != nil {
-			log.Printf("Failed to add department: %v", err)
+			log.Println("Failed to add department:", err)
 			c.String(500, "")
 			return
 		}
@@ -76,7 +71,7 @@ func addDepartment(c *gin.Context) {
 func editDepartment(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
@@ -93,7 +88,7 @@ func editDepartment(c *gin.Context) {
 		message = fmt.Sprintf(localize["DepartmentExist"], dept)
 	} else {
 		if _, err := db.Exec("UPDATE department SET dept_name = ? WHERE id = ?", dept, id); err != nil {
-			log.Printf("Failed to edit department: %v", err)
+			log.Println("Failed to edit department:", err)
 			c.String(500, "")
 			return
 		}
@@ -104,21 +99,17 @@ func editDepartment(c *gin.Context) {
 }
 
 func deleteDepartment(c *gin.Context) {
-	id := c.Param("id")
-	if _, err := getDepartments([]string{id}); err != nil {
-		log.Printf("Failed to get dept id: %v", err)
-		c.String(400, "")
-		return
-	}
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
 	defer db.Close()
+
+	id := c.Param("id")
 	if _, err := db.Exec("DELETE FROM department WHERE id = ?", id); err != nil {
-		log.Printf("Failed to delete department: %v", err)
+		log.Println("Failed to delete department:", err)
 		c.String(500, "")
 		return
 	}

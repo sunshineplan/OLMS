@@ -17,14 +17,15 @@ func isEmailValid(email string) bool {
 		return false
 	}
 	//https://www.w3.org/TR/2016/REC-html51-20161101/sec-forms.html#email-state-typeemail
-	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	emailRegex := regexp.MustCompile(
+		"^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	return emailRegex.MatchString(email)
 }
 
 func subscribe(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
@@ -34,7 +35,7 @@ func subscribe(c *gin.Context) {
 	switch c.PostForm("subscribe") {
 	case "0":
 		if _, err := db.Exec("UPDATE user SET subscribe = 0 WHERE id = ?", userID); err != nil {
-			log.Printf("Failed to update user: %v", err)
+			log.Println("Failed to update user:", err)
 			c.String(500, "")
 			return
 		}
@@ -42,7 +43,7 @@ func subscribe(c *gin.Context) {
 		if email := c.PostForm("email"); isEmailValid(email) {
 			if _, err := db.Exec(
 				"UPDATE user SET subscribe = 1, email = ? WHERE id = ?", email, userID); err != nil {
-				log.Printf("Failed to update user: %v", err)
+				log.Println("Failed to update user:", err)
 				c.String(500, "")
 				return
 			}
@@ -60,7 +61,7 @@ func subscribe(c *gin.Context) {
 func notify(id *idOptions, message string, localize translate) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		return
 	}
 	defer db.Close()
@@ -73,7 +74,7 @@ func notify(id *idOptions, message string, localize translate) {
 		if err := db.QueryRow(
 			"SELECT subscribe, realname, email FROM user WHERE id = ?",
 			id.User).Scan(&subscribe, &realname, &email); err != nil {
-			log.Printf("Failed to get user subscribe: %v", err)
+			log.Println("Failed to get user subscribe:", err)
 		}
 		if subscribe {
 			title = fmt.Sprintf(localize["Dear"], realname)
@@ -85,14 +86,14 @@ func notify(id *idOptions, message string, localize translate) {
 		var deptName string
 		if err := db.QueryRow("SELECT dept_name FROM department WHERE id = ?",
 			id.Departments[0]).Scan(&deptName); err != nil {
-			log.Printf("Failed to get department: %v", err)
+			log.Println("Failed to get department:", err)
 			return
 		}
 		rows, err := db.Query(
 			"SELECT email FROM user LEFT JOIN permission p ON id = user_id WHERE subscribe = 1 AND (p.dept_id = ? OR id = 0)",
 			id.Departments[0])
 		if err != nil {
-			log.Printf("Failed to get employees: %v", err)
+			log.Println("Failed to get employees:", err)
 			return
 		}
 		defer rows.Close()
@@ -100,7 +101,7 @@ func notify(id *idOptions, message string, localize translate) {
 		for rows.Next() {
 			var email string
 			if err = rows.Scan(&email); err != nil {
-				log.Printf("Failed to scan email: %v", err)
+				log.Println("Failed to scan email:", err)
 				return
 			}
 			emails = append(emails, email)
@@ -115,7 +116,7 @@ func notify(id *idOptions, message string, localize translate) {
 			Subject: fmt.Sprintf("%s-%s", localize["NotificationSubject"], time.Now().Format("20060102 15:04")),
 			Body:    fmt.Sprintf("%s\n\n    %s", title, message),
 		}); err != nil {
-			log.Printf("Failed to send mail: %v", err)
+			log.Println("Failed to send mail:", err)
 		}
 	})
 }

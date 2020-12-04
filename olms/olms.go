@@ -1,7 +1,6 @@
 package olms
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -28,7 +27,7 @@ func init() {
 	var err error
 	Self, err = os.Executable()
 	if err != nil {
-		log.Fatalf("Failed to get Self path: %v", err)
+		log.Fatalln("Failed to get Self path:", err)
 	}
 	os.MkdirAll(joinPath(dir(Self), "instance"), 0755)
 	sqlite = joinPath(dir(Self), "instance", "olms.db")
@@ -52,31 +51,30 @@ func checkSuper(c *gin.Context) bool {
 	return false
 }
 
-func checkPermission(c *gin.Context, ids ...interface{}) bool {
+func checkPermission(c *gin.Context, option *idOptions) bool {
 	userID := sessions.Default(c).Get("userID")
 	if userID == "0" {
 		return true
 	}
-	users, _, err := getEmployees(&idOptions{User: userID}, nil)
+	user, err := getUser(userID)
 	if err != nil {
 		return false
 	}
-	switch len(ids) {
-	case 1:
-		id := fmt.Sprintf("%v", ids[0])
-		for _, i := range strings.Split(users[0].Permission, ",") {
-			if id == i {
+	switch {
+	case option.Departments != nil && option.User == nil:
+		for _, i := range strings.Split(user.Permission, ",") {
+			if option.Departments[0] == i {
 				return true
 			}
 		}
-	case 2:
-		id := fmt.Sprintf("%v", ids[0])
-		empls, _, err := getEmployees(&idOptions{User: ids[1]}, nil)
+	default:
+		employee, err := getUser(option.User)
 		if err != nil {
 			return false
 		}
-		for _, i := range strings.Split(users[0].Permission, ",") {
-			if (ids[0] == nil || id == i) && strconv.Itoa(empls[0].DeptID) == i {
+		for _, i := range strings.Split(user.Permission, ",") {
+			if (option.Departments == nil || option.Departments[0] == i) &&
+				strconv.Itoa(employee.DeptID) == i {
 				return true
 			}
 		}

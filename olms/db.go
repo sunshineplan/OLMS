@@ -41,7 +41,7 @@ func execScript(file string) {
 func dump() string {
 	tmpfile, err := ioutil.TempFile("", "tmp")
 	if err != nil {
-		log.Fatalf("Failed to create temporary file: %v", err)
+		log.Fatalln("Failed to create temporary file:", err)
 	}
 	tmpfile.Close()
 

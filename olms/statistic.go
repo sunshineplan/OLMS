@@ -18,7 +18,7 @@ type statistic struct {
 func getStatistics(id *idOptions, options *searchOptions) (statistics []statistic, total int, err error) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		return
 	}
 	defer db.Close()
@@ -62,7 +62,7 @@ func getStatistics(id *idOptions, options *searchOptions) (statistics []statisti
 		go func() {
 			if err := db.QueryRow(fmt.Sprintf("SELECT count(*) FROM (%s)",
 				fmt.Sprintf(stmt+group, "substr(period,1,4) period")), args...).Scan(&total); err != nil {
-				log.Printf("Failed to get total records: %v", err)
+				log.Println("Failed to get total records:", err)
 				bc <- false
 			}
 			bc <- true
@@ -77,14 +77,16 @@ func getStatistics(id *idOptions, options *searchOptions) (statistics []statisti
 	}
 	rows, err := db.Query(fmt.Sprintf(stmt+group+orderBy+limit, fields), args...)
 	if err != nil {
-		log.Printf("Failed to get statistics: %v", err)
+		log.Println("Failed to get statistics:", err)
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var statistic statistic
-		if err = rows.Scan(&statistic.Period, &statistic.DeptName, &statistic.Realname, &statistic.Overtime, &statistic.Leave, &statistic.Summary); err != nil {
-			log.Printf("Failed to scan statistics: %v", err)
+		if err = rows.Scan(
+			&statistic.Period, &statistic.DeptName, &statistic.Realname, &statistic.Overtime, &statistic.Leave, &statistic.Summary,
+		); err != nil {
+			log.Println("Failed to scan statistics:", err)
 			return
 		}
 		statistics = append(statistics, statistic)

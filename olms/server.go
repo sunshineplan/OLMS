@@ -17,7 +17,7 @@ func Run() {
 	if LogPath != "" {
 		f, err := os.OpenFile(LogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
 		if err != nil {
-			log.Fatalf("Failed to open log file: %v", err)
+			log.Fatalln("Failed to open log file:", err)
 		}
 		gin.DefaultWriter = f
 		gin.DefaultErrorWriter = f
@@ -26,7 +26,7 @@ func Run() {
 
 	secret := make([]byte, 16)
 	if _, err := rand.Read(secret); err != nil {
-		log.Fatalf("Failed to get secret: %v", err)
+		log.Fatalln("Failed to get secret:", err)
 	}
 
 	gin.SetMode(gin.ReleaseMode)
@@ -53,19 +53,19 @@ func Run() {
 	router.LoadHTMLFiles(joinPath(dir(Self), "dist/index.html"))
 	router.GET("/", func(c *gin.Context) {
 		var user employee
+		var err error
 		switch userID := sessions.Default(c).Get("userID"); userID {
 		case nil:
 			c.Redirect(302, "/auth/login")
 		case "0":
 			user = employee{ID: 0, Realname: "root", Role: true}
 		default:
-			users, _, err := getEmployees(&idOptions{User: userID}, nil)
+			user, err = getUser(userID)
 			if err != nil {
-				log.Printf("Failed to get users: %v", err)
+				log.Println("Failed to get users:", err)
 				c.String(500, "")
 				return
 			}
-			user = users[0]
 		}
 		if SiteKey != "" && SecretKey != "" {
 			c.HTML(200, "index.html", gin.H{"localize": localize(c), "user": user, "recaptcha": SiteKey})
@@ -107,19 +107,19 @@ func Run() {
 	record.Use(authRequired)
 	record.POST("/add", addRecord)
 	record.POST("/edit", editRecord)
-	record.POST("/verify", adminRequired, verifyRecord)
-	record.POST("/delete", deleteRecord)
+	record.POST("/verify/:id", adminRequired, verifyRecord)
+	record.POST("/delete/:id", deleteRecord)
 
 	empl := router.Group("/employee")
 	empl.POST("/add", adminRequired, addEmployee)
 	empl.POST("/edit", superRequired, editEmployee)
-	empl.POST("/delete", superRequired, deleteEmployee)
+	empl.POST("/delete/:id", superRequired, deleteEmployee)
 
 	dept := router.Group("/department")
 	dept.Use(superRequired)
 	dept.POST("/add", addDepartment)
 	dept.POST("/edit", editDepartment)
-	dept.POST("/delete", deleteDepartment)
+	dept.POST("/delete/:id", deleteDepartment)
 
 	router.NoRoute(func(c *gin.Context) {
 		c.Redirect(302, "/")

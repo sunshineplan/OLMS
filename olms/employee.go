@@ -1,9 +1,9 @@
 package olms
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -20,76 +20,56 @@ type employee struct {
 	Permission string `json:"permission"`
 }
 
-func getEmployees(id *idOptions, options *searchOptions) (employees []employee, total int, err error) {
+func getUser(id interface{}) (user employee, err error) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		return
 	}
 	defer db.Close()
 
-	stmt := "SELECT %s FROM employee WHERE"
-
-	var args []interface{}
-	var orderBy, limit string
-	bc := make(chan bool, 1)
-	if id.User != nil {
-		stmt += " id = ?"
-		args = append(args, id.User)
-		bc <- true
-	} else {
-		marks := make([]string, len(id.Departments))
-		for i := range marks {
-			marks[i] = "?"
-		}
-		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
-		for _, i := range id.Departments {
-			args = append(args, i)
-		}
-
-		if options != nil {
-			if r, ok := options.Role.(float64); ok {
-				stmt += " AND role = ?"
-				args = append(args, r)
-			}
-			if p, ok := options.Page.(float64); ok {
-				limit = fmt.Sprintf(" LIMIT ?, ?")
-				args = append(args, int(p-1)*perPage, perPage)
-			}
-			if options.Sort != nil {
-				orderBy = fmt.Sprintf(" ORDER BY %v %v", options.Sort, options.Order)
-			} else {
-				orderBy = " ORDER BY dept_name, realname"
-			}
-		}
-		go func() {
-			if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)"), args...).Scan(&total); err != nil {
-				log.Printf("Failed to get total records: %v", err)
-				bc <- false
-			}
-			bc <- true
-		}()
-	}
-	rows, err := db.Query(
-		fmt.Sprintf(stmt+orderBy+limit, "id, username, realname, dept_id, dept_name, role, permission"), args...)
-	if err != nil {
-		log.Printf("Failed to get employees: %v", err)
+	var permission []byte
+	if err = db.QueryRow("SELECT * FROM employee WHERE id = ?", id).Scan(
+		&user.ID, &user.Username, &user.Realname, &user.DeptID, &user.DeptName, &user.Role, &permission); err != nil {
+		log.Println("Failed to get user:", err)
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var employee employee
-		var permission []byte
-		if err = rows.Scan(
-			&employee.ID, &employee.Username, &employee.Realname, &employee.DeptID, &employee.DeptName, &employee.Role, &permission); err != nil {
-			log.Printf("Failed to scan employee: %v", err)
+	user.Permission = string(permission)
+	return
+}
+
+func getEmployees(db *sql.DB, ids []string, super bool) (employees []employee, err error) {
+	var rows *sql.Rows
+	if super {
+		rows, err = db.Query("SELECT * FROM employee")
+		if err != nil {
+			log.Println("Failed to get employees:", err)
 			return
 		}
-		employee.Permission = string(permission)
-		employees = append(employees, employee)
-	}
-	if v := <-bc; !v {
-		err = fmt.Errorf("Failed to get total records")
+		for rows.Next() {
+			var e employee
+			var permission []byte
+			if err = rows.Scan(&e.ID, &e.Username, &e.Realname, &e.DeptID, &e.DeptName, &e.Role, &permission); err != nil {
+				log.Println("Failed to scan department:", err)
+				return
+			}
+			e.Permission = string(permission)
+			employees = append(employees, e)
+		}
+	} else {
+		rows, err = db.Query("SELECT * FROM employee WHERE id IN (" + strings.Join(ids, ", ") + ")")
+		if err != nil {
+			log.Println("Failed to get employees:", err)
+			return
+		}
+		for rows.Next() {
+			var e employee
+			if err = rows.Scan(&e.ID, &e.Username, &e.Realname, &e.DeptID, &e.DeptName); err != nil {
+				log.Println("Failed to scan department:", err)
+				return
+			}
+			employees = append(employees, e)
+		}
 	}
 	return
 }
@@ -97,14 +77,14 @@ func getEmployees(id *idOptions, options *searchOptions) (employees []employee, 
 func addEmployee(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
 	defer db.Close()
 
 	deptID := c.PostForm("dept")
-	if deptID != "" && !checkPermission(c, deptID) {
+	if deptID != "" && !checkPermission(c, &idOptions{Departments: []string{fmt.Sprintf("%v", deptID)}}) {
 		c.String(403, "")
 		return
 	}
@@ -130,13 +110,13 @@ func addEmployee(c *gin.Context) {
 			res, err := db.Exec("INSERT INTO user (username, realname, dept_id, role) VALUES (?, ?, ?, ?)",
 				strings.ToLower(username), realname, deptID, role)
 			if err != nil {
-				log.Printf("Failed to add user: %v", err)
+				log.Println("Failed to add user:", err)
 				c.String(500, "")
 				return
 			}
 			id, err := res.LastInsertId()
 			if err != nil {
-				log.Printf("Failed to get last insert id: %v", err)
+				log.Println("Failed to get last insert id:", err)
 				c.String(500, "")
 				return
 			}
@@ -144,7 +124,7 @@ func addEmployee(c *gin.Context) {
 				for _, permission := range c.PostFormArray("permission") {
 					if _, err = db.Exec(
 						"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, id); err != nil {
-						log.Printf("Failed to add user permission: %v", err)
+						log.Println("Failed to add user permission:", err)
 						c.String(500, "")
 						return
 					}
@@ -155,7 +135,7 @@ func addEmployee(c *gin.Context) {
 		}
 		if _, err = db.Exec(
 			"INSERT INTO user (username, realname, dept_id) VALUES (?, ?, ?)", username, realname, deptID); err != nil {
-			log.Printf("Failed to add user: %v", err)
+			log.Println("Failed to add user:", err)
 			c.String(500, "")
 			return
 		}
@@ -168,14 +148,14 @@ func addEmployee(c *gin.Context) {
 func editEmployee(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
 	defer db.Close()
 
 	deptID := c.PostForm("dept")
-	if deptID != "" && !checkPermission(c, deptID) {
+	if deptID != "" && !checkPermission(c, &idOptions{Departments: []string{fmt.Sprintf("%v", deptID)}}) {
 		c.String(403, "")
 		return
 	}
@@ -201,27 +181,27 @@ func editEmployee(c *gin.Context) {
 			if _, err = db.Exec(
 				"UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ? WHERE id = ?",
 				strings.ToLower(username), realname, deptID, role, id); err != nil {
-				log.Printf("Failed to edit user: %v", err)
+				log.Println("Failed to edit user:", err)
 				c.String(500, "")
 				return
 			}
 		} else {
 			newPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			if err != nil {
-				log.Println(err)
+				log.Print(err)
 				c.String(500, "")
 				return
 			}
 			if _, err = db.Exec(
 				"UPDATE user SET username = ?, realname = ?, password = ?, dept_id = ?, role = ? WHERE id = ?",
 				strings.ToLower(username), realname, string(newPassword), deptID, role, id); err != nil {
-				log.Printf("Failed to edit user: %v", err)
+				log.Println("Failed to edit user:", err)
 				c.String(500, "")
 				return
 			}
 		}
 		if _, err = db.Exec("DELETE FROM permission WHERE user_id = ?", id); err != nil {
-			log.Printf("Failed to clear user permission: %v", err)
+			log.Println("Failed to clear user permission:", err)
 			c.String(500, "")
 			return
 		}
@@ -229,7 +209,7 @@ func editEmployee(c *gin.Context) {
 			for _, permission := range c.PostFormArray("permission") {
 				if _, err = db.Exec(
 					"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, id); err != nil {
-					log.Printf("Failed to add user permission: %v", err)
+					log.Println("Failed to add user permission:", err)
 					c.String(500, "")
 					return
 				}
@@ -243,25 +223,19 @@ func editEmployee(c *gin.Context) {
 
 func deleteEmployee(c *gin.Context) {
 	id := c.Param("id")
-	empls, _, err := getEmployees(&idOptions{User: id}, nil)
-	if err != nil {
-		log.Printf("Failed to get empl: %v", err)
-		c.String(400, "")
-		return
-	}
-	if !checkPermission(c, strconv.Itoa(empls[0].DeptID)) {
+	if !checkPermission(c, &idOptions{User: id}) {
 		c.String(403, "")
 		return
 	}
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
 	defer db.Close()
 	if _, err := db.Exec("DELETE FROM user WHERE id = ?", id); err != nil {
-		log.Printf("Failed to delete employee: %v", err)
+		log.Println("Failed to delete employee:", err)
 		c.String(500, "")
 		return
 	}

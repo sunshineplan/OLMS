@@ -29,7 +29,7 @@ type record struct {
 func getRecords(id *idOptions, options *searchOptions) (records []record, total int, err error) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		return
 	}
 	defer db.Close()
@@ -94,7 +94,7 @@ func getRecords(id *idOptions, options *searchOptions) (records []record, total 
 		}
 		go func() {
 			if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)"), args...).Scan(&total); err != nil {
-				log.Printf("Failed to get total records: %v", err)
+				log.Println("Failed to get total records:", err)
 				bc <- false
 			}
 			bc <- true
@@ -103,15 +103,16 @@ func getRecords(id *idOptions, options *searchOptions) (records []record, total 
 	rows, err := db.Query(fmt.Sprintf(stmt+orderBy+limit,
 		"record.id, employee.dept_id, dept_name, employee.id, realname, date, ABS(duration), type, status, describe, created"), args...)
 	if err != nil {
-		log.Printf("Failed to get records: %v", err)
+		log.Println("Failed to get records:", err)
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var r record
 		if err = rows.Scan(
-			&r.ID, &r.DeptID, &r.DeptName, &r.UserID, &r.Realname, &r.Date, &r.Duration, &r.Type, &r.Status, &r.Describe, &r.Created); err != nil {
-			log.Printf("Failed to scan record: %v", err)
+			&r.ID, &r.DeptID, &r.DeptName, &r.UserID, &r.Realname, &r.Date, &r.Duration, &r.Type, &r.Status, &r.Describe, &r.Created,
+		); err != nil {
+			log.Println("Failed to scan record:", err)
 			return
 		}
 		records = append(records, r)
@@ -125,7 +126,7 @@ func getRecords(id *idOptions, options *searchOptions) (records []record, total 
 func getYears(id *idOptions) (years []string, err error) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		return
 	}
 	defer db.Close()
@@ -148,14 +149,14 @@ func getYears(id *idOptions) (years []string, err error) {
 	}
 	rows, err := db.Query(stmt+" ORDER BY year DESC", args...)
 	if err != nil {
-		log.Printf("Failed to get years: %v", err)
+		log.Println("Failed to get years:", err)
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var y string
 		if err = rows.Scan(&y); err != nil {
-			log.Printf("Failed to scan year: %v", err)
+			log.Println("Failed to scan year:", err)
 			return
 		}
 		years = append(years, y)
@@ -168,17 +169,17 @@ func checkRecord(c *gin.Context, record record, super bool) bool {
 	if userID == "0" {
 		return true
 	}
-	users, _, err := getEmployees(&idOptions{User: userID}, nil)
+	user, err := getUser(userID)
 	if err != nil {
 		return false
 	}
 	if super {
-		if record.UserID == users[0].ID {
+		if record.UserID == user.ID {
 			return true
 		}
 		return false
 	}
-	for _, i := range strings.Split(users[0].Permission, ",") {
+	for _, i := range strings.Split(user.Permission, ",") {
 		if strconv.Itoa(record.DeptID) == i {
 			return true
 		}
@@ -193,7 +194,7 @@ func addRecord(c *gin.Context) {
 	}
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
@@ -202,13 +203,13 @@ func addRecord(c *gin.Context) {
 	date := c.PostForm("date")
 	Type, err := strconv.Atoi(c.PostForm("type"))
 	if err != nil {
-		log.Printf("Failed to get type: %v", err)
+		log.Println("Failed to get type:", err)
 		c.String(400, "")
 		return
 	}
 	duration, err := strconv.Atoi(c.PostForm("duration"))
 	if err != nil {
-		log.Printf("Failed to get duration: %v", err)
+		log.Println("Failed to get duration:", err)
 		c.String(400, "")
 		return
 	}
@@ -236,13 +237,12 @@ func addRecord(c *gin.Context) {
 	case "0":
 		user = employee{ID: 0}
 	default:
-		users, _, err := getEmployees(&idOptions{User: userID}, nil)
+		user, err = getUser(userID)
 		if err != nil {
-			log.Printf("Failed to get user: %v", err)
+			log.Println("Failed to get user:", err)
 			c.String(500, "")
 			return
 		}
-		user = users[0]
 	}
 
 	localize := localize(c)
@@ -250,9 +250,10 @@ func addRecord(c *gin.Context) {
 	ip, _, _ := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
 	ip = ip + "-" + c.ClientIP()
 	if userID == "" {
-		if _, err := db.Exec("INSERT INTO record (date, type, duration, describe, dept_id, user_id, createdby) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		if _, err := db.Exec(
+			"INSERT INTO record (date, type, duration, describe, dept_id, user_id, createdby) VALUES (?, ?, ?, ?, ?, ?, ?)",
 			date, Type, duration, describe, user.DeptID, user.ID, fmt.Sprintf("%d-%s", user.ID, ip)); err != nil {
-			log.Printf("Failed to add record: %v", err)
+			log.Println("Failed to add record:", err)
 			c.String(500, "")
 			return
 		}
@@ -263,13 +264,15 @@ func addRecord(c *gin.Context) {
 	}
 	deptID := c.PostForm("dept")
 	if user.ID != 0 {
-		if deptID != "" && !checkPermission(c, deptID, userID) {
+		if deptID != "" && !checkPermission(c, &idOptions{User: userID, Departments: []string{fmt.Sprintf("%v", deptID)}}) {
 			c.String(403, "")
 			return
 		}
-		if _, err := db.Exec("INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-			deptID, userID, date, Type, duration, describe, 1, fmt.Sprintf("%d-%s", user.ID, ip), fmt.Sprintf("%d-%s", user.ID, ip)); err != nil {
-			log.Printf("Failed to add record: %v", err)
+		if _, err := db.Exec(
+			"INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			deptID, userID, date, Type, duration, describe, 1, fmt.Sprintf("%d-%s", user.ID, ip), fmt.Sprintf("%d-%s", user.ID, ip),
+		); err != nil {
+			log.Println("Failed to add record:", err)
 			c.String(500, "")
 			return
 		}
@@ -281,9 +284,10 @@ func addRecord(c *gin.Context) {
 		return
 	}
 	status := c.PostForm("status")
-	if _, err := db.Exec("INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	if _, err := db.Exec(
+		"INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		deptID, userID, date, Type, duration, describe, status, fmt.Sprintf("%d-%s", 0, ip), fmt.Sprintf("%d-%s", 0, ip)); err != nil {
-		log.Printf("Failed to add record: %v", err)
+		log.Println("Failed to add record:", err)
 		c.String(500, "")
 		return
 	}
@@ -297,7 +301,7 @@ func editRecord(c *gin.Context) {
 	}
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
@@ -306,13 +310,13 @@ func editRecord(c *gin.Context) {
 	date := c.PostForm("date")
 	Type, err := strconv.Atoi(c.PostForm("type"))
 	if err != nil {
-		log.Printf("Failed to get type: %v", err)
+		log.Println("Failed to get type:", err)
 		c.String(400, "")
 		return
 	}
 	duration, err := strconv.Atoi(c.PostForm("duration"))
 	if err != nil {
-		log.Printf("Failed to get duration: %v", err)
+		log.Println("Failed to get duration:", err)
 		c.String(400, "")
 		return
 	}
@@ -338,7 +342,7 @@ func editRecord(c *gin.Context) {
 	id := c.Param("id")
 	records, _, err := getRecords(&idOptions{Record: id}, nil)
 	if err != nil {
-		log.Printf("Failed to get record: %v", err)
+		log.Println("Failed to get record:", err)
 		c.String(400, "")
 		return
 	}
@@ -346,15 +350,15 @@ func editRecord(c *gin.Context) {
 		c.String(403, "")
 		return
 	}
-	user := sessions.Default(c).Get("userID")
-	if user != "0" {
+	userID := sessions.Default(c).Get("userID")
+	if userID != "0" {
 		if records[0].Status != 0 {
 			c.JSON(200, gin.H{"status": 0, "message": "You can only update record which is not verified."})
 			return
 		}
 		if _, err := db.Exec("UPDATE record SET date = ?, type = ?, duration = ?, describe = ? WHERE id = ?",
 			date, Type, duration, describe, id); err != nil {
-			log.Printf("Failed to update record: %v", err)
+			log.Println("Failed to update record:", err)
 			c.String(500, "")
 			return
 		}
@@ -364,27 +368,28 @@ func editRecord(c *gin.Context) {
 			fmt.Sprintf(localize["EditRecordSubscribe"], records[0].Realname), localize)
 		return
 	}
-	userID := c.PostForm("empl")
+	emplID := c.PostForm("empl")
 	deptID := c.PostForm("dept")
-	if userID == "" || deptID == "" {
+	if emplID == "" || deptID == "" {
 		log.Print("Missing param.")
 		c.String(400, "")
 		return
 	}
-	users, _, err := getEmployees(&idOptions{User: userID}, nil)
+	user, err := getUser(emplID)
 	if err != nil {
-		log.Printf("Failed to get users: %v", err)
+		log.Println("Failed to get users:", err)
 		c.String(400, "")
 		return
 	}
-	if deptID != strconv.Itoa(users[0].DeptID) {
+	if deptID != strconv.Itoa(user.DeptID) {
 		c.JSON(200, gin.H{"status": 0, "message": "Employee does not belong this department."})
 		return
 	}
 	status := c.PostForm("status")
-	if _, err := db.Exec("UPDATE record SET user_id = ?, dept_id = ?, date = ?, type = ?, duration = ?, status = ?, describe = ? WHERE id = ?",
-		userID, deptID, date, Type, duration, status, describe, id); err != nil {
-		log.Printf("Failed to update record: %v", err)
+	if _, err := db.Exec(
+		"UPDATE record SET user_id = ?, dept_id = ?, date = ?, type = ?, duration = ?, status = ?, describe = ? WHERE id = ?",
+		emplID, deptID, date, Type, duration, status, describe, id); err != nil {
+		log.Println("Failed to update record:", err)
 		c.String(500, "")
 		return
 	}
@@ -399,7 +404,7 @@ func verifyRecord(c *gin.Context) {
 	id := c.Param("id")
 	records, _, err := getRecords(&idOptions{Record: id}, nil)
 	if err != nil {
-		log.Printf("Failed to get record: %v", err)
+		log.Println("Failed to get record:", err)
 		c.String(400, "")
 		return
 	}
@@ -414,19 +419,19 @@ func verifyRecord(c *gin.Context) {
 	}
 	status, err := strconv.Atoi(c.PostForm("status"))
 	if err != nil {
-		log.Printf("Failed to get status: %v", err)
+		log.Println("Failed to get status:", err)
 		c.String(400, "")
 		return
 	}
 	if status != 1 && status != 2 {
-		log.Printf("Unknow status.")
+		log.Println("Unknow status.")
 		c.String(400, "")
 		return
 	}
 
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
@@ -437,18 +442,17 @@ func verifyRecord(c *gin.Context) {
 	case "0":
 		user = employee{ID: 0}
 	default:
-		users, _, err := getEmployees(&idOptions{User: userID}, nil)
+		user, err = getUser(userID)
 		if err != nil {
-			log.Printf("Failed to get user: %v", err)
+			log.Println("Failed to get user:", err)
 			c.String(500, "")
 			return
 		}
-		user = users[0]
 	}
 	ip, _, _ := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
 	if _, err := db.Exec("UPDATE record SET status = ?, verifiedby = ? WHERE id = ?",
 		status, fmt.Sprintf("%d-%s-%s", user.ID, ip, c.ClientIP()), id); err != nil {
-		log.Printf("Failed to verify record: %v", err)
+		log.Println("Failed to verify record:", err)
 		c.String(500, "")
 		return
 	}
@@ -470,7 +474,7 @@ func deleteRecord(c *gin.Context) {
 	id := c.Param("id")
 	records, _, err := getRecords(&idOptions{Record: id}, nil)
 	if err != nil {
-		log.Printf("Failed to get record: %v", err)
+		log.Println("Failed to get record:", err)
 		c.String(400, "")
 		return
 	}
@@ -479,13 +483,12 @@ func deleteRecord(c *gin.Context) {
 	case "0":
 		user = employee{ID: 0}
 	default:
-		users, _, err := getEmployees(&idOptions{User: userID}, nil)
+		user, err = getUser(userID)
 		if err != nil {
-			log.Printf("Failed to get user: %v", err)
+			log.Println("Failed to get user:", err)
 			c.String(500, "")
 			return
 		}
-		user = users[0]
 	}
 	if user.ID != 0 && records[0].Status != 0 {
 		c.JSON(200, gin.H{"status": 0, "message": "You can only delete record which is not verified."})
@@ -494,14 +497,14 @@ func deleteRecord(c *gin.Context) {
 
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
 	defer db.Close()
 
 	if _, err := db.Exec("DELETE FROM record WHERE id = ?", id); err != nil {
-		log.Printf("Failed to delete record: %v", err)
+		log.Println("Failed to delete record:", err)
 		c.String(500, "")
 		return
 	}

@@ -25,10 +25,20 @@ func adminRequired(c *gin.Context) {
 		c.AbortWithStatus(401)
 	case "0":
 	default:
-		user, _, err := getEmployees(&idOptions{User: userID}, nil)
+		db, err := getDB()
 		if err != nil {
+			log.Println("Failed to connect to database:", err)
+			c.AbortWithStatus(503)
+			return
+		}
+		defer db.Close()
+		var role bool
+		if err := db.QueryRow("SELECT role FROM user WHERE id = ?", userID).Scan(&role); err != nil {
+			log.Println("Failed to get role:", err)
 			c.AbortWithStatus(500)
-		} else if !user[0].Role {
+			return
+		}
+		if !role {
 			c.AbortWithStatus(403)
 		}
 	}
@@ -55,7 +65,7 @@ func login(c *gin.Context) {
 
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
@@ -69,14 +79,14 @@ func login(c *gin.Context) {
 		} else if strings.Contains(err.Error(), "no rows") {
 			message = "IncorrectUsername"
 		} else {
-			log.Println(err)
+			log.Print(err)
 			message = "CriticalError"
 		}
 	} else if err = bcrypt.CompareHashAndPassword([]byte(pw), []byte(password)); err != nil {
 		if (strings.Contains(err.Error(), "too short") && pw != password) || strings.Contains(err.Error(), "is not") {
 			message = "IncorrectPassword"
 		} else if pw != password {
-			log.Println(err)
+			log.Print(err)
 			message = "CriticalError"
 		}
 	}
@@ -92,7 +102,7 @@ func login(c *gin.Context) {
 		}
 
 		if err := session.Save(); err != nil {
-			log.Println("Failed to save session.", err)
+			log.Println("Failed to save session:", err)
 			c.String(500, "")
 			return
 		}
@@ -109,7 +119,7 @@ func login(c *gin.Context) {
 func setting(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
@@ -120,7 +130,7 @@ func setting(c *gin.Context) {
 	if err := db.QueryRow(
 		"SELECT subscribe, email FROM user WHERE id = ?",
 		sessions.Default(c).Get("userID")).Scan(&subscribe, &email); err != nil {
-		log.Printf("Failed to get user subscribe: %v", err)
+		log.Println("Failed to get user subscribe:", err)
 	}
 	c.HTML(200, "setting.html", gin.H{"localize": localize(c), "subscribe": subscribe, "email": email})
 }
@@ -132,7 +142,7 @@ func doSetting(c *gin.Context) {
 	}
 	db, err := getDB()
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		log.Println("Failed to connect to database:", err)
 		c.String(503, "")
 		return
 	}
@@ -146,7 +156,7 @@ func doSetting(c *gin.Context) {
 
 	var oldPassword string
 	if err := db.QueryRow("SELECT password FROM user WHERE id = ?", userID).Scan(&oldPassword); err != nil {
-		log.Println(err)
+		log.Print(err)
 		c.String(500, "")
 		return
 	}
@@ -161,7 +171,7 @@ func doSetting(c *gin.Context) {
 			errorCode = 1
 			break
 		} else if password != oldPassword {
-			log.Println(err)
+			log.Print(err)
 			c.String(500, "")
 			return
 		}
@@ -179,19 +189,19 @@ func doSetting(c *gin.Context) {
 	if message == "" {
 		newPassword, err := bcrypt.GenerateFromPassword([]byte(password1), bcrypt.MinCost)
 		if err != nil {
-			log.Println(err)
+			log.Print(err)
 			c.String(500, "")
 			return
 		}
 		_, err = db.Exec("UPDATE user SET password = ? WHERE id = ?", string(newPassword), userID)
 		if err != nil {
-			log.Println(err)
+			log.Print(err)
 			c.String(500, "")
 			return
 		}
 		session.Clear()
 		if err := session.Save(); err != nil {
-			log.Println(err)
+			log.Print(err)
 			c.String(500, "")
 			return
 		}

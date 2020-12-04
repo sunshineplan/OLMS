@@ -32,7 +32,7 @@ func Backup() {
 		Subject:     fmt.Sprintf("OLMS Backup-%s", time.Now().Format("20060102")),
 		Attachments: []*mail.Attachment{{Path: file, Filename: "database"}},
 	}); err != nil {
-		log.Fatalf("Failed to send mail: %v", err)
+		log.Fatalln("Failed to send mail:", err)
 	}
 	log.Println("Done!")
 }
@@ -44,7 +44,7 @@ func Restore(file string) {
 		file = joinPath(dir(Self), "scripts/schema.sql")
 	} else {
 		if _, err := os.Stat(file); err != nil {
-			log.Fatalf("File not found: %v", err)
+			log.Fatalln("File not found:", err)
 		}
 	}
 	dropAll := joinPath(dir(Self), "scripts/drop_all.sql")
