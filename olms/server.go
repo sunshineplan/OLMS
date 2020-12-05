@@ -53,14 +53,20 @@ func Run() {
 	router.LoadHTMLFiles(joinPath(dir(Self), "dist/index.html"))
 	router.GET("/", func(c *gin.Context) {
 		var user employee
-		var err error
 		switch userID := sessions.Default(c).Get("userID"); userID {
 		case nil:
 			c.Redirect(302, "/auth/login")
 		case "0":
 			user = employee{ID: 0, Realname: "root", Role: true}
 		default:
-			user, err = getUser(userID)
+			db, err := getDB()
+			if err != nil {
+				log.Println("Failed to connect to database:", err)
+				c.String(503, "")
+				return
+			}
+			defer db.Close()
+			user, err = getUser(db, userID)
 			if err != nil {
 				log.Println("Failed to get users:", err)
 				c.String(500, "")
@@ -99,8 +105,10 @@ func Run() {
 
 	api := router.Group("/")
 	api.Use(authRequired)
-	api.POST("/get", get)
-	api.POST("/export", exportCSV)
+	api.POST("/records", records)
+	api.POST("/statistics", statistics)
+	api.POST("/records/export", exportRecords)
+	api.POST("/statistics/export", exportStatistics)
 	api.POST("/subscribe", subscribe)
 
 	record := router.Group("/record")

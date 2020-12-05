@@ -53,14 +53,10 @@ func (s *statistic) format(localize map[string]string) (f map[string]interface{}
 func (d *department) format() map[string]interface{} { return nil }
 func (e *employee) format() map[string]interface{}   { return nil }
 
-func sendCSV(c *gin.Context, filename string, fieldnames []string, r []map[string]interface{}) {
-	if len(r) == 0 {
+func sendCSV(c *gin.Context, filename string, fieldnames []string, rows []map[string]interface{}) {
+	if len(rows) == 0 {
 		c.String(404, "No result.")
 		return
-	}
-	var rows []interface{}
-	for _, i := range r {
-		rows = append(rows, i)
 	}
 	var b bytes.Buffer
 	if err := utils.ExportUTF8CSV(fieldnames, rows, &b); err != nil {

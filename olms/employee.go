@@ -20,14 +20,7 @@ type employee struct {
 	Permission string `json:"permission"`
 }
 
-func getUser(id interface{}) (user employee, err error) {
-	db, err := getDB()
-	if err != nil {
-		log.Println("Failed to connect to database:", err)
-		return
-	}
-	defer db.Close()
-
+func getUser(db *sql.DB, id interface{}) (user employee, err error) {
 	var permission []byte
 	if err = db.QueryRow("SELECT * FROM employee WHERE id = ?", id).Scan(
 		&user.ID, &user.Username, &user.Realname, &user.DeptID, &user.DeptName, &user.Role, &permission); err != nil {
@@ -84,7 +77,7 @@ func addEmployee(c *gin.Context) {
 	defer db.Close()
 
 	deptID := c.PostForm("dept")
-	if deptID != "" && !checkPermission(c, &idOptions{Departments: []string{fmt.Sprintf("%v", deptID)}}) {
+	if deptID != "" && !checkPermission(db, c, &idOptions{Departments: []string{fmt.Sprintf("%v", deptID)}}) {
 		c.String(403, "")
 		return
 	}
@@ -155,7 +148,7 @@ func editEmployee(c *gin.Context) {
 	defer db.Close()
 
 	deptID := c.PostForm("dept")
-	if deptID != "" && !checkPermission(c, &idOptions{Departments: []string{fmt.Sprintf("%v", deptID)}}) {
+	if deptID != "" && !checkPermission(db, c, &idOptions{Departments: []string{fmt.Sprintf("%v", deptID)}}) {
 		c.String(403, "")
 		return
 	}
@@ -222,11 +215,6 @@ func editEmployee(c *gin.Context) {
 }
 
 func deleteEmployee(c *gin.Context) {
-	id := c.Param("id")
-	if !checkPermission(c, &idOptions{User: id}) {
-		c.String(403, "")
-		return
-	}
 	db, err := getDB()
 	if err != nil {
 		log.Println("Failed to connect to database:", err)
@@ -234,6 +222,12 @@ func deleteEmployee(c *gin.Context) {
 		return
 	}
 	defer db.Close()
+
+	id := c.Param("id")
+	if !checkPermission(db, c, &idOptions{User: id}) {
+		c.String(403, "")
+		return
+	}
 	if _, err := db.Exec("DELETE FROM user WHERE id = ?", id); err != nil {
 		log.Println("Failed to delete employee:", err)
 		c.String(500, "")

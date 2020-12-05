@@ -1,6 +1,7 @@
 package olms
 
 import (
+	"database/sql"
 	"log"
 	"os"
 	"strconv"
@@ -51,12 +52,13 @@ func checkSuper(c *gin.Context) bool {
 	return false
 }
 
-func checkPermission(c *gin.Context, option *idOptions) bool {
+func checkPermission(db *sql.DB, c *gin.Context, option *idOptions) bool {
 	userID := sessions.Default(c).Get("userID")
 	if userID == "0" {
 		return true
 	}
-	user, err := getUser(userID)
+
+	user, err := getUser(db, userID)
 	if err != nil {
 		return false
 	}
@@ -68,7 +70,7 @@ func checkPermission(c *gin.Context, option *idOptions) bool {
 			}
 		}
 	default:
-		employee, err := getUser(option.User)
+		employee, err := getUser(db, option.User)
 		if err != nil {
 			return false
 		}

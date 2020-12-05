@@ -1,6 +1,7 @@
 package olms
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"strings"
@@ -15,14 +16,7 @@ type statistic struct {
 	Summary  int    `json:"summary"`
 }
 
-func getStatistics(id *idOptions, options *searchOptions) (statistics []statistic, total int, err error) {
-	db, err := getDB()
-	if err != nil {
-		log.Println("Failed to connect to database:", err)
-		return
-	}
-	defer db.Close()
-
+func getStatistics(db *sql.DB, id *idOptions, options *searchOptions) (statistics []statistic, total int, err error) {
 	stmt := "SELECT %s FROM statistics WHERE"
 
 	var args []interface{}
@@ -44,8 +38,8 @@ func getStatistics(id *idOptions, options *searchOptions) (statistics []statisti
 
 	if options.Period == "month" {
 		fields = "period, dept_name, realname, overtime, leave, summary"
-		if options.Month == nil {
-			if options.Year != nil {
+		if options.Month == "" {
+			if options.Year != "" {
 				stmt += " AND substr(period,1,4) = ?"
 				args = append(args, options.Year)
 			}
@@ -58,7 +52,7 @@ func getStatistics(id *idOptions, options *searchOptions) (statistics []statisti
 		group = " GROUP BY period, dept_id, user_id"
 		orderBy = " ORDER BY period DESC"
 	}
-	if p, ok := options.Page.(float64); ok {
+	if options.Page != 0 {
 		go func() {
 			if err := db.QueryRow(fmt.Sprintf("SELECT count(*) FROM (%s)",
 				fmt.Sprintf(stmt+group, "substr(period,1,4) period")), args...).Scan(&total); err != nil {
@@ -68,11 +62,11 @@ func getStatistics(id *idOptions, options *searchOptions) (statistics []statisti
 			bc <- true
 		}()
 		limit = fmt.Sprintf(" LIMIT ?, ?")
-		args = append(args, int(p-1)*perPage, perPage)
+		args = append(args, int(options.Page-1)*perPage, perPage)
 	} else {
 		bc <- true
 	}
-	if options.Sort != nil {
+	if options.Sort != "" {
 		orderBy = fmt.Sprintf(" ORDER BY %v %v", options.Sort, options.Order)
 	}
 	rows, err := db.Query(fmt.Sprintf(stmt+group+orderBy+limit, fields), args...)
