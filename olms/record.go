@@ -87,7 +87,8 @@ func getRecords(db *sql.DB, id *idOptions, options *searchOptions) (records []re
 		bc <- true
 	}()
 	rows, err := db.Query(fmt.Sprintf(stmt+orderBy+limit,
-		"record.id, employee.dept_id, dept_name, employee.id, realname, date, ABS(duration), type, status, describe, created"), args...)
+		"record.id, employee.dept_id, dept_name, employee.id, realname, date, ABS(duration), type, status, describe, created"),
+		args...)
 	if err != nil {
 		log.Println("Failed to get records:", err)
 		return
@@ -109,68 +110,17 @@ func getRecords(db *sql.DB, id *idOptions, options *searchOptions) (records []re
 	return
 }
 
-func getYears(db *sql.DB, id *idOptions) (years []string, err error) {
-	stmt := "SELECT DISTINCT strftime('%Y', date) year FROM record WHERE"
-
-	var args []interface{}
-	if id.User != nil {
-		stmt += " user_id = ?"
-		args = append(args, id.User)
-	} else {
-		marks := make([]string, len(id.Departments))
-		for i := range marks {
-			marks[i] = "?"
-		}
-		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
-		for _, i := range id.Departments {
-			args = append(args, i)
-		}
-	}
-	rows, err := db.Query(stmt+" ORDER BY year DESC", args...)
-	if err != nil {
-		log.Println("Failed to get years:", err)
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var year string
-		if err = rows.Scan(&year); err != nil {
-			log.Println("Failed to scan year:", err)
-			return
-		}
-		years = append(years, year)
-	}
-	return
-}
-
-func checkRecord(db *sql.DB, c *gin.Context, record record, super bool) bool {
-	userID := sessions.Default(c).Get("userID")
-	if userID == "0" {
-		return true
-	}
-	user, err := getUser(db, userID)
-	if err != nil {
-		return false
-	}
-	if super {
-		if record.UserID == user.ID {
-			return true
-		}
-		return false
-	}
-	for _, i := range strings.Split(user.Permission, ",") {
-		if strconv.Itoa(record.DeptID) == i {
-			return true
-		}
-	}
-	return false
-}
-
 func addRecord(c *gin.Context) {
-	if !verifyResponse("record", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
-		c.String(403, "reCAPTCHA challenge failed")
+	if !verifyResponse("record", c.ClientIP(), c.PostForm("recaptcha")) {
+		c.String(403, "reCAPTCHAChallengeFailed")
 		return
 	}
+	var r record
+	if err := c.BindJSON(&r); err != nil {
+		c.String(400, "")
+		return
+	}
+
 	db, err := getDB()
 	if err != nil {
 		log.Println("Failed to connect to database:", err)
@@ -179,59 +129,35 @@ func addRecord(c *gin.Context) {
 	}
 	defer db.Close()
 
-	date := c.PostForm("date")
-	Type, err := strconv.Atoi(c.PostForm("type"))
-	if err != nil {
-		log.Println("Failed to get type:", err)
-		c.String(400, "")
-		return
-	}
-	duration, err := strconv.Atoi(c.PostForm("duration"))
-	if err != nil {
-		log.Println("Failed to get duration:", err)
-		c.String(400, "")
-		return
-	}
-	switch Type {
-	case 1:
-		if duration < 1 {
-			c.JSON(200, gin.H{"status": 0, "message": "Bad duration value"})
+	if r.Type {
+		if r.Duration < 1 {
+			c.JSON(200, gin.H{"status": 0, "message": "BadDuration"})
 			return
 		}
-	case 0:
-		duration = -duration
-		if duration > -1 {
-			c.JSON(200, gin.H{"status": 0, "message": "Bad duration value"})
-			return
-		}
-	default:
-		log.Println("Unknown type value")
-		c.String(400, "")
-		return
-	}
-	describe := c.PostForm("describe")
-
-	var user employee
-	switch userID := sessions.Default(c).Get("userID"); userID {
-	case "0":
-		user = employee{ID: 0}
-	default:
-		user, err = getUser(db, userID)
-		if err != nil {
-			log.Println("Failed to get user:", err)
-			c.String(500, "")
+	} else {
+		r.Duration = -r.Duration
+		if r.Duration > -1 {
+			c.JSON(200, gin.H{"status": 0, "message": "BadDuration"})
 			return
 		}
 	}
 
-	localize := localize(c)
-	userID := c.PostForm("empl")
+	user, err := getUser(db, sessions.Default(c).Get("userID"))
+	if err != nil {
+		log.Println("Failed to get user:", err)
+		c.String(500, "")
+		return
+	}
+
 	ip, _, _ := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
 	ip = ip + "-" + c.ClientIP()
-	if userID == "" {
+	localize := localize(c)
+	if r.UserID == 0 {
 		if _, err := db.Exec(
-			"INSERT INTO record (date, type, duration, describe, dept_id, user_id, createdby) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			date, Type, duration, describe, user.DeptID, user.ID, fmt.Sprintf("%d-%s", user.ID, ip)); err != nil {
+			`INSERT INTO record (date, type, duration, describe, dept_id, user_id, createdby)
+			 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			r.Date, r.Type, r.Duration, r.Describe, user.DeptID, user.ID, fmt.Sprintf("%d-%s", user.ID, ip),
+		); err != nil {
 			log.Println("Failed to add record:", err)
 			c.String(500, "")
 			return
@@ -241,31 +167,34 @@ func addRecord(c *gin.Context) {
 			fmt.Sprintf(localize["AddRecordSubscribe"], user.Realname), localize)
 		return
 	}
-	deptID := c.PostForm("dept")
 	if user.ID != 0 {
-		if deptID != "" && !checkPermission(db, c, &idOptions{User: userID, Departments: []string{fmt.Sprintf("%v", deptID)}}) {
+		if r.DeptID != 0 && !checkPermission(db, c, &idOptions{User: r.UserID, Departments: []string{strconv.Itoa(r.DeptID)}}) {
 			c.String(403, "")
 			return
 		}
 		if _, err := db.Exec(
-			"INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-			deptID, userID, date, Type, duration, describe, 1, fmt.Sprintf("%d-%s", user.ID, ip), fmt.Sprintf("%d-%s", user.ID, ip),
+			`INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			r.DeptID, r.UserID, r.Date, r.Type, r.Duration, r.Describe, 1,
+			fmt.Sprintf("%d-%s", user.ID, ip), fmt.Sprintf("%d-%s", user.ID, ip),
 		); err != nil {
 			log.Println("Failed to add record:", err)
 			c.String(500, "")
 			return
 		}
 		c.JSON(200, gin.H{"status": 1})
-		notify(&idOptions{User: userID},
+		notify(&idOptions{User: r.UserID},
 			fmt.Sprintf(localize["AdminAddRecordSubscribe"], user.Realname), localize)
-		notify(&idOptions{Departments: []string{deptID}},
+		notify(&idOptions{Departments: []string{strconv.Itoa(r.DeptID)}},
 			fmt.Sprintf(localize["AdminAddRecordAdminSubscribe"], user.Realname), localize)
 		return
 	}
-	status := c.PostForm("status")
 	if _, err := db.Exec(
-		"INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		deptID, userID, date, Type, duration, describe, status, fmt.Sprintf("%d-%s", 0, ip), fmt.Sprintf("%d-%s", 0, ip)); err != nil {
+		`INSERT INTO record (dept_id, user_id, date, type, duration, describe, status, createdby, verifiedby)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		r.DeptID, r.UserID, r.Date, r.Type, r.Duration, r.Describe, r.Status,
+		fmt.Sprintf("%d-%s", 0, ip), fmt.Sprintf("%d-%s", 0, ip),
+	); err != nil {
 		log.Println("Failed to add record:", err)
 		c.String(500, "")
 		return
@@ -274,10 +203,16 @@ func addRecord(c *gin.Context) {
 }
 
 func editRecord(c *gin.Context) {
-	if !verifyResponse("record", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
-		c.String(403, "reCAPTCHA challenge failed")
+	if !verifyResponse("record", c.ClientIP(), c.PostForm("recaptcha")) {
+		c.String(403, "reCAPTCHAChallengeFailed")
 		return
 	}
+	var r record
+	if err := c.BindJSON(&r); err != nil {
+		c.String(400, "")
+		return
+	}
+
 	db, err := getDB()
 	if err != nil {
 		log.Println("Failed to connect to database:", err)
@@ -286,88 +221,60 @@ func editRecord(c *gin.Context) {
 	}
 	defer db.Close()
 
-	date := c.PostForm("date")
-	Type, err := strconv.Atoi(c.PostForm("type"))
-	if err != nil {
-		log.Println("Failed to get type:", err)
-		c.String(400, "")
-		return
-	}
-	duration, err := strconv.Atoi(c.PostForm("duration"))
-	if err != nil {
-		log.Println("Failed to get duration:", err)
-		c.String(400, "")
-		return
-	}
-	switch Type {
-	case 1:
-		if duration < 1 {
-			c.JSON(200, gin.H{"status": 0, "message": "Bad duration value"})
+	if r.Type {
+		if r.Duration < 1 {
+			c.JSON(200, gin.H{"status": 0, "message": "BadDuration"})
 			return
 		}
-	case 0:
-		duration = -duration
-		if duration > -1 {
-			c.JSON(200, gin.H{"status": 0, "message": "Bad duration value"})
+	} else {
+		r.Duration = -r.Duration
+		if r.Duration > -1 {
+			c.JSON(200, gin.H{"status": 0, "message": "BadDuration"})
 			return
 		}
-	default:
-		log.Println("Unknown type value")
-		c.String(400, "")
-		return
 	}
-	describe := c.PostForm("describe")
 
-	id := c.Param("id")
-	records, _, err := getRecords(db, &idOptions{Record: id}, nil)
-	if err != nil {
-		log.Println("Failed to get record:", err)
-		c.String(400, "")
-		return
-	}
-	if !checkRecord(db, c, records[0], true) {
+	record, ok := checkRecord(db, c, r.ID, true)
+	if !ok {
 		c.String(403, "")
 		return
 	}
 	userID := sessions.Default(c).Get("userID")
 	if userID != "0" {
-		if records[0].Status != 0 {
-			c.JSON(200, gin.H{"status": 0, "message": "You can only update record which is not verified."})
+		if record.Status != 0 {
+			c.JSON(200, gin.H{"status": 0, "message": "UpdateRecordNotVerified"})
 			return
 		}
 		if _, err := db.Exec("UPDATE record SET date = ?, type = ?, duration = ?, describe = ? WHERE id = ?",
-			date, Type, duration, describe, id); err != nil {
+			r.Date, r.Type, r.Duration, r.Describe, r.ID); err != nil {
 			log.Println("Failed to update record:", err)
 			c.String(500, "")
 			return
 		}
 		c.JSON(200, gin.H{"status": 1})
 		localize := localize(c)
-		notify(&idOptions{Departments: []string{strconv.Itoa(records[0].DeptID)}},
-			fmt.Sprintf(localize["EditRecordSubscribe"], records[0].Realname), localize)
+		notify(&idOptions{Departments: []string{strconv.Itoa(record.DeptID)}},
+			fmt.Sprintf(localize["EditRecordSubscribe"], record.Realname), localize)
 		return
 	}
-	emplID := c.PostForm("empl")
-	deptID := c.PostForm("dept")
-	if emplID == "" || deptID == "" {
+	if r.UserID == 0 || r.DeptID == 0 {
 		log.Print("Missing param.")
 		c.String(400, "")
 		return
 	}
-	user, err := getUser(db, emplID)
+	user, err := getUser(db, r.UserID)
 	if err != nil {
 		log.Println("Failed to get users:", err)
 		c.String(400, "")
 		return
 	}
-	if deptID != strconv.Itoa(user.DeptID) {
-		c.JSON(200, gin.H{"status": 0, "message": "Employee does not belong this department."})
+	if r.DeptID != user.DeptID {
+		c.JSON(200, gin.H{"status": 0, "message": "EmployeeNotBelong"})
 		return
 	}
-	status := c.PostForm("status")
 	if _, err := db.Exec(
 		"UPDATE record SET user_id = ?, dept_id = ?, date = ?, type = ?, duration = ?, status = ?, describe = ? WHERE id = ?",
-		emplID, deptID, date, Type, duration, status, describe, id); err != nil {
+		r.UserID, r.DeptID, r.Date, r.Type, r.Duration, r.Status, r.Describe, r.ID); err != nil {
 		log.Println("Failed to update record:", err)
 		c.String(500, "")
 		return
@@ -376,8 +283,13 @@ func editRecord(c *gin.Context) {
 }
 
 func verifyRecord(c *gin.Context) {
-	if !verifyResponse("verify", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
-		c.String(403, "reCAPTCHA challenge failed")
+	if !verifyResponse("verify", c.ClientIP(), c.PostForm("recaptcha")) {
+		c.String(403, "reCAPTCHAChallengeFailed")
+		return
+	}
+	var r record
+	if err := c.BindJSON(&r); err != nil {
+		c.String(400, "")
 		return
 	}
 
@@ -389,64 +301,46 @@ func verifyRecord(c *gin.Context) {
 	}
 	defer db.Close()
 
-	id := c.Param("id")
-	records, _, err := getRecords(db, &idOptions{Record: id}, nil)
-	if err != nil {
-		log.Println("Failed to get record:", err)
-		c.String(400, "")
-		return
-	}
-	if !checkRecord(db, c, records[0], false) {
+	record, ok := checkRecord(db, c, r.ID, false)
+	if !ok {
 		c.String(403, "")
 		return
 	}
-	if records[0].Status != 0 {
+	if record.Status != 0 {
 		log.Println("The record is already verified.")
 		c.String(400, "")
 		return
 	}
-	status, err := strconv.Atoi(c.PostForm("status"))
-	if err != nil {
-		log.Println("Failed to get status:", err)
-		c.String(400, "")
-		return
-	}
-	if status != 1 && status != 2 {
+	if r.Status != 1 && r.Status != 2 {
 		log.Println("Unknow status.")
 		c.String(400, "")
 		return
 	}
 
-	var user employee
-	switch userID := sessions.Default(c).Get("userID"); userID {
-	case "0":
-		user = employee{ID: 0}
-	default:
-		user, err = getUser(db, userID)
-		if err != nil {
-			log.Println("Failed to get user:", err)
-			c.String(500, "")
-			return
-		}
+	user, err := getUser(db, sessions.Default(c).Get("userID"))
+	if err != nil {
+		log.Println("Failed to get user:", err)
+		c.String(500, "")
+		return
 	}
 	ip, _, _ := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
 	if _, err := db.Exec("UPDATE record SET status = ?, verifiedby = ? WHERE id = ?",
-		status, fmt.Sprintf("%d-%s-%s", user.ID, ip, c.ClientIP()), id); err != nil {
+		r.Status, fmt.Sprintf("%d-%s-%s", user.ID, ip, c.ClientIP()), r.ID); err != nil {
 		log.Println("Failed to verify record:", err)
 		c.String(500, "")
 		return
 	}
 	localize := localize(c)
 	var result string
-	if status == 1 {
+	if r.Status == 1 {
 		result = localize["Verified"]
 	} else {
 		result = localize["Rejected"]
 	}
 	c.JSON(200, gin.H{"status": 1})
-	notify(&idOptions{User: records[0].UserID},
+	notify(&idOptions{User: record.UserID},
 		fmt.Sprintf(localize["VerifyRecordSubscribe"], user.Realname, result), localize)
-	notify(&idOptions{Departments: []string{strconv.Itoa(records[0].DeptID)}},
+	notify(&idOptions{Departments: []string{strconv.Itoa(record.DeptID)}},
 		fmt.Sprintf(localize["VerifyRecordAdminSubscribe"], user.Realname, result), localize)
 }
 
@@ -459,28 +353,26 @@ func deleteRecord(c *gin.Context) {
 	}
 	defer db.Close()
 
-	id := c.Param("id")
-	records, _, err := getRecords(db, &idOptions{Record: id}, nil)
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		log.Println("Failed to get record:", err)
+		log.Println("Failed to get id:", err)
 		c.String(400, "")
 		return
 	}
-
-	var user employee
-	switch userID := sessions.Default(c).Get("userID"); userID {
-	case "0":
-		user = employee{ID: 0}
-	default:
-		user, err = getUser(db, userID)
-		if err != nil {
-			log.Println("Failed to get user:", err)
-			c.String(500, "")
-			return
-		}
+	record, ok := checkRecord(db, c, id, true)
+	if !ok {
+		c.String(403, "")
+		return
 	}
-	if user.ID != 0 && records[0].Status != 0 {
-		c.JSON(200, gin.H{"status": 0, "message": "You can only delete record which is not verified."})
+
+	user, err := getUser(db, sessions.Default(c).Get("userID"))
+	if err != nil {
+		log.Println("Failed to get user:", err)
+		c.String(500, "")
+		return
+	}
+	if user.ID != 0 && record.Status != 0 {
+		c.JSON(200, gin.H{"status": 0, "message": "DeleteRecordNotVerified"})
 		return
 	}
 

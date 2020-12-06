@@ -52,56 +52,19 @@ func Run() {
 	router.StaticFile("favicon.ico", joinPath(dir(Self), "dist/favicon.ico"))
 	router.LoadHTMLFiles(joinPath(dir(Self), "dist/index.html"))
 	router.GET("/", func(c *gin.Context) {
-		var user employee
-		switch userID := sessions.Default(c).Get("userID"); userID {
-		case nil:
-			c.Redirect(302, "/auth/login")
-		case "0":
-			user = employee{ID: 0, Realname: "root", Role: true}
-		default:
-			db, err := getDB()
-			if err != nil {
-				log.Println("Failed to connect to database:", err)
-				c.String(503, "")
-				return
-			}
-			defer db.Close()
-			user, err = getUser(db, userID)
-			if err != nil {
-				log.Println("Failed to get users:", err)
-				c.String(500, "")
-				return
-			}
-		}
-		if SiteKey != "" && SecretKey != "" {
-			c.HTML(200, "index.html", gin.H{"localize": localize(c), "user": user, "recaptcha": SiteKey})
-			return
-		}
-		c.HTML(200, "index.html", gin.H{"localize": localize(c), "user": user})
+		c.HTML(200, "index.html", nil)
 	})
 
 	auth := router.Group("/")
-	auth.GET("/login", func(c *gin.Context) {
-		user := sessions.Default(c).Get("userID")
-		if user != nil {
-			c.Redirect(302, "/")
-			return
-		}
-		if SiteKey != "" && SecretKey != "" {
-			c.HTML(200, "login.html", gin.H{"localize": localize(c), "error": "", "recaptcha": SiteKey})
-			return
-		}
-		c.HTML(200, "login.html", gin.H{"localize": localize(c), "error": ""})
-	})
+	auth.GET("/info", info)
 	auth.POST("/login", login)
 	auth.GET("/logout", authRequired, func(c *gin.Context) {
 		session := sessions.Default(c)
 		session.Clear()
 		session.Save()
-		c.Redirect(302, "/login")
+		c.Redirect(302, "/")
 	})
-	auth.GET("/setting", authRequired, setting)
-	auth.POST("/setting", authRequired, doSetting)
+	auth.POST("/setting", authRequired, setting)
 
 	api := router.Group("/")
 	api.Use(authRequired)
@@ -109,25 +72,26 @@ func Run() {
 	api.POST("/statistics", statistics)
 	api.POST("/records/export", exportRecords)
 	api.POST("/statistics/export", exportStatistics)
+	api.GET("/subscribe", getSubscribe)
 	api.POST("/subscribe", subscribe)
 
 	record := router.Group("/record")
 	record.Use(authRequired)
 	record.POST("/add", addRecord)
 	record.POST("/edit", editRecord)
-	record.POST("/verify/:id", adminRequired, verifyRecord)
+	record.POST("/verify", adminRequired, verifyRecord)
 	record.POST("/delete/:id", deleteRecord)
 
-	empl := router.Group("/employee")
-	empl.POST("/add", adminRequired, addEmployee)
-	empl.POST("/edit", superRequired, editEmployee)
-	empl.POST("/delete/:id", superRequired, deleteEmployee)
+	employee := router.Group("/employee")
+	employee.POST("/add", adminRequired, addEmployee)
+	employee.POST("/edit", superRequired, editEmployee)
+	employee.POST("/delete/:id", superRequired, deleteEmployee)
 
-	dept := router.Group("/department")
-	dept.Use(superRequired)
-	dept.POST("/add", addDepartment)
-	dept.POST("/edit", editDepartment)
-	dept.POST("/delete/:id", deleteDepartment)
+	department := router.Group("/department")
+	department.Use(superRequired)
+	department.POST("/add", addDepartment)
+	department.POST("/edit", editDepartment)
+	department.POST("/delete/:id", deleteDepartment)
 
 	router.NoRoute(func(c *gin.Context) {
 		c.Redirect(302, "/")

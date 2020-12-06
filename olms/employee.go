@@ -2,10 +2,11 @@ package olms
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,6 +15,7 @@ type employee struct {
 	ID         int    `json:"id"`
 	Username   string `json:"username"`
 	Realname   string `json:"realname"`
+	Password   string
 	DeptID     int    `json:"deptid"`
 	DeptName   string `json:"deptname"`
 	Role       bool   `json:"role"`
@@ -21,6 +23,10 @@ type employee struct {
 }
 
 func getUser(db *sql.DB, id interface{}) (user employee, err error) {
+	if id == "0" {
+		user = employee{ID: 0, Realname: "root", Role: true}
+		return
+	}
 	var permission []byte
 	if err = db.QueryRow("SELECT * FROM employee WHERE id = ?", id).Scan(
 		&user.ID, &user.Username, &user.Realname, &user.DeptID, &user.DeptName, &user.Role, &permission); err != nil {
@@ -68,6 +74,12 @@ func getEmployees(db *sql.DB, ids []string, super bool) (employees []employee, e
 }
 
 func addEmployee(c *gin.Context) {
+	var employee employee
+	if err := c.BindJSON(&employee); err != nil {
+		c.String(400, "")
+		return
+	}
+
 	db, err := getDB()
 	if err != nil {
 		log.Println("Failed to connect to database:", err)
@@ -76,34 +88,31 @@ func addEmployee(c *gin.Context) {
 	}
 	defer db.Close()
 
-	deptID := c.PostForm("dept")
-	if deptID != "" && !checkPermission(db, c, &idOptions{Departments: []string{fmt.Sprintf("%v", deptID)}}) {
+	if employee.DeptID != 0 &&
+		!checkPermission(db, c, &idOptions{Departments: []string{strconv.Itoa(employee.DeptID)}}) {
 		c.String(403, "")
 		return
 	}
-	username := strings.TrimSpace(c.PostForm("username"))
-	realname := strings.TrimSpace(c.PostForm("realname"))
-	if realname == "" {
-		realname = username
+	if employee.Realname == "" {
+		employee.Realname = employee.Username
 	}
-	localize := localize(c)
+
 	var exist, message string
 	var code int
-	if username == "" {
-		message = "Username is required."
+	if employee.Username == "" {
+		message = "UsernameRequired"
 	} else if err := db.QueryRow(
-		"SELECT id FROM user WHERE username = ?", strings.ToLower(username)).Scan(&exist); err == nil {
-		message = fmt.Sprintf(localize["UsernameExist"], username)
+		"SELECT id FROM user WHERE username = ?", strings.ToLower(employee.Username)).Scan(&exist); err == nil {
+		message = "UsernameExist"
 		code = 1
-	} else if deptID == "" {
-		message = localize["DepartmentRequired"]
+	} else if employee.DeptID == 0 {
+		message = "DepartmentRequired"
 	} else {
-		if checkSuper(c) {
-			role := c.PostForm("role")
+		if sessions.Default(c).Get("userID") == "0" {
 			res, err := db.Exec("INSERT INTO user (username, realname, dept_id, role) VALUES (?, ?, ?, ?)",
-				strings.ToLower(username), realname, deptID, role)
+				strings.ToLower(employee.Username), employee.Realname, employee.DeptID, employee.Role)
 			if err != nil {
-				log.Println("Failed to add user:", err)
+				log.Println("Failed to add employee:", err)
 				c.String(500, "")
 				return
 			}
@@ -113,11 +122,11 @@ func addEmployee(c *gin.Context) {
 				c.String(500, "")
 				return
 			}
-			if role == "1" {
-				for _, permission := range c.PostFormArray("permission") {
-					if _, err = db.Exec(
+			if employee.Role {
+				for _, permission := range employee.Permission {
+					if _, err := db.Exec(
 						"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, id); err != nil {
-						log.Println("Failed to add user permission:", err)
+						log.Println("Failed to add employee permission:", err)
 						c.String(500, "")
 						return
 					}
@@ -126,9 +135,10 @@ func addEmployee(c *gin.Context) {
 			c.JSON(200, gin.H{"status": 1})
 			return
 		}
-		if _, err = db.Exec(
-			"INSERT INTO user (username, realname, dept_id) VALUES (?, ?, ?)", username, realname, deptID); err != nil {
-			log.Println("Failed to add user:", err)
+		if _, err := db.Exec(
+			"INSERT INTO user (username, realname, dept_id) VALUES (?, ?, ?)",
+			employee.Username, employee.Realname, employee.DeptID); err != nil {
+			log.Println("Failed to add employee:", err)
 			c.String(500, "")
 			return
 		}
@@ -139,6 +149,12 @@ func addEmployee(c *gin.Context) {
 }
 
 func editEmployee(c *gin.Context) {
+	var employee employee
+	if err := c.BindJSON(&employee); err != nil {
+		c.String(400, "")
+		return
+	}
+
 	db, err := getDB()
 	if err != nil {
 		log.Println("Failed to connect to database:", err)
@@ -147,61 +163,57 @@ func editEmployee(c *gin.Context) {
 	}
 	defer db.Close()
 
-	deptID := c.PostForm("dept")
-	if deptID != "" && !checkPermission(db, c, &idOptions{Departments: []string{fmt.Sprintf("%v", deptID)}}) {
+	if employee.DeptID != 0 &&
+		!checkPermission(db, c, &idOptions{Departments: []string{strconv.Itoa(employee.DeptID)}}) {
 		c.String(403, "")
 		return
 	}
-	id := c.Param("id")
-	username := strings.TrimSpace(c.PostForm("username"))
-	realname := strings.TrimSpace(c.PostForm("realname"))
-	if realname == "" {
-		realname = username
+	if employee.Realname == "" {
+		employee.Realname = employee.Username
 	}
-	role := c.PostForm("role")
 
-	localize := localize(c)
 	var exist, message string
-	if username == "" {
-		message = "Username is required."
+	if employee.Username == "" {
+		message = "UsernameRequired"
 	} else if err := db.QueryRow("SELECT id FROM user WHERE username = ? AND id != ?",
-		strings.ToLower(username), id).Scan(&exist); err == nil {
-		message = fmt.Sprintf(localize["UsernameExist"], username)
-	} else if deptID == "" {
-		message = localize["DepartmentRequired"]
+		strings.ToLower(employee.Username), employee.ID).Scan(&exist); err == nil {
+		message = "UsernameExist"
+	} else if employee.DeptID == 0 {
+		message = "DepartmentRequired"
 	} else {
-		if password := c.PostForm("password"); password == "" {
-			if _, err = db.Exec(
+		if employee.Password == "" {
+			if _, err := db.Exec(
 				"UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ? WHERE id = ?",
-				strings.ToLower(username), realname, deptID, role, id); err != nil {
+				strings.ToLower(employee.Username), employee.Realname, employee.DeptID, employee.Role, employee.ID); err != nil {
 				log.Println("Failed to edit user:", err)
 				c.String(500, "")
 				return
 			}
 		} else {
-			newPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+			newPassword, err := bcrypt.GenerateFromPassword([]byte(employee.Password), bcrypt.MinCost)
 			if err != nil {
 				log.Print(err)
 				c.String(500, "")
 				return
 			}
-			if _, err = db.Exec(
+			if _, err := db.Exec(
 				"UPDATE user SET username = ?, realname = ?, password = ?, dept_id = ?, role = ? WHERE id = ?",
-				strings.ToLower(username), realname, string(newPassword), deptID, role, id); err != nil {
+				strings.ToLower(employee.Username), employee.Realname, string(newPassword), employee.DeptID, employee.Role, employee.ID,
+			); err != nil {
 				log.Println("Failed to edit user:", err)
 				c.String(500, "")
 				return
 			}
 		}
-		if _, err = db.Exec("DELETE FROM permission WHERE user_id = ?", id); err != nil {
+		if _, err := db.Exec("DELETE FROM permission WHERE user_id = ?", employee.ID); err != nil {
 			log.Println("Failed to clear user permission:", err)
 			c.String(500, "")
 			return
 		}
-		if role == "1" {
-			for _, permission := range c.PostFormArray("permission") {
-				if _, err = db.Exec(
-					"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, id); err != nil {
+		if employee.Role {
+			for _, permission := range employee.Permission {
+				if _, err := db.Exec(
+					"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, employee.ID); err != nil {
 					log.Println("Failed to add user permission:", err)
 					c.String(500, "")
 					return
@@ -224,10 +236,6 @@ func deleteEmployee(c *gin.Context) {
 	defer db.Close()
 
 	id := c.Param("id")
-	if !checkPermission(db, c, &idOptions{User: id}) {
-		c.String(403, "")
-		return
-	}
 	if _, err := db.Exec("DELETE FROM user WHERE id = ?", id); err != nil {
 		log.Println("Failed to delete employee:", err)
 		c.String(500, "")

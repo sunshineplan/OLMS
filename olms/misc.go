@@ -24,7 +24,7 @@ var (
 
 // Backup database
 func Backup() {
-	log.Println("Start!")
+	log.Print("Start!")
 	file := dump()
 	defer os.Remove(file)
 	if err := Dialer.Send(&mail.Message{
@@ -34,12 +34,12 @@ func Backup() {
 	}); err != nil {
 		log.Fatalln("Failed to send mail:", err)
 	}
-	log.Println("Done!")
+	log.Print("Done!")
 }
 
 // Restore database
 func Restore(file string) {
-	log.Println("Start!")
+	log.Print("Start!")
 	if file == "" {
 		file = joinPath(dir(Self), "scripts/schema.sql")
 	} else {
@@ -50,5 +50,5 @@ func Restore(file string) {
 	dropAll := joinPath(dir(Self), "scripts/drop_all.sql")
 	execScript(dropAll)
 	execScript(file)
-	log.Println("Done!")
+	log.Print("Done!")
 }

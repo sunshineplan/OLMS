@@ -22,7 +22,37 @@ func isEmailValid(email string) bool {
 	return emailRegex.MatchString(email)
 }
 
+func getSubscribe(c *gin.Context) {
+	db, err := getDB()
+	if err != nil {
+		log.Println("Failed to connect to database:", err)
+		c.String(503, "")
+		return
+	}
+	defer db.Close()
+
+	var subscribe bool
+	var email string
+	if err := db.QueryRow(
+		"SELECT subscribe, email FROM user WHERE id = ?",
+		sessions.Default(c).Get("userID")).Scan(&subscribe, &email); err != nil {
+		log.Println("Failed to get subscribe:", err)
+		c.String(500, "")
+		return
+	}
+	c.JSON(200, gin.H{"subscribe": subscribe, "Email": email})
+}
+
 func subscribe(c *gin.Context) {
+	var subscribe struct {
+		Subscribe bool
+		Email     string
+	}
+	if err := c.BindJSON(&subscribe); err != nil {
+		c.String(400, "")
+		return
+	}
+
 	db, err := getDB()
 	if err != nil {
 		log.Println("Failed to connect to database:", err)
@@ -32,17 +62,10 @@ func subscribe(c *gin.Context) {
 	defer db.Close()
 
 	userID := sessions.Default(c).Get("userID")
-	switch c.PostForm("subscribe") {
-	case "0":
-		if _, err := db.Exec("UPDATE user SET subscribe = 0 WHERE id = ?", userID); err != nil {
-			log.Println("Failed to update user:", err)
-			c.String(500, "")
-			return
-		}
-	case "1":
-		if email := c.PostForm("email"); isEmailValid(email) {
+	if subscribe.Subscribe {
+		if isEmailValid(subscribe.Email) {
 			if _, err := db.Exec(
-				"UPDATE user SET subscribe = 1, email = ? WHERE id = ?", email, userID); err != nil {
+				"UPDATE user SET subscribe = 1, email = ? WHERE id = ?", subscribe.Email, userID); err != nil {
 				log.Println("Failed to update user:", err)
 				c.String(500, "")
 				return
@@ -51,9 +74,12 @@ func subscribe(c *gin.Context) {
 			c.JSON(200, gin.H{"status": 0})
 			return
 		}
-	default:
-		c.String(400, "")
-		return
+	} else {
+		if _, err := db.Exec("UPDATE user SET subscribe = 0 WHERE id = ?", userID); err != nil {
+			log.Println("Failed to update user:", err)
+			c.String(500, "")
+			return
+		}
 	}
 	c.JSON(200, gin.H{"status": 1})
 }
@@ -66,7 +92,7 @@ func notify(id *idOptions, message string, localize translate) {
 	}
 	defer db.Close()
 
-	var emails []interface{}
+	var emails []string
 	var title string
 	if id.User != nil {
 		var subscribe bool
@@ -100,7 +126,7 @@ func notify(id *idOptions, message string, localize translate) {
 
 		for rows.Next() {
 			var email string
-			if err = rows.Scan(&email); err != nil {
+			if err := rows.Scan(&email); err != nil {
 				log.Println("Failed to scan email:", err)
 				return
 			}

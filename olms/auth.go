@@ -1,6 +1,7 @@
 package olms
 
 import (
+	"database/sql"
 	"log"
 	"strings"
 
@@ -54,14 +55,21 @@ func superRequired(c *gin.Context) {
 }
 
 func login(c *gin.Context) {
-	localize := localize(c)
-	if !verifyResponse("login", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
-		c.HTML(200, "login.html", gin.H{"localize": localize, "error": "reCAPTCHA challenge failed", "recaptcha": SiteKey})
+	var login struct {
+		Username, Password string
+		Rememberme         bool
+		Recaptcha          string
+	}
+	if err := c.BindJSON(&login); err != nil {
+		c.String(400, "")
 		return
 	}
-	session := sessions.Default(c)
-	username := strings.TrimSpace(strings.ToLower(c.PostForm("username")))
-	password := c.PostForm("password")
+	login.Username = strings.ToLower(login.Username)
+
+	if !verifyResponse("login", c.ClientIP(), login.Recaptcha) {
+		c.String(403, "reCAPTCHAChallengeFailed")
+		return
+	}
 
 	db, err := getDB()
 	if err != nil {
@@ -70,53 +78,69 @@ func login(c *gin.Context) {
 		return
 	}
 	defer db.Close()
-	var id, realname, pw, message string
-	if err := db.QueryRow("SELECT id, realname, password FROM user WHERE username = ?",
-		username).Scan(&id, &realname, &pw); err != nil {
-		if strings.Contains(err.Error(), "no such table") {
+
+	var user employee
+	statusCode := 200
+	var message string
+	if err := db.QueryRow(
+		"SELECT id, realname, password FROM user WHERE username = ?", login.Username,
+	).Scan(&user.ID, &user.Realname, &user.Password); err != nil {
+		if strings.Contains(err.Error(), "doesn't exist") {
 			Restore("")
+			statusCode = 503
 			message = "InitDatabase"
-		} else if strings.Contains(err.Error(), "no rows") {
+		} else if err == sql.ErrNoRows {
+			statusCode = 403
 			message = "IncorrectUsername"
 		} else {
 			log.Print(err)
+			statusCode = 500
 			message = "CriticalError"
 		}
-	} else if err = bcrypt.CompareHashAndPassword([]byte(pw), []byte(password)); err != nil {
-		if (strings.Contains(err.Error(), "too short") && pw != password) || strings.Contains(err.Error(), "is not") {
-			message = "IncorrectPassword"
-		} else if pw != password {
-			log.Print(err)
-			message = "CriticalError"
+	} else {
+		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password)); err != nil {
+			if (err == bcrypt.ErrHashTooShort && user.Password != login.Password) ||
+				err == bcrypt.ErrMismatchedHashAndPassword {
+				statusCode = 403
+				message = "IncorrectPassword"
+			} else if user.Password != login.Password {
+				log.Print(err)
+				statusCode = 500
+				message = "CriticalError"
+			}
 		}
-	}
-	if message == "" {
-		session.Clear()
-		session.Set("userID", id)
+		if message == "" {
+			session := sessions.Default(c)
+			session.Clear()
+			session.Set("userID", user.ID)
 
-		rememberme := c.PostForm("rememberme")
-		if rememberme == "on" {
-			session.Options(sessions.Options{Path: "/", HttpOnly: true, MaxAge: 856400 * 365})
-		} else {
-			session.Options(sessions.Options{Path: "/", HttpOnly: true, MaxAge: 0})
-		}
+			if login.Rememberme {
+				session.Options(sessions.Options{Path: "/", HttpOnly: true, MaxAge: 856400 * 365})
+			} else {
+				session.Options(sessions.Options{Path: "/", HttpOnly: true})
+			}
 
-		if err := session.Save(); err != nil {
-			log.Println("Failed to save session:", err)
-			c.String(500, "")
-			return
+			if err := session.Save(); err != nil {
+				log.Print(err)
+				statusCode = 500
+				message = "Failed to save session."
+			}
 		}
-		c.Redirect(302, "/")
-		return
 	}
-	if SiteKey != "" && SecretKey != "" {
-		c.HTML(200, "login.html", gin.H{"localize": localize, "error": localize[message], "recaptcha": SiteKey})
-		return
-	}
-	c.HTML(200, "login.html", gin.H{"localize": localize, "error": localize[message]})
+	c.String(statusCode, message)
 }
 
 func setting(c *gin.Context) {
+	var setting struct{ Password, Password1, Password2, Recaptcha string }
+	if err := c.BindJSON(&setting); err != nil {
+		c.String(400, "")
+		return
+	}
+	if !verifyResponse("setting", c.ClientIP(), setting.Recaptcha) {
+		c.JSON(200, gin.H{"status": 0, "message": "reCAPTCHAChallengeFailed"})
+		return
+	}
+
 	db, err := getDB()
 	if err != nil {
 		log.Println("Failed to connect to database:", err)
@@ -125,37 +149,11 @@ func setting(c *gin.Context) {
 	}
 	defer db.Close()
 
-	var subscribe bool
-	var email string
-	if err := db.QueryRow(
-		"SELECT subscribe, email FROM user WHERE id = ?",
-		sessions.Default(c).Get("userID")).Scan(&subscribe, &email); err != nil {
-		log.Println("Failed to get user subscribe:", err)
-	}
-	c.HTML(200, "setting.html", gin.H{"localize": localize(c), "subscribe": subscribe, "email": email})
-}
-
-func doSetting(c *gin.Context) {
-	if !verifyResponse("setting", c.ClientIP(), c.PostForm("g-recaptcha-response")) {
-		c.JSON(200, gin.H{"status": 0, "message": "reCAPTCHA challenge failed"})
-		return
-	}
-	db, err := getDB()
-	if err != nil {
-		log.Println("Failed to connect to database:", err)
-		c.String(503, "")
-		return
-	}
-	defer db.Close()
 	session := sessions.Default(c)
 	userID := session.Get("userID")
 
-	password := c.PostForm("password")
-	password1 := c.PostForm("password1")
-	password2 := c.PostForm("password2")
-
 	var oldPassword string
-	if err := db.QueryRow("SELECT password FROM user WHERE id = ?", userID).Scan(&oldPassword); err != nil {
+	if err = db.QueryRow("SELECT password FROM user WHERE id = ?", userID).Scan(&oldPassword); err != nil {
 		log.Print(err)
 		c.String(500, "")
 		return
@@ -163,38 +161,36 @@ func doSetting(c *gin.Context) {
 
 	var message string
 	var errorCode int
-	err = bcrypt.CompareHashAndPassword([]byte(oldPassword), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(oldPassword), []byte(setting.Password))
 	switch {
 	case err != nil:
-		if (strings.Contains(err.Error(), "too short") && password != oldPassword) || strings.Contains(err.Error(), "is not") {
+		if (err == bcrypt.ErrHashTooShort && setting.Password != oldPassword) ||
+			err == bcrypt.ErrMismatchedHashAndPassword {
 			message = "IncorrectPassword"
 			errorCode = 1
-			break
-		} else if password != oldPassword {
+		} else if setting.Password != oldPassword {
 			log.Print(err)
 			c.String(500, "")
 			return
 		}
-		fallthrough
-	case password1 == password:
-		message = "SamePassword"
-		errorCode = 2
-	case password1 != password2:
+	case setting.Password1 != setting.Password2:
 		message = "ConfirmPasswordNoMatch"
 		errorCode = 2
-	case password1 == "":
+	case setting.Password1 == setting.Password:
+		message = "SamePassword"
+		errorCode = 2
+	case setting.Password1 == "":
 		message = "NewPasswordBlank"
 	}
 
 	if message == "" {
-		newPassword, err := bcrypt.GenerateFromPassword([]byte(password1), bcrypt.MinCost)
+		newPassword, err := bcrypt.GenerateFromPassword([]byte(setting.Password1), bcrypt.MinCost)
 		if err != nil {
 			log.Print(err)
 			c.String(500, "")
 			return
 		}
-		_, err = db.Exec("UPDATE user SET password = ? WHERE id = ?", string(newPassword), userID)
-		if err != nil {
+		if _, err := db.Exec("UPDATE user SET password = ? WHERE id = ?", string(newPassword), userID); err != nil {
 			log.Print(err)
 			c.String(500, "")
 			return
@@ -208,5 +204,5 @@ func doSetting(c *gin.Context) {
 		c.JSON(200, gin.H{"status": 1})
 		return
 	}
-	c.JSON(200, gin.H{"status": 0, "message": localize(c)[message], "error": errorCode})
+	c.JSON(200, gin.H{"status": 0, "message": message, "error": errorCode})
 }

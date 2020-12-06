@@ -1,6 +1,7 @@
 package olms
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 )
 
 type idOptions struct {
-	Record      interface{}
 	User        interface{}
 	Departments []string
 }
@@ -41,13 +41,22 @@ func info(c *gin.Context) {
 	}
 	defer db.Close()
 
+	var info gin.H
+	if SiteKey != "" && SecretKey != "" {
+		info["recaptcha"] = SiteKey
+	}
 	userID := sessions.Default(c).Get("userID")
+	if userID == nil {
+		c.JSON(200, info)
+		return
+	}
 	user, err := getUser(db, userID)
 	if err != nil {
 		log.Println("Failed to get user:", err)
 		c.String(500, "")
 		return
 	}
+	info["user"] = user
 	if user.Role {
 		var departments []department
 		var employees []employee
@@ -78,10 +87,44 @@ func info(c *gin.Context) {
 				return
 			}
 		}
-		c.JSON(200, gin.H{"user": user, "departments": departments, "employees": employees})
-	} else {
-		c.JSON(200, gin.H{"user": user})
+		info["departments"] = departments
+		info["employees"] = employees
 	}
+	c.JSON(200, info)
+}
+
+func years(db *sql.DB, id *idOptions) (years []string, err error) {
+	stmt := "SELECT DISTINCT strftime('%Y', date) year FROM record WHERE"
+
+	var args []interface{}
+	if id.User != nil {
+		stmt += " user_id = ?"
+		args = append(args, id.User)
+	} else {
+		marks := make([]string, len(id.Departments))
+		for i := range marks {
+			marks[i] = "?"
+		}
+		stmt += " dept_id IN (" + strings.Join(marks, ", ") + ")"
+		for _, i := range id.Departments {
+			args = append(args, i)
+		}
+	}
+	rows, err := db.Query(stmt+" ORDER BY year DESC", args...)
+	if err != nil {
+		log.Println("Failed to get years:", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var year string
+		if err = rows.Scan(&year); err != nil {
+			log.Println("Failed to scan year:", err)
+			return
+		}
+		years = append(years, year)
+	}
+	return
 }
 
 func api(c *gin.Context, mode string, export bool) {
@@ -92,7 +135,7 @@ func api(c *gin.Context, mode string, export bool) {
 	}
 
 	if !verifyResponse(mode, c.ClientIP(), option.Recaptcha) {
-		c.String(403, "reCAPTCHA challenge failed")
+		c.String(403, "reCAPTCHAChallengeFailed")
 		return
 	}
 

@@ -2,7 +2,6 @@ package olms
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"strings"
 
@@ -43,6 +42,12 @@ func getDepartments(db *sql.DB, ids []string, super bool) (departments []departm
 }
 
 func addDepartment(c *gin.Context) {
+	var department department
+	if err := c.BindJSON(&department); err != nil {
+		c.String(400, "")
+		return
+	}
+
 	db, err := getDB()
 	if err != nil {
 		log.Println("Failed to connect to database:", err)
@@ -50,14 +55,13 @@ func addDepartment(c *gin.Context) {
 		return
 	}
 	defer db.Close()
-	dept := strings.TrimSpace(c.PostForm("dept"))
 	var exist, message string
-	if dept == "" {
-		message = "Department name is required."
-	} else if err := db.QueryRow("SELECT id FROM department WHERE dept_name = ?", dept).Scan(&exist); err == nil {
-		message = fmt.Sprintf(localize(c)["DepartmentExist"], dept)
+	if department.Name == "" {
+		message = "DepartmentRequired"
+	} else if err := db.QueryRow("SELECT id FROM department WHERE dept_name = ?", department.Name).Scan(&exist); err == nil {
+		message = "DepartmentExist"
 	} else {
-		if _, err := db.Exec("INSERT INTO department (dept_name) VALUES (?)", dept); err != nil {
+		if _, err := db.Exec("INSERT INTO department (dept_name) VALUES (?)", department.Name); err != nil {
 			log.Println("Failed to add department:", err)
 			c.String(500, "")
 			return
@@ -69,6 +73,12 @@ func addDepartment(c *gin.Context) {
 }
 
 func editDepartment(c *gin.Context) {
+	var department department
+	if err := c.BindJSON(&department); err != nil {
+		c.String(400, "")
+		return
+	}
+
 	db, err := getDB()
 	if err != nil {
 		log.Println("Failed to connect to database:", err)
@@ -76,18 +86,17 @@ func editDepartment(c *gin.Context) {
 		return
 	}
 	defer db.Close()
-	dept := strings.TrimSpace(c.PostForm("dept"))
-	id := c.Param("id")
-	localize := localize(c)
 	var old, exist, message string
-	if dept == "" {
-		message = "Department name is required."
-	} else if db.QueryRow("SELECT dept_name FROM department WHERE id = ?", id).Scan(&old); old == dept {
-		message = localize["SameDepartment"]
-	} else if err := db.QueryRow("SELECT id FROM department WHERE dept_name = ? AND id != ?", id, dept).Scan(&exist); err == nil {
-		message = fmt.Sprintf(localize["DepartmentExist"], dept)
+	if department.Name == "" {
+		message = "DepartmentRequired"
+	} else if db.QueryRow("SELECT dept_name FROM department WHERE id = ?", department.ID).Scan(&old); old == department.Name {
+		message = "SameDepartment"
+	} else if err := db.QueryRow("SELECT id FROM department WHERE dept_name = ? AND id != ?",
+		department.ID, department.Name).Scan(&exist); err == nil {
+		message = "DepartmentExist"
 	} else {
-		if _, err := db.Exec("UPDATE department SET dept_name = ? WHERE id = ?", dept, id); err != nil {
+		if _, err := db.Exec("UPDATE department SET dept_name = ? WHERE id = ?",
+			department.Name, department.ID); err != nil {
 			log.Println("Failed to edit department:", err)
 			c.String(500, "")
 			return
