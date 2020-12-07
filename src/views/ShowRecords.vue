@@ -104,19 +104,19 @@
           <input class="form-control" v-model="describe" id="describe" />
         </div>
         <div class="input-group">
-          <a class="btn btn-primary btn-sm" :click="filter()">
+          <a class="btn btn-primary btn-sm" @click="filter()">
             {{ $t("Filter") }}
           </a>
-          <a class="btn btn-primary btn-sm" :click="reset()">
+          <a class="btn btn-primary btn-sm" @click="reset()">
             {{ $t("Reset") }}
           </a>
-          <a class="btn btn-info btn-sm" :click="download()">
+          <a class="btn btn-info btn-sm" @click="download()">
             {{ $t("Export") }}
           </a>
         </div>
       </div>
     </div>
-    <a class="btn btn-primary" :click="add()">{{ $t("New") }}</a>
+    <a class="btn btn-primary" @click="add()">{{ $t("New") }}</a>
     <p></p>
   </header>
   <Pagination :total="total">
@@ -187,7 +187,7 @@
               <a
                 class="btn btn-outline-primary btn-sm"
                 :class="{ disabled: !r.status }"
-                :click="edit(r)"
+                @click="edit(r)"
               >
                 {{ t("Edit") }}
               </a>
@@ -196,13 +196,13 @@
               <a
                 class="btn btn-outline-primary btn-sm"
                 :class="{ disabled: r.status }"
-                :click="verify(r)"
+                @click="verify(r)"
               >
                 {{ t("Verify") }}
               </a>
             </td>
             <td v-else>
-              <a class="btn btn-outline-primary btn-sm" :click="edit(r)">
+              <a class="btn btn-outline-primary btn-sm" @click="edit(r)">
                 {{ t("Edit") }}
               </a>
             </td>

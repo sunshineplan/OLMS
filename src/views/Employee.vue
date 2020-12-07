@@ -9,7 +9,7 @@
         <label for="username">{{ $t("Username") }}</label>
         <input
           class="form-control"
-          v-model.trim="username"
+          v-model.trim="employee.username"
           id="username"
           required
         />
@@ -17,14 +17,18 @@
       </div>
       <div class="form-group">
         <label for="realname">{{ $t("Realname") }}</label>
-        <input class="form-control" v-model.trim="realname" id="realname" />
+        <input
+          class="form-control"
+          v-model.trim="employee.realname"
+          id="realname"
+        />
       </div>
     </div>
     <div class="form-group">
       <label for="department">{{ $t("Department") }}</label>
       <select
         class="form-control"
-        v-model="department"
+        v-model="employee.department"
         id="department"
         required
       >
@@ -39,7 +43,7 @@
       <input
         class="form-control"
         type="password"
-        v-model.trim="password"
+        v-model.trim="employee.password"
         id="password"
         maxlength="20"
       />
@@ -47,17 +51,12 @@
     </div>
     <div class="form-group" v-if="user.super">
       <label for="role">{{ $t("Role") }}</label>
-      <select class="form-control" v-model="role" id="role">
+      <select class="form-control" v-model="employee.role" id="role">
         <option value="0">{{ $t("GeneralEmployee") }}</option>
         <option value="1">{{ $t("Administrator") }}</option>
       </select>
     </div>
-    <div
-      class="form-group"
-      id="permission-selector"
-      v-if="user.super"
-      v-show="role == 1"
-    >
+    <div class="form-group" v-if="user.super" v-show="employee.role">
       <label for="permission">
         {{ $t("Permission") }} ({{ $t("MultipleChoice") }})
       </label>
@@ -70,15 +69,15 @@
         <option v-for="d in departments" :key="d.id" :value="d.id"></option>
       </select>
     </div>
-    <button class="btn btn-primary" :click="save()">
+    <button class="btn btn-primary" @click="save()">
       {{ mode }}
     </button>
-    <button class="btn btn-primary" :click="goback()">
+    <button class="btn btn-primary" @click="goback()">
       {{ $t("Cancel") }}
     </button>
   </div>
   <div class="form" v-if="$route.params.mode == 'edit'">
-    <button class="btn btn-danger delete" :click="del()">
+    <button class="btn btn-danger delete" @click="del()">
       {{ $t("Delete") }}
     </button>
   </div>
@@ -91,42 +90,23 @@ export default {
   name: "Employee",
   data() {
     return {
-      username: "",
-      realname: "",
-      department: "",
-      password: "",
-      role: false,
+      user: this.$store.state.user,
+      departments: this.$store.state.departments,
+      mode:
+        this.$route.params.mode == "add"
+          ? this.$t("AddEmployee")
+          : this.$t("EditEmployee"),
+      employee:
+        this.$route.params.mode == "edit" ? this.$store.state.employee : {},
       permission: [],
       validated: false,
     };
   },
-  computed: {
-    user() {
-      return this.$store.state.user;
-    },
-    departments() {
-      return this.$store.state.departments;
-    },
-    employee() {
-      return this.$route.params.mode == "edit"
-        ? this.$store.state.employee
-        : {};
-    },
-    mode() {
-      return this.$route.params.mode == "add"
-        ? this.$t("AddEmployee")
-        : this.$t("EditEmployee");
-    },
-  },
   created() {
-    this.username = this.employee.username;
-    this.realname = this.employee.realname;
-    this.department = this.employee.department;
-    this.role = this.employee.role;
-    this.permission = this.employee.permission;
+    this.permission = this.employee.permission.split(",");
   },
   mounted() {
-    document.title = this.mode + " Employee";
+    document.title = this.mode;
     window.addEventListener("keyup", this.cancel);
   },
   beforeUnmount() {
@@ -136,39 +116,44 @@ export default {
     async save() {
       if (valid()) {
         this.validated = false;
-        let url;
+        let url, data;
         if (this.$route.params.mode == "add") url = "/employee/add";
-        else url = "/employee/edit/" + this.record.id;
-        let data = {
-          username: this.username,
-          realname: this.realname,
-          department: this.department,
-        };
-        if (this.user.super) {
-          data.password = this.password;
-          data.role = this.role;
-          data.permission = this.permission;
-        }
-        const resp = await post(url, data);
-        if (!resp.ok)
-          await BootstrapButtons.fire("Error", await resp.text(), "error");
         else {
-          const json = await resp.json();
-          if (json.status == 1) {
-            if (this.$route.params.mode == "add")
-              await this.$store.dispatch("addEmployee", this.realname);
-            else await this.$store.dispatch("editEmployee", this.realname);
-            this.goback();
-          } else await BootstrapButtons.fire("Error", json.message, "error");
+          url = "/employee/edit";
+          data.id = this.employee.id;
         }
+        data.username = this.employee.username;
+        data.realname = this.employee.realname;
+        data.deptid = this.employee.department;
+        if (this.user.super) {
+          data.password = this.employee.password;
+          data.role = this.employee.role;
+          data.permission = this.permission;
+          if (data.role && !data.permission.length) {
+            await BootstrapButtons.fire(
+              this.$t("Error"),
+              this.$t("EmptyPermission"), //?go check
+              "error"
+            );
+            return;
+          }
+        }
+        await this.check(await post(url, data), async () => {
+          await this.checkJson(await resp.json(), async () =>
+            this.goback(true)
+          );
+        });
       } else this.validated = true;
     },
     async del() {
-      if (await confirm("employee")) {
-        const resp = await post("/employee/delete/" + this.employee.id);
-        if (!resp.ok)
-          await BootstrapButtons.fire("Error", await resp.text(), "error");
-        else this.goback();
+      if (await confirm(this.$t("Employee"))) {
+        await this.checkResp(
+          await post("/employee/delete/" + this.employee.id),
+          async () => {
+            await this.$store.dispatch("delEmployee", this.employee.id);
+            this.goback();
+          }
+        );
       }
     },
   },

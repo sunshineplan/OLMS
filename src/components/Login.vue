@@ -16,7 +16,7 @@
         v-model.trim="username"
         id="username"
         maxlength="20"
-        placeholder='{{$t("Username")}}'
+        :placeholder="$t('Username')"
         required
       />
     </div>
@@ -28,7 +28,7 @@
         v-model.trim="password"
         id="password"
         maxlength="20"
-        placeholder='{{$t("Password")}}'
+        :placeholder="$t('Password')"
         required
       />
     </div>
@@ -43,12 +43,6 @@
         {{ $t("RememberMe") }}
       </label>
     </div>
-    <input
-      type="hidden"
-      name="g-recaptcha-response"
-      v-model="token"
-      v-if="recaptcha"
-    />
     <hr />
     <button class="btn btn-primary login" @click="login()">
       {{ $t("Login") }}
@@ -59,10 +53,14 @@
 <script>
 import { BootstrapButtons, post } from "../misc.js";
 
+const grecaptcha = windows.grecaptcha;
+
 export default {
   name: "Login",
   data() {
     return {
+      user: this.$store.state.user,
+      recaptcha: this.$store.state.recaptcha,
       username: "",
       password: "",
       rememberme: false,
@@ -72,10 +70,10 @@ export default {
   mounted() {
     document.title = "Log In";
     this.username = localStorage.getItem("username");
-    if (this.$store.state.recaptcha) {
+    if (this.recaptcha) {
       function execute() {
         grecaptcha
-          .execute(this.$store.state.recaptcha, { action: "login" })
+          .execute(this.recaptcha, { action: "login" })
           .then((token) => (this.token = token));
       }
       grecaptcha.ready(() => {
@@ -90,30 +88,29 @@ export default {
     async login() {
       if (!document.querySelector("#username").checkValidity())
         await BootstrapButtons.fire(
-          "Error",
-          "Username cannot be empty.",
+          this.$t("Error"),
+          this.$t("EmptyUsername"),
           "error"
         );
       else if (!document.querySelector("#password").checkValidity())
         await BootstrapButtons.fire(
-          "Error",
-          "Password cannot be empty.",
+          this.$t("Error"),
+          this.$t("EmptyPassword"),
           "error"
         );
       else {
-        const resp = await post("/login", {
+        let data = {
           username: this.username,
           password: this.password,
           rememberme: this.rememberme,
-        });
-        if (!resp.ok)
-          await BootstrapButtons.fire("Error", await resp.text(), "error");
-        else {
+        };
+        if (this.recaptcha) data.recaptcha = this.token;
+        const resp = await post("/login", data);
+        this.checkResp(resp, () => {
           if (this.username != "root")
             localStorage.setItem("username", this.username);
-          this.$store.commit("username", this.username);
-          this.$router.push("/");
-        }
+          window.location = "/";
+        });
       }
     },
   },

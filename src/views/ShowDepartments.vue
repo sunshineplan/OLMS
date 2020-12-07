@@ -3,10 +3,9 @@
     <div style="height: 50px">
       <a class="h3 title">{{ $t("DepartmentsList") }}</a>
     </div>
-    <a class="btn btn-primary" :click="add()">{{ $t("Add") }}</a>
+    <a class="btn btn-primary" @click="add()">{{ $t("Add") }}</a>
     <p></p>
   </header>
-
   <div class="table-responsive">
     <table class="table table-hover">
       <thead>
@@ -21,7 +20,7 @@
           <td>{{ d.id }}</td>
           <td>{{ d.name }}</td>
           <td>
-            <a class="btn btn-outline-primary btn-sm" :click="edit(d)">
+            <a class="btn btn-outline-primary btn-sm" @click="edit(d)">
               {{ $t("Edit") }}
             </a>
           </td>
@@ -36,21 +35,11 @@ export default {
   name: "ShowDepartments",
   data() {
     return {
-      departments: [],
+      departments: this.$store.state.departments,
     };
   },
-  async created() {
-    await load();
-  },
   methods: {
-    async load() {
-      this.$store.commit("loading");
-      const resp = await fetch("/departments");
-      this.departments = await resp.json();
-      this.$store.commit("loading");
-    },
     add() {
-      this.$store.commit("department", {});
       this.$router.push("/department/add");
     },
     edit(department) {

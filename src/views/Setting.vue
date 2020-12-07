@@ -13,8 +13,8 @@
           class="form-control"
           v-model="email"
           id="email"
-          placeholder="{{ $t('email') }})"
-          :change="(subscribe = false)"
+          placeholder="{{ $t('Email') }})"
+          @change="subscribe = false"
         />
       </div>
       <div class="form-group form-check">
@@ -23,7 +23,7 @@
           class="form-check-input"
           v-model="subscribe"
           id="subscribe"
-          :change="doSubscribe()"
+          @change="doSubscribe()"
         />
         <label class="form-check-label" for="subscribe">
           {{ $t("SubscribeNotification") }}
@@ -39,14 +39,14 @@
         class="form-control"
         v-model.trim="lang"
         id="lang"
-        :change="changeLanguage()"
+        @change="changeLanguage()"
       >
         <option value="en">English</option>
         <option value="zh">简体中文</option>
       </select>
     </div>
   </div>
-  <div class="form" @keyup.enter="setting()">
+  <div class="form" @keyup.enter="changePassword()">
     <h4>{{ $t("ChangePassword") }}</h4>
     <div class="form-group">
       <label for="password">{{ $t("CurrentPassword") }}</label>
@@ -85,20 +85,23 @@
       <div class="invalid-feedback">{{ $t("RequiredField") }}</div>
       <small class="form-text text-muted">{{ $t("MaxPasswordLength") }}</small>
     </div>
-    <button class="btn btn-primary" :click="setting()">
+    <button class="btn btn-primary" @click="changePassword()">
       {{ $t("SavePassword") }}
     </button>
-    <button class="btn btn-primary" :click="goback()">{{ $t("Back") }}</button>
+    <button class="btn btn-primary" @click="goback()">{{ $t("Back") }}</button>
   </div>
 </template>
 
 <script>
 import { BootstrapButtons, post, valid, validateEmail } from "../misc.js";
 
+const grecaptcha = windows.grecaptcha;
+
 export default {
   name: "Setting",
   data() {
     return {
+      recaptcha: this.$store.state.recaptcha,
       email: "",
       subscribe: "",
       lang: document.documentElement.lang,
@@ -109,7 +112,7 @@ export default {
     };
   },
   mounted() {
-    document.title = "Setting";
+    document.title = this.$t("Setting");
   },
   methods: {
     changeLanguage() {
@@ -126,12 +129,12 @@ export default {
         if (validateEmail(this.email))
           data = { subscribe: 1, email: this.email };
         else {
+          this.subscribe = false;
           await BootstrapButtons.fire(
             this.$t("Error"),
             this.$t("EmailNotValid"),
             "error"
           );
-          this.subscribe = false;
         }
       } else data = { subscribe: 0 };
       const resp = await post("/subscribe", data);
@@ -142,34 +145,37 @@ export default {
           "success"
         );
       else {
+        this.subscribe = false;
         await BootstrapButtons.fire(
           this.$t("Error"),
           this.$t("EmailNotValid"),
           "error"
         );
-        this.subscribe = false;
       }
     },
-    async setting() {
+    async changePassword() {
       if (valid()) {
         this.validated = false;
-        const resp = await post("/setting", {
+        let data = {
           password: this.password,
           password1: this.password1,
           password2: this.password2,
-        });
-        if (!resp.ok)
-          await BootstrapButtons.fire("Error", await resp.text(), "error");
-        else {
+        };
+        if (this.recaptcha)
+          data.recaptcha = await grecaptcha.execute(this.recaptcha, {
+            action: "setting",
+          });
+        const resp = await post("/setting", data);
+        await this.checkResp(resp, async () => {
           const json = await resp.json();
           if (json.status == 1) {
             await BootstrapButtons.fire(
-              "Success",
-              "Your password has changed. Please Re-login!",
+              this.$t("Success"),
+              this.$t("PasswordChanged"),
               "success"
             );
-            this.$store.commit("username", undefined);
-            this.$router.push("/");
+            this.$store.commit("user", null);
+            this.$router.push("/login");
           } else {
             await BootstrapButtons.fire("Error", json.message, "error");
             if (json.error == 1) this.password = "";
@@ -178,7 +184,7 @@ export default {
               this.password2 = "";
             }
           }
-        }
+        });
       } else this.validated = true;
     },
   },

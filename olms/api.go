@@ -60,13 +60,12 @@ func info(c *gin.Context) {
 	if user.Role {
 		var departments []department
 		var employees []employee
+		ec := make(chan error, 1)
 		if user.ID == 0 {
-			departments, err = getDepartments(db, nil, true)
-			if err != nil {
-				log.Println("Failed to get departments:", err)
-				c.String(500, "")
-				return
-			}
+			go func() {
+				departments, err = getDepartments(db, nil, true)
+				ec <- err
+			}()
 			employees, err = getEmployees(db, nil, true)
 			if err != nil {
 				log.Println("Failed to get employees:", err)
@@ -74,18 +73,21 @@ func info(c *gin.Context) {
 				return
 			}
 		} else {
-			departments, err = getDepartments(db, strings.Split(user.Permission, ","), false)
-			if err != nil {
-				log.Println("Failed to get departments:", err)
-				c.String(500, "")
-				return
-			}
+			go func() {
+				departments, err = getDepartments(db, strings.Split(user.Permission, ","), false)
+				ec <- err
+			}()
 			employees, err = getEmployees(db, strings.Split(user.Permission, ","), false)
 			if err != nil {
 				log.Println("Failed to get employees:", err)
 				c.String(500, "")
 				return
 			}
+		}
+		if err = <-ec; err != nil {
+			log.Println("Failed to get departments:", err)
+			c.String(500, "")
+			return
 		}
 		info["departments"] = departments
 		info["employees"] = employees

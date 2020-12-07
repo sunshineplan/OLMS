@@ -11,7 +11,7 @@
               {{ $t("Dept") }}
             </label>
           </div>
-          <select class="custom-select" v-model="department" id="department">
+          <select class="custom-select" v-model="filter.deptid" id="department">
             <option value="">{{ $t("All") }}</option>
             <option v-for="d in departments" :key="d.id" :value="d.id">
               {{ d.name }}
@@ -22,23 +22,23 @@
           <div class="input-group-prepend">
             <label class="input-group-text" for="type">{{ $t("Type") }}</label>
           </div>
-          <select class="custom-select" v-model="type" id="type">
+          <select class="custom-select" v-model="filter.type" id="type">
             <option value="">{{ $t("All") }}</option>
             <option value="0">{{ $t("GeneralEmployee") }}</option>
             <option value="1">{{ $t("Administrator") }}</option>
           </select>
         </div>
         <div class="input-group">
-          <a class="btn btn-primary btn-sm" :click="filter()">
+          <a class="btn btn-primary btn-sm" @click="filter()">
             {{ $t("Filter") }}
           </a>
-          <a class="btn btn-primary btn-sm" :click="reset()">
+          <a class="btn btn-primary btn-sm" @click="$store.commit('reset')">
             {{ $t("Reset") }}
           </a>
         </div>
       </div>
     </div>
-    <a class="btn btn-primary" :click="add()">{{ $t("Add") }}</a>
+    <a class="btn btn-primary" @click="add()">{{ $t("Add") }}</a>
     <p></p>
   </header>
   <Pagination :total="total">
@@ -61,7 +61,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="e in employees" :key="e.id">
+          <tr
+            v-for="e in employees.slice((current - 1) * 10, current * 10)"
+            :key="e.id"
+          >
             <td>{{ e.username }}</td>
             <td>{{ e.realname }}</td>
             <td>{{ e.deptname }}</td>
@@ -70,7 +73,7 @@
             </td>
             <td v-if="user.super">{{ e.permission }}</td>
             <td v-if="user.super">
-              <a class="btn btn-outline-primary btn-sm" :click="edit(e)">
+              <a class="btn btn-outline-primary btn-sm" @click="edit(e)">
                 {{ $t("Edit") }}
               </a>
             </td>
@@ -86,34 +89,27 @@ export default {
   name: "ShowEmployees",
   data() {
     return {
-      employees: [],
-      total: 0,
-      department: "",
-      type: "",
+      user: this.$store.state.user,
+      departments: this.$store.state.departments,
+      all: this.$store.state.employees,
+      filter: { deptid: "", type: "" },
     };
   },
   computed: {
-    user() {
-      return this.$store.state.user;
+    employees() {
+      return this.$store.state.employees.filter(
+        (i) => i.deptid == this.filter.deptid
+      );
     },
-    departments() {
-      return this.$store.state.departments;
+    total() {
+      return this.employees.lenght;
     },
-  },
-  async created() {
-    await load();
+    current() {
+      return this.state.current;
+    },
   },
   methods: {
-    async load() {
-      this.$store.commit("loading");
-      const resp = await fetch("/employees");
-      json = await resp.json();
-      this.employees = json.rows;
-      this.total = json.total;
-      this.$store.commit("loading");
-    },
     add() {
-      this.$store.commit("employee", {});
       this.$router.push("/employee/add");
     },
     edit(employee) {

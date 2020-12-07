@@ -110,16 +110,21 @@ func editDepartment(c *gin.Context) {
 func deleteDepartment(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
-		log.Println("Failed to connect to database:", err)
-		c.String(503, "")
+		log.Print(err)
+		c.String(503, "Failed to connect to database.")
 		return
 	}
 	defer db.Close()
 
 	id := c.Param("id")
+	var exist string
+	if err := db.QueryRow("SELECT realname FROM user WHERE dept_id = ?", id).Scan(&exist); err == nil {
+		c.String(500, "Can't delete department which has employee.")
+		return
+	}
 	if _, err := db.Exec("DELETE FROM department WHERE id = ?", id); err != nil {
-		log.Println("Failed to delete department:", err)
-		c.String(500, "")
+		log.Print(err)
+		c.String(500, "Failed to delete department.")
 		return
 	}
 	c.JSON(200, gin.H{"status": 1})

@@ -9,45 +9,65 @@
         <label for="department">{{ $t("Department") }}</label>
         <input
           class="form-control"
-          v-text="department"
+          v-text="record.deptname"
           id="department"
           readonly
         />
       </div>
       <div class="form-group">
         <label for="employee">{{ $t("Employee") }}</label>
-        <input class="form-control" v-text="employee" id="employee" readonly />
+        <input
+          class="form-control"
+          v-text="record.realname"
+          id="employee"
+          readonly
+        />
       </div>
     </div>
     <div class="form-group">
       <label for="date">{{ $t("Date") }}</label>
-      <input class="form-control" v-text="date" id="date" readonly />
+      <input
+        class="form-control"
+        v-text="record.date.replace(':00Z', '').replace('T', ' ')"
+        id="date"
+        readonly
+      />
     </div>
     <div class="form-group">
       <label for="type">{{ $t("Type") }}</label>
-      <input class="form-control" v-text="type" id="type" readonly />
+      <input
+        class="form-control"
+        v-text="record.type ? $t('Overtime') : $t('Leave')"
+        id="type"
+        readonly
+      />
     </div>
     <div class="form-group">
       <label for="duration">{{ $t("Duration") }}</label>
-      <input class="form-control" v-text="duration" id="duration" readonly />
+      <input
+        class="form-control"
+        v-text="record.duration"
+        id="duration"
+        readonly
+      />
     </div>
     <div class="form-group">
       <label for="describe">{{ $t("Describe") }}</label>
       <textarea
         class="form-control"
-        v-text="describe"
+        v-text="record.describe"
         id="describe"
         rows="3"
         readonly
       />
     </div>
-    <button class="btn btn-success" :click="verify(true)">
+    <button class="btn btn-success" @click="verify(true)">
       {{ $t("Accept") }}
     </button>
-    <button class="btn btn-danger" :click="verify(false)">
+    <button class="btn btn-danger" @click="verify(false)">
       {{ $t("Reject") }}
     </button>
-    <button class="btn btn-primary" :click="goback()">
+    <button class="btn btn-primary" @click="goback()">
       {{ $t("Cancel") }}
     </button>
   </div>
@@ -60,29 +80,11 @@ export default {
   name: "Verify",
   data() {
     return {
-      department: "",
-      employee: "",
-      date: "",
-      type: "",
-      duration: "",
-      describe: "",
+      record: this.$store.state.record,
     };
   },
-  computed: {
-    record() {
-      return this.$store.state.record;
-    },
-  },
-  created() {
-    this.department = this.record.department;
-    this.employee = this.record.employee;
-    this.date = this.record.date;
-    this.type = this.record.type;
-    this.duration = this.record.duration;
-    this.describe = this.record.describe;
-  },
   mounted() {
-    document.title = "Verify Record";
+    document.title = this.$t("VerifyRecord");
     window.addEventListener("keyup", this.cancel);
   },
   beforeUnmount() {
@@ -91,13 +93,9 @@ export default {
   methods: {
     async verify(status) {
       const resp = await post("/record/verify/" + this.record.id, { status });
-      if (!resp.ok)
-        await BootstrapButtons.fire("Error", await resp.text(), "error");
-      else {
-        const json = await resp.json();
-        if (json.status == 1) this.goback();
-        else await BootstrapButtons.fire("Error", json.message, "error");
-      }
+      await this.checkResp(resp, async () => {
+        await this.checkJson(await resp.json(), async () => this.goback());
+      });
     },
   },
 };

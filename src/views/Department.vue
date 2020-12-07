@@ -5,19 +5,24 @@
   </header>
   <div class="form">
     <div class="form-group">
-      <label for="dept">{{ $t("Department") }}</label>
-      <input class="form-control" v-model.trim="name" id="dept" required />
+      <label for="department">{{ $t("Department") }}</label>
+      <input
+        class="form-control"
+        v-model.trim="department.name"
+        id="department"
+        required
+      />
       <div class="invalid-feedback">{{ $t("RequiredField") }}</div>
     </div>
-    <button class="btn btn-primary" :click="save()">
+    <button class="btn btn-primary" @click="save()">
       {{ mode }}
     </button>
-    <button class="btn btn-primary" :click="goback()">
+    <button class="btn btn-primary" @click="goback()">
       {{ $t("Cancel") }}
     </button>
   </div>
   <div class="form" v-if="$route.params.mode == 'edit'">
-    <button class="btn btn-danger delete" :click="del()">
+    <button class="btn btn-danger delete" @click="del()">
       {{ $t("Delete") }}
     </button>
   </div>
@@ -30,27 +35,17 @@ export default {
   name: "Department",
   data() {
     return {
-      name: "",
+      mode:
+        this.$route.params.mode == "add"
+          ? this.$t("AddDepartment")
+          : this.$t("EditDepartment"),
+      department:
+        this.$route.params.mode == "edit" ? this.$store.state.department : {},
       validated: false,
     };
   },
-  computed: {
-    department() {
-      return this.$route.params.mode == "edit"
-        ? this.$store.state.department
-        : {};
-    },
-    mode() {
-      return this.$route.params.mode == "add"
-        ? this.$t("AddDepartment")
-        : this.$t("EditDepartment");
-    },
-  },
-  created() {
-    this.name = this.department.name;
-  },
   mounted() {
-    document.title = this.mode + " Department";
+    document.title = this.mode;
     window.addEventListener("keyup", this.cancel);
   },
   beforeUnmount() {
@@ -62,30 +57,24 @@ export default {
         this.validated = false;
         let resp;
         if (this.$route.params.mode == "add")
-          resp = await post("/department/add", { name: this.name });
-        else
-          resp = await post("/department/edit/" + this.department.id, {
-            name: this.name,
-          });
-        if (!resp.ok)
-          await BootstrapButtons.fire("Error", await resp.text(), "error");
-        else {
-          const json = await resp.json();
-          if (json.status == 1) {
-            if (this.$route.params.mode == "add")
-              await this.$store.dispatch("addDepartment", this.name);
-            else await this.$store.dispatch("editDepartment", this.name);
-            this.goback();
-          } else await BootstrapButtons.fire("Error", json.message, "error");
-        }
+          resp = await post("/department/add", { name: this.department.name });
+        else resp = await post("/department/edit", this.department);
+        await this.checkResp(resp, async () => {
+          await this.checkJson(await resp.json(), async () =>
+            this.goback(true)
+          );
+        });
       } else this.validated = true;
     },
     async del() {
-      if (await confirm("department")) {
-        const resp = await post("/department/delete/" + this.department.id);
-        if (!resp.ok)
-          await BootstrapButtons.fire("Error", await resp.text(), "error");
-        else this.goback();
+      if (await confirm(this.$t("Department"))) {
+        await this.checkResp(
+          await post("/department/delete/" + this.department.id),
+          async () => {
+            await this.$store.dispatch("delDepartment", this.department.id);
+            this.goback();
+          }
+        );
       }
     },
   },

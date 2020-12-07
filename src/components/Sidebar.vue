@@ -1,7 +1,7 @@
 <template>
   <nav class="nav flex-column navbar-light sidebar">
     <div class="panel">
-      <div v-if="user.ID !== 0">
+      <div v-if="!user.super">
         <a class="navbar-brand">{{ $t("EmployeePanel") }}</a>
         <ul class="navbar-nav">
           <li>
@@ -28,10 +28,10 @@
           </li>
         </ul>
       </div>
-      <div v-if="user.Role">
+      <div v-if="user.role">
         <a class="navbar-brand">{{ $t("DepartmentPanel") }}</a>
         <ul class="navbar-nav">
-          <li v-if="user.ID !== 0">
+          <li v-if="!user.super">
             <router-link
               class="nav-link"
               :class="{
@@ -57,7 +57,7 @@
           </li>
         </ul>
       </div>
-      <div v-if="user.Role">
+      <div v-if="user.role">
         <a class="navbar-brand">{{ $t("ControlPanel") }}</a>
         <ul class="navbar-nav">
           <li>
@@ -69,7 +69,7 @@
               {{ $t("ManageEmployees") }}
             </router-link>
           </li>
-          <li v-if="user.ID == 0">
+          <li v-if="user.super">
             <router-link
               class="nav-link"
               :class="{ selected: $router.name == 'departments' }"
@@ -78,7 +78,7 @@
               {{ $t("ManageDepartments") }}
             </router-link>
           </li>
-          <li v-if="user.ID == 0">
+          <li v-if="user.super">
             <router-link
               class="nav-link"
               :class="{

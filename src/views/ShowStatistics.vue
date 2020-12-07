@@ -83,13 +83,13 @@
           </select>
         </div>
         <div class="input-group">
-          <a class="btn btn-primary btn-sm" :click="filter()">
+          <a class="btn btn-primary btn-sm" @click="filter()">
             {{ $t("Filter") }}
           </a>
-          <a class="btn btn-primary btn-sm" :click="reset()">
+          <a class="btn btn-primary btn-sm" @click="reset()">
             {{ $t("Reset") }}
           </a>
-          <a class="btn btn-info btn-sm" :click="download()">
+          <a class="btn btn-info btn-sm" @click="download()">
             {{ $t("Export") }}
           </a>
         </div>

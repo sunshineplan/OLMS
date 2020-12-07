@@ -14,18 +14,18 @@
   <nav v-if="total">
     <ul class="pagination justify-content-center">
       <li class="page-item" :disabled="current > 1">
-        <a class="page-link" :click="current--">{{ $t("Previous") }}</a>
+        <a class="page-link" @click="current--">{{ $t("Previous") }}</a>
       </li>
       <div v-for="(i, index) in items" :key="i">
         <li class="page-item" v-if="index > 1 && i - items[index - 1] > 1">
           <a class="page-link">...</a>
         </li>
         <li class="page-item" :class="{ active: i == current }">
-          <a class="page-link" :click="(current = i)">{{ i }}</a>
+          <a class="page-link" @click="(current = i)">{{ i }}</a>
         </li>
       </div>
       <li class="page-item" :disabled="current < page">
-        <a class="page-link" :click="current++">{{ $t("Next") }}</a>
+        <a class="page-link" @click="current++">{{ $t("Next") }}</a>
       </li>
     </ul>
   </nav>
