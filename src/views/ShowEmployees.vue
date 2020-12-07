@@ -32,7 +32,7 @@
           <a class="btn btn-primary btn-sm" @click="filter()">
             {{ $t("Filter") }}
           </a>
-          <a class="btn btn-primary btn-sm" @click="$store.commit('reset')">
+          <a class="btn btn-primary btn-sm" @click="$store.dispatch('reset')">
             {{ $t("Reset") }}
           </a>
         </div>
@@ -62,7 +62,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="e in employees.slice((current - 1) * 10, current * 10)"
+            v-for="e in employees.slice((page - 1) * 10, page * 10)"
             :key="e.id"
           >
             <td>{{ e.username }}</td>
@@ -91,24 +91,30 @@ export default {
     return {
       user: this.$store.state.user,
       departments: this.$store.state.departments,
-      all: this.$store.state.employees,
-      filter: { deptid: "", type: "" },
+      employees: this.$store.state.employees,
+      filter: this.$store.state.filter,
     };
   },
   computed: {
-    employees() {
-      return this.$store.state.employees.filter(
-        (i) => i.deptid == this.filter.deptid
-      );
-    },
     total() {
       return this.employees.lenght;
     },
-    current() {
-      return this.state.current;
+    page() {
+      return this.state.page;
     },
   },
+  created() {
+    this.filter = {};
+  },
   methods: {
+    async filter() {
+      this.$store.commit("filter", this.filter);
+      if (!this.filter.deptid) this.employees = this.$store.state.employees;
+      else
+        this.employees = this.$store.state.employees.filter(
+          (i) => i.deptid == this.filter.deptid
+        );
+    },
     add() {
       this.$router.push("/employee/add");
     },

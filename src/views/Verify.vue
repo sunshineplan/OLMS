@@ -94,7 +94,7 @@ export default {
     async verify(status) {
       const resp = await post("/record/verify/" + this.record.id, { status });
       await this.checkResp(resp, async () => {
-        await this.checkJson(await resp.json(), async () => this.goback());
+        await this.checkJson(await resp.json(), () => this.goback());
       });
     },
   },

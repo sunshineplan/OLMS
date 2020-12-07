@@ -15,7 +15,7 @@ export default createStore({
       employee: {},
       record: {},
       filter: {},
-      current: 1
+      page: 1
     }
   },
   mutations: {
@@ -32,12 +32,12 @@ export default createStore({
     employee(state, employee) { state.employee = employee },
     record(state, record) { state.record = record },
     filter(state, filter) { state.filter = filter },
-    current(state, current) { state.current = current }
+    page(state, page) { state.page = page }
   },
   actions: {
     async info({ commit }) {
       commit('startLoading')
-      const resp = await post('/info')
+      const resp = await fetch('/info')
       const json = await resp.json()
       let user = json.user
       if (user.id == 0) user.super = true
@@ -55,7 +55,7 @@ export default createStore({
     },
     reset({ commit }) {
       commit('filter', {})
-      commit('current', 1)
+      commit('page', 1)
     }
   }
 })

@@ -13,7 +13,7 @@
               {{ $t("Dept") }}
             </label>
           </div>
-          <select class="custom-select" v-model="department" id="department">
+          <select class="custom-select" v-model="filter.deptid" id="department">
             <option value="">{{ $t("All") }}</option>
             <option v-for="d in departments" :key="d.id" :value="d.id">
               {{ d.name }}
@@ -26,7 +26,7 @@
               {{ $t("Name") }}
             </label>
           </div>
-          <select class="custom-select" v-model="employee" id="employee">
+          <select class="custom-select" v-model="filter.userid" id="employee">
             <option value="">{{ $t("All") }}</option>
             <option v-for="e in employees" :key="e.id" :value="e.id">
               {{ e.realname }}
@@ -39,8 +39,9 @@
           <div class="input-group-prepend">
             <label class="input-group-text" for="year">{{ $t("Year") }}</label>
           </div>
-          <select class="custom-select" v-model="year" id="year">
+          <select class="custom-select" v-model="filter.year" id="year">
             <option value="">{{ $t("All") }}</option>
+            <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
           </select>
         </div>
         <div class="input-group input-group-sm">
@@ -51,9 +52,9 @@
           </div>
           <select
             class="custom-select"
-            v-model="month"
+            v-model="filter.month"
             id="month"
-            :disabled="year == ''"
+            :disabled="filter.year == ''"
           >
             <option value="">{{ $t("All") }}</option>
             <option value="01">1</option>
@@ -74,7 +75,7 @@
           <div class="input-group-prepend">
             <label class="input-group-text" for="type">{{ $t("Type") }}</label>
           </div>
-          <select class="custom-select" v-model="type" id="type">
+          <select class="custom-select" v-model="filter.type" id="type">
             <option value="">{{ $t("All") }}</option>
             <option value="1">{{ $t("Overtime") }}</option>
             <option value="0">{{ $t("Leave") }}</option>
@@ -86,7 +87,7 @@
               {{ $t("Status") }}
             </label>
           </div>
-          <select class="custom-select" v-model="status" id="status">
+          <select class="custom-select" v-model="filter.status" id="status">
             <option value="">{{ $t("All") }}</option>
             <option value="0">{{ $t("Unverified") }}</option>
             <option value="1">{{ $t("Verified") }}</option>
@@ -101,16 +102,16 @@
               {{ $t("Describe") }}
             </label>
           </div>
-          <input class="form-control" v-model="describe" id="describe" />
+          <input class="form-control" v-model="filter.describe" id="describe" />
         </div>
         <div class="input-group">
-          <a class="btn btn-primary btn-sm" @click="filter()">
+          <a class="btn btn-primary btn-sm" @click="load('records')">
             {{ $t("Filter") }}
           </a>
-          <a class="btn btn-primary btn-sm" @click="reset()">
+          <a class="btn btn-primary btn-sm" @click="reset('records')">
             {{ $t("Reset") }}
           </a>
-          <a class="btn btn-info btn-sm" @click="download()">
+          <a class="btn btn-info btn-sm" @click="download('records')">
             {{ $t("Export") }}
           </a>
         </div>
@@ -218,42 +219,30 @@ export default {
   name: "ShowRecords",
   data() {
     return {
+      user: this.$store.state.user,
+      departments: this.$store.state.departments,
+      employees: this.$store.state.employees,
+      years: [],
       records: [],
       total: 0,
-      department: "",
-      employee: "",
-      year: "",
-      month: "",
-      type: "",
-      status: "",
-      describe: "",
+      filter: this.$store.state.filter,
     };
   },
   computed: {
-    user() {
-      return this.$store.state.user;
+    page() {
+      return this.state.page;
     },
-    departments() {
-      return this.$store.state.departments;
-    },
-    employees() {
-      return this.$store.state.employees;
+  },
+  watch: {
+    async page() {
+      await this.load("records");
     },
   },
   async created() {
-    await load();
+    await this.reset("records");
   },
   methods: {
-    async load() {
-      this.$store.commit("loading");
-      const resp = await fetch("/statistics");
-      json = await resp.json();
-      this.statistics = json.rows;
-      this.total = json.total;
-      this.$store.commit("loading");
-    },
     add() {
-      this.$store.commit("record", {});
       this.$router.push("/record/add");
     },
     edit(record) {
@@ -264,18 +253,6 @@ export default {
       this.$store.commit("record", record);
       this.$router.push("/record/verify");
     },
-    async filter() {},
-    async reset() {
-      this.department = "";
-      this.employee = "";
-      this.year = "";
-      this.month = "";
-      this.type = "";
-      this.status = "";
-      this.describe = "";
-      await load();
-    },
-    download() {},
   },
 };
 </script>

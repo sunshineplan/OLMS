@@ -12,7 +12,7 @@
               {{ $t("Dept") }}
             </label>
           </div>
-          <select class="custom-select" v-model="department" id="department">
+          <select class="custom-select" v-model="filter.deptid" id="department">
             <option value="">{{ $t("All") }}</option>
             <option v-for="d in departments" :key="d.id" :value="d.id">
               {{ d.name }}
@@ -25,7 +25,7 @@
               {{ $t("Name") }}
             </label>
           </div>
-          <select class="custom-select" v-model="employee" id="employee">
+          <select class="custom-select" v-model="filter.userid" id="employee">
             <option value="">{{ $t("All") }}</option>
             <option v-for="e in employees" :key="e.id" :value="e.id">
               {{ e.realname }}
@@ -40,7 +40,7 @@
               {{ $t("Period") }}
             </label>
           </div>
-          <select class="custom-select" v-model="period" id="period">
+          <select class="custom-select" v-model="filter.period" id="period">
             <option value="month">{{ $t("Month") }}</option>
             <option value="year">{{ $t("Year") }}</option>
           </select>
@@ -49,7 +49,7 @@
           <div class="input-group-prepend">
             <label class="input-group-text" for="year">{{ $t("Year") }}</label>
           </div>
-          <select class="custom-select" v-model="year" id="year">
+          <select class="custom-select" v-model="filter.year" id="year">
             <option value="">{{ $t("All") }}</option>
             <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
           </select>
@@ -62,10 +62,10 @@
           </div>
           <select
             class="custom-select"
-            v-model="month"
+            v-model="filter.month"
             id="month"
-            v-show="period == 'month'"
-            :disabled="year == ''"
+            v-show="filter.period == 'month'"
+            :disabled="filter.year == ''"
           >
             <option value="">{{ $t("All") }}</option>
             <option value="01">1</option>
@@ -83,13 +83,13 @@
           </select>
         </div>
         <div class="input-group">
-          <a class="btn btn-primary btn-sm" @click="filter()">
+          <a class="btn btn-primary btn-sm" @click="load('statistics')">
             {{ $t("Filter") }}
           </a>
-          <a class="btn btn-primary btn-sm" @click="reset()">
+          <a class="btn btn-primary btn-sm" @click="reset('statistics')">
             {{ $t("Reset") }}
           </a>
-          <a class="btn btn-info btn-sm" @click="download()">
+          <a class="btn btn-info btn-sm" @click="download('statistics')">
             {{ $t("Export") }}
           </a>
         </div>
@@ -133,48 +133,27 @@ export default {
   name: "ShowStatistics",
   data() {
     return {
+      user: this.$store.state.user,
+      departments: this.$store.state.departments,
+      employees: this.$store.state.employees,
+      years: [],
       statistics: [],
       total: 0,
-      department: "",
-      employee: "",
-      period: "month",
-      year: "",
-      month: "",
+      filter: this.$store.state.filter,
     };
   },
   computed: {
-    user() {
-      return this.$store.state.user;
+    page() {
+      return this.state.page;
     },
-    departments() {
-      return this.$store.state.departments;
-    },
-    employees() {
-      return this.$store.state.employees;
+  },
+  watch: {
+    async page() {
+      await this.load("statistics");
     },
   },
   async created() {
-    await load();
-  },
-  methods: {
-    async load() {
-      this.$store.commit("loading");
-      const resp = await fetch("/statistics");
-      json = await resp.json();
-      this.statistics = json.rows;
-      this.total = json.total;
-      this.$store.commit("loading");
-    },
-    async filter() {},
-    async reset() {
-      this.department = "";
-      this.employee = "";
-      this.period = "month";
-      this.year = "";
-      this.month = "";
-      await load();
-    },
-    download() {},
+    await this.reset("statistics");
   },
 };
 </script>

@@ -16,12 +16,10 @@ import (
 	"github.com/vharitonsky/iniflags"
 )
 
-var svc winsvc.Service
-
-func init() {
-	svc.Name = "OLMS"
-	svc.Desc = "Overtime and Leave Management System"
-	svc.Exec = olms.Run
+var svc = winsvc.Service{
+	Name: "OLMS",
+	Desc: "Overtime and Leave Management System",
+	Exec: olms.Run,
 }
 
 func usage() {

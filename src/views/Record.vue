@@ -145,10 +145,7 @@ export default {
         if (this.user.super) data = this.record;
         const resp = await post(url, data);
         await this.checkResp(resp, async () => {
-          await this.checkJson(
-            await resp.json(),
-            async () => await this.goback()
-          );
+          await this.checkJson(await resp.json(), () => this.goback());
         });
       } else this.validated = true;
     },
@@ -156,7 +153,7 @@ export default {
       if (await confirm("Record")) {
         await this.checkResp(
           await post("/record/delete/" + this.record.id),
-          async () => await this.goback()
+          () => this.goback()
         );
       }
     },
