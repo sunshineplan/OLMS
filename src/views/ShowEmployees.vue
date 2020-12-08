@@ -11,8 +11,12 @@
               {{ $t("Dept") }}
             </label>
           </div>
-          <select class="custom-select" v-model="filter.deptid" id="department">
-            <option value="">{{ $t("All") }}</option>
+          <select
+            class="custom-select"
+            v-model.number="filter.deptid"
+            id="department"
+          >
+            <option value="0">{{ $t("All") }}</option>
             <option v-for="d in departments" :key="d.id" :value="d.id">
               {{ d.name }}
             </option>
@@ -29,7 +33,7 @@
           </select>
         </div>
         <div class="input-group">
-          <a class="btn btn-primary btn-sm" @click="filter()">
+          <a class="btn btn-primary btn-sm" @click="doFilter()">
             {{ $t("Filter") }}
           </a>
           <a class="btn btn-primary btn-sm" @click="$store.dispatch('reset')">
@@ -107,7 +111,7 @@ export default {
     this.filter = {};
   },
   methods: {
-    async filter() {
+    async doFilter() {
       this.$store.commit("filter", this.filter);
       if (!this.filter.deptid) this.employees = this.$store.state.employees;
       else

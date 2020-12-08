@@ -7,10 +7,8 @@
           <li>
             <router-link
               class="nav-link"
-              :class="{
-                selected: $router.name == 'records' && !$route.params.admin,
-              }"
-              :to="{ name: 'records' }"
+              :class="{ selected: $router.name == 'personalRecords' }"
+              :to="{ name: 'personalRecords' }"
             >
               {{ $t("EmployeeRecords") }}
             </router-link>
@@ -18,10 +16,8 @@
           <li>
             <router-link
               class="nav-link"
-              :class="{
-                selected: $router.name == 'statistics' && !$route.params.mode,
-              }"
-              :to="{ name: 'statistics' }"
+              :class="{ selected: $router.name == 'personalStatistics' }"
+              :to="{ name: 'personalStatistics' }"
             >
               {{ $t("EmployeeStatistics") }}
             </router-link>
@@ -35,10 +31,9 @@
             <router-link
               class="nav-link"
               :class="{
-                selected:
-                  $router.name == 'records' && $route.params.mode == 'admin',
+                selected: $router.name == 'departmentRecords' && !user.super,
               }"
-              :to="{ name: 'records', params: { mode: 'admin' } }"
+              :to="{ name: 'departmentRecords' }"
             >
               {{ $t("DepartmentRecords") }}
             </router-link>
@@ -46,11 +41,8 @@
           <li>
             <router-link
               class="nav-link"
-              :class="{
-                selected:
-                  $router.name == 'statistics' && $route.params.mode == 'admin',
-              }"
-              :to="{ name: 'statistics', params: { mode: 'admin' } }"
+              :class="{ selected: $router.name == 'departmentStatistics' }"
+              :to="{ name: 'departmentStatistics' }"
             >
               {{ $t("DepartmentStatistics") }}
             </router-link>
@@ -82,10 +74,9 @@
             <router-link
               class="nav-link"
               :class="{
-                selected:
-                  $router.name == 'records' && $route.params.mode == 'super',
+                selected: $router.name == 'departmentRecords' && user.super,
               }"
-              :to="{ name: 'records', params: { mode: 'super' } }"
+              :to="{ name: 'departmentRecords' }"
             >
               {{ $t("ManageRecords") }}
             </router-link>

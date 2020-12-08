@@ -1,19 +1,24 @@
 <template>
   <header style="padding-left: 20px">
     <div style="height: 50px">
-      <a class="h3 title" v-if="user.role">{{ $t("DepartmentStatistics") }}</a>
-      <a class="h3 title" v-else>{{ $t("EmployeeStatistics") }}</a>
+      <a class="h3 title" v-if="personal">{{ $t("EmployeeStatistics") }}</a>
+      <a class="h3 title" v-else>{{ $t("DepartmentStatistics") }}</a>
     </div>
     <div class="toolbar">
-      <div class="form-inline" v-if="user.role">
+      <div class="form-inline" v-if="!personal">
         <div class="input-group input-group-sm">
           <div class="input-group-prepend">
             <label class="input-group-text" for="department">
               {{ $t("Dept") }}
             </label>
           </div>
-          <select class="custom-select" v-model="filter.deptid" id="department">
-            <option value="">{{ $t("All") }}</option>
+          <select
+            class="custom-select"
+            v-model.number="filter.deptid"
+            id="department"
+            @change="year('department')"
+          >
+            <option value="0">{{ $t("All") }}</option>
             <option v-for="d in departments" :key="d.id" :value="d.id">
               {{ d.name }}
             </option>
@@ -25,8 +30,14 @@
               {{ $t("Name") }}
             </label>
           </div>
-          <select class="custom-select" v-model="filter.userid" id="employee">
-            <option value="">{{ $t("All") }}</option>
+          <select
+            class="custom-select"
+            v-model.number="filter.userid"
+            id="employee"
+            :disabled="!filter.deptid"
+            @change="year('employee')"
+          >
+            <option value="0">{{ $t("All") }}</option>
             <option v-for="e in employees" :key="e.id" :value="e.id">
               {{ e.realname }}
             </option>
@@ -102,10 +113,10 @@
         <thead>
           <tr>
             <th class="sortable" data-name="period">{{ $t("Period") }}</th>
-            <th class="sortable" data-name="dept_name" v-if="user.role">
+            <th class="sortable" data-name="dept_name" v-if="!personal">
               {{ $t("Department") }}
             </th>
-            <th class="sortable" data-name="realname" v-if="user.role">
+            <th class="sortable" data-name="realname" v-if="!personal">
               {{ $t("Realname") }}
             </th>
             <th class="sortable" data-name="overtime">{{ $t("Overtime") }}</th>
@@ -116,8 +127,8 @@
         <tbody>
           <tr v-for="s in statistics" :key="s.period + s.deptname + s.realname">
             <td>{{ s.period }}</td>
-            <td v-if="user.role">{{ s.deptname }}</td>
-            <td v-if="user.role">{{ s.realname }}</td>
+            <td v-if="!personal">{{ s.deptname }}</td>
+            <td v-if="!personal">{{ s.realname }}</td>
             <td>{{ s.overtime }} {{ $t("Hours") }}</td>
             <td>{{ s.leave }} {{ $t("Hours") }}</td>
             <td>{{ s.summary }} {{ $t("Hours") }}</td>
@@ -134,8 +145,8 @@ export default {
   data() {
     return {
       user: this.$store.state.user,
+      personal: this.$router.name == "departmentStatistics" ? false : true,
       departments: this.$store.state.departments,
-      employees: this.$store.state.employees,
       years: [],
       statistics: [],
       total: 0,
@@ -143,6 +154,11 @@ export default {
     };
   },
   computed: {
+    employees() {
+      return this.$store.state.employees.filter(
+        (i) => i.deptid == this.record.deptid
+      );
+    },
     page() {
       return this.state.page;
     },
@@ -153,6 +169,7 @@ export default {
     },
   },
   async created() {
+    await this.year();
     await this.reset("statistics");
   },
 };

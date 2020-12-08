@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { BootstrapButtons, post, valid, confirm } from "../misc.js";
+import { post, valid } from "../misc.js";
 
 export default {
   name: "Department",
@@ -67,7 +67,7 @@ export default {
       } else this.validated = true;
     },
     async del() {
-      if (await confirm(this.$t("Department"))) {
+      if (await this.confirm("Department")) {
         await this.checkResp(
           await post("/department/delete/" + this.department.id),
           async () => {

@@ -74,7 +74,7 @@
 </template>
 
 <script>
-import { BootstrapButtons, post, confirm } from "../misc.js";
+import { post } from "../misc.js";
 
 export default {
   name: "Verify",

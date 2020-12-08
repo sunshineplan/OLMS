@@ -13,8 +13,13 @@
               {{ $t("Dept") }}
             </label>
           </div>
-          <select class="custom-select" v-model="filter.deptid" id="department">
-            <option value="">{{ $t("All") }}</option>
+          <select
+            class="custom-select"
+            v-model.number="filter.deptid"
+            id="department"
+            @change="year('department')"
+          >
+            <option value="0">{{ $t("All") }}</option>
             <option v-for="d in departments" :key="d.id" :value="d.id">
               {{ d.name }}
             </option>
@@ -26,8 +31,14 @@
               {{ $t("Name") }}
             </label>
           </div>
-          <select class="custom-select" v-model="filter.userid" id="employee">
-            <option value="">{{ $t("All") }}</option>
+          <select
+            class="custom-select"
+            v-model.number="filter.userid"
+            id="employee"
+            :disabled="!filter.deptid"
+            @change="year('employee')"
+          >
+            <option value="0">{{ $t("All") }}</option>
             <option v-for="e in employees" :key="e.id" :value="e.id">
               {{ e.realname }}
             </option>
@@ -117,7 +128,7 @@
         </div>
       </div>
     </div>
-    <a class="btn btn-primary" @click="add()">{{ $t("New") }}</a>
+    <a class="btn btn-primary" @click="add(personal)">{{ $t("New") }}</a>
     <p></p>
   </header>
   <Pagination :total="total">
@@ -188,7 +199,7 @@
               <a
                 class="btn btn-outline-primary btn-sm"
                 :class="{ disabled: !r.status }"
-                @click="edit(r)"
+                @click="edit(r, personal)"
               >
                 {{ t("Edit") }}
               </a>
@@ -220,8 +231,8 @@ export default {
   data() {
     return {
       user: this.$store.state.user,
+      personal: this.$router.name == "departmentRecords" ? false : true,
       departments: this.$store.state.departments,
-      employees: this.$store.state.employees,
       years: [],
       records: [],
       total: 0,
@@ -229,6 +240,11 @@ export default {
     };
   },
   computed: {
+    employees() {
+      return this.$store.state.employees.filter(
+        (i) => i.deptid == this.record.deptid
+      );
+    },
     page() {
       return this.state.page;
     },
@@ -239,15 +255,20 @@ export default {
     },
   },
   async created() {
+    await this.year();
     await this.reset("records");
   },
   methods: {
-    add() {
-      this.$router.push("/record/add");
+    add(personal) {
+      if (personal)
+        this.$router.push({ name: "personalRecord", params: { mode: "add" } });
+      this.$router.push({ name: "departmentRecord", params: { mode: "add" } });
     },
-    edit(record) {
+    edit(record, personal) {
       this.$store.commit("record", record);
-      this.$router.push("/record/edit");
+      if (personal)
+        this.$router.push({ name: "personalRecord", params: { mode: "edit" } });
+      this.$router.push({ name: "departmentRecord", params: { mode: "edit" } });
     },
     verify(record) {
       this.$store.commit("record", record);

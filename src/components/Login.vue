@@ -53,7 +53,7 @@
 <script>
 import { BootstrapButtons, post } from "../misc.js";
 
-const grecaptcha = windows.grecaptcha;
+const grecaptcha = window.grecaptcha;
 
 export default {
   name: "Login",
@@ -71,20 +71,20 @@ export default {
     document.title = "Log In";
     this.username = localStorage.getItem("username");
     if (this.recaptcha) {
-      function execute() {
-        grecaptcha
-          .execute(this.recaptcha, { action: "login" })
-          .then((token) => (this.token = token));
-      }
       grecaptcha.ready(() => {
-        execute();
+        this.execute();
         setInterval(() => {
-          execute();
+          this.execute();
         }, 100000);
       });
     }
   },
   methods: {
+    execute() {
+      grecaptcha
+        .execute(this.recaptcha, { action: "login" })
+        .then((token) => (this.token = token));
+    },
     async login() {
       if (!document.querySelector("#username").checkValidity())
         await BootstrapButtons.fire(

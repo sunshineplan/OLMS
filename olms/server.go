@@ -68,6 +68,8 @@ func Run() {
 
 	api := router.Group("/")
 	api.Use(authRequired)
+	api.GET("/year", year)
+	api.POST("/year", year)
 	api.POST("/records", records)
 	api.POST("/statistics", statistics)
 	api.POST("/records/export", exportRecords)

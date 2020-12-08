@@ -1,4 +1,3 @@
-
 import Swal from 'sweetalert2'
 
 export const BootstrapButtons = Swal.mixin({
@@ -6,14 +5,14 @@ export const BootstrapButtons = Swal.mixin({
   buttonsStyling: false
 })
 
-export function valid() {
+export const valid = () => {
   var result = true
   Array.from(document.querySelectorAll('input'))
     .forEach(i => { if (!i.checkValidity()) result = false })
   return result
 }
 
-export function post(url, data) {
+export const post = (url, data) => {
   return fetch(url, {
     method: 'post',
     headers: { 'Content-Type': 'application/json' },
@@ -21,8 +20,8 @@ export function post(url, data) {
   })
 }
 
-export function validateEmail(email) {
+export const validateEmail = email => {
   //https://www.w3.org/TR/2016/REC-html51-20161101/sec-forms.html#email-state-typeemail
-  const re = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-  return re.test(email);
+  const re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+  return re.test(email)
 }

@@ -95,7 +95,7 @@
 <script>
 import { BootstrapButtons, post, valid, validateEmail } from "../misc.js";
 
-const grecaptcha = windows.grecaptcha;
+const grecaptcha = window.grecaptcha;
 
 export default {
   name: "Setting",

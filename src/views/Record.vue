@@ -4,12 +4,12 @@
     <hr />
   </header>
   <div class="form">
-    <div class="form-row" v-if="user.role">
+    <div class="form-row" v-if="!personal">
       <div class="form-group">
         <label for="department">{{ $t("Department") }}</label>
         <select
           class="form-control"
-          v-model="record.deptid"
+          v-model.number="record.deptid"
           id="department"
           required
         >
@@ -23,8 +23,9 @@
         <label for="employee">{{ $t("Employee") }}</label>
         <select
           class="form-control"
-          v-model="record.userid"
+          v-model.number="record.userid"
           id="employee"
+          :disabled="!record.deptid"
           required
         >
           <option disabled>-- {{ $t("SelectEmployee") }} --</option>
@@ -47,7 +48,7 @@
     <div class="form-row">
       <div class="form-group">
         <label for="type">{{ $t("Type") }}</label>
-        <select class="form-control" v-model="record.type" id="type">
+        <select class="form-control" v-model.number="record.type" id="type">
           <option value="1">{{ $t("Overtime") }}</option>
           <option value="0">{{ $t("Leave") }}</option>
         </select>
@@ -58,7 +59,7 @@
           class="form-control"
           type="number"
           min="1"
-          v-model="record.duration"
+          v-model.number="record.duration"
           id="duration"
           required
         />
@@ -66,7 +67,7 @@
     </div>
     <div class="form-group" v-if="user.super">
       <label for="status">{{ $t("Status") }}</label>
-      <select class="form-control" v-model="record.status" id="status">
+      <select class="form-control" v-model.number="record.status" id="status">
         <option value="0">{{ $t("Unverified") }}</option>
         <option value="1">{{ $t("Verified") }}</option>
         <option value="2">{{ $t("Rejected") }}</option>
@@ -96,13 +97,14 @@
 </template>
 
 <script>
-import { post, valid, confirm } from "../misc.js";
+import { post, valid } from "../misc.js";
 
 export default {
   name: "Record",
   data() {
     return {
       user: this.$store.state.user,
+      personal: this.$router.name == "departmentRecord" ? false : true,
       departments: this.$store.state.departments,
       mode:
         this.$route.params.mode == "add"
@@ -150,7 +152,7 @@ export default {
       } else this.validated = true;
     },
     async del() {
-      if (await confirm("Record")) {
+      if (await this.confirm("Record")) {
         await this.checkResp(
           await post("/record/delete/" + this.record.id),
           () => this.goback()

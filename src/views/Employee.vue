@@ -84,7 +84,7 @@
 </template>
 
 <script>
-import { BootstrapButtons, post, valid, confirm } from "../misc.js";
+import { BootstrapButtons, post, valid } from "../misc.js";
 
 export default {
   name: "Employee",
@@ -138,7 +138,8 @@ export default {
             return;
           }
         }
-        await this.check(await post(url, data), async () => {
+        const resp = await post(url, data);
+        await this.check(resp, async () => {
           await this.checkJson(await resp.json(), async () =>
             this.goback(true)
           );
@@ -146,7 +147,7 @@ export default {
       } else this.validated = true;
     },
     async del() {
-      if (await confirm(this.$t("Employee"))) {
+      if (await this.confirm("Employee")) {
         await this.checkResp(
           await post("/employee/delete/" + this.employee.id),
           async () => {

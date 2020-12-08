@@ -1,8 +1,9 @@
 <template>
-  <script
+  <component
+    :is="script"
     src="https://www.recaptcha.net/recaptcha/api.js"
     v-if="recaptcha"
-  ></script>
+  ></component>
   <nav class="navbar navbar-light topbar">
     <div class="d-flex" style="height: 100%">
       <a class="toggle" v-if="user && smallSize" @click="toggle">
@@ -24,10 +25,10 @@
       <a class="nav-link">{{ $t("Login") }}</a>
     </div>
   </nav>
-  <Login v-if="!user"></Login>
+  <Login v-if="!user" />
   <div v-else>
     <transition name="slide">
-      <Sidebar v-show="showSidebar || !smallSize"></Sidebar>
+      <Sidebar v-show="showSidebar || !smallSize" />
     </transition>
     <div
       class="content"
@@ -72,9 +73,8 @@ export default {
   },
   async created() {
     await this.$store.dispatch("info");
-    if (!user) this.$router.push("/login");
-    else if (user.super) this.$router.push("/");
-    else if (user.role) this.$router.push("/");
+    if (!this.user) this.$router.push("/login");
+    else this.$router.push({ name: "departmentRecords" });
   },
   mounted() {
     window.addEventListener("resize", this.checkSize900);

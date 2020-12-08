@@ -30,6 +30,7 @@ type searchOptions struct {
 	Sort      string
 	Order     string
 	Recaptcha string
+	Personal  bool
 }
 
 func info(c *gin.Context) {
@@ -95,8 +96,38 @@ func info(c *gin.Context) {
 	c.JSON(200, info)
 }
 
-func years(db *sql.DB, id *idOptions) (years []string, err error) {
-	stmt := "SELECT DISTINCT strftime('%Y', date) year FROM record WHERE"
+func year(c *gin.Context) {
+	db, err := getDB()
+	if err != nil {
+		log.Println("Failed to connect to database:", err)
+		c.String(503, "")
+		return
+	}
+	defer db.Close()
+
+	user, err := getUser(db, sessions.Default(c).Get("userID"))
+	if err != nil {
+		log.Println("Failed to get user:", err)
+		c.String(500, "")
+		return
+	}
+
+	var id idOptions
+	if c.Request.Method == "POST" {
+		var option struct{ DeptID, UserID int }
+		c.BindJSON(&option)
+		if option.UserID != 0 {
+			id.User = option.UserID
+		} else if option.DeptID != 0 {
+			id.Departments = []string{strconv.Itoa(option.DeptID)}
+		} else {
+			id.Departments = strings.Split(user.Permission, ",")
+		}
+	} else {
+		id.User = user.ID
+	}
+
+	stmt := "SELECT min(strftime('%Y', date)) year FROM record WHERE"
 
 	var args []interface{}
 	if id.User != nil {
@@ -112,21 +143,14 @@ func years(db *sql.DB, id *idOptions) (years []string, err error) {
 			args = append(args, i)
 		}
 	}
-	rows, err := db.Query(stmt+" ORDER BY year DESC", args...)
-	if err != nil {
-		log.Println("Failed to get years:", err)
+
+	var year int
+	if err := db.QueryRow(stmt, args...).Scan(&year); err != nil && err != sql.ErrNoRows {
+		log.Println("Failed to get year:", err)
+		c.String(500, "")
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var year string
-		if err = rows.Scan(&year); err != nil {
-			log.Println("Failed to scan year:", err)
-			return
-		}
-		years = append(years, year)
-	}
-	return
+	c.JSON(200, gin.H{"year": year})
 }
 
 func api(c *gin.Context, mode string, export bool) {
@@ -150,7 +174,9 @@ func api(c *gin.Context, mode string, export bool) {
 	defer db.Close()
 
 	var ids idOptions
-	if option.UserID != 0 {
+	if option.Personal {
+		ids.User = sessions.Default(c).Get("userID")
+	} else if option.UserID != 0 {
 		ids.User = option.UserID
 	} else if option.DeptID != 0 {
 		ids.Departments = []string{strconv.Itoa(option.DeptID)}
@@ -163,7 +189,7 @@ func api(c *gin.Context, mode string, export bool) {
 		}
 		ids.Departments = strings.Split(user.Permission, ",")
 	}
-	if checkPermission(db, c, &ids) {
+	if option.Personal || checkPermission(db, c, &ids) {
 		if option.Page == 0 {
 			option.Page = 1
 		} else if export {
