@@ -3,7 +3,7 @@
     <a class="h3 title">{{ mode }}</a>
     <hr />
   </header>
-  <div class="form">
+  <div class="form" @keyup.enter="save()">
     <div class="form-group">
       <label for="department">{{ $t("Department") }}</label>
       <input
@@ -11,6 +11,7 @@
         v-model.trim="department.name"
         id="department"
         required
+        autofocus
       />
       <div class="invalid-feedback">{{ $t("RequiredField") }}</div>
     </div>

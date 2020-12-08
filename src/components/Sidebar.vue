@@ -9,6 +9,7 @@
               class="nav-link"
               :class="{ selected: $router.name == 'personalRecords' }"
               :to="{ name: 'personalRecords' }"
+              @click="closeSidebar()"
             >
               {{ $t("EmployeeRecords") }}
             </router-link>
@@ -18,6 +19,7 @@
               class="nav-link"
               :class="{ selected: $router.name == 'personalStatistics' }"
               :to="{ name: 'personalStatistics' }"
+              @click="closeSidebar()"
             >
               {{ $t("EmployeeStatistics") }}
             </router-link>
@@ -34,6 +36,7 @@
                 selected: $router.name == 'departmentRecords' && !user.super,
               }"
               :to="{ name: 'departmentRecords' }"
+              @click="closeSidebar()"
             >
               {{ $t("DepartmentRecords") }}
             </router-link>
@@ -43,6 +46,7 @@
               class="nav-link"
               :class="{ selected: $router.name == 'departmentStatistics' }"
               :to="{ name: 'departmentStatistics' }"
+              @click="closeSidebar()"
             >
               {{ $t("DepartmentStatistics") }}
             </router-link>
@@ -57,6 +61,7 @@
               class="nav-link"
               :class="{ selected: $router.name == 'employees' }"
               :to="{ name: 'employees' }"
+              @click="closeSidebar()"
             >
               {{ $t("ManageEmployees") }}
             </router-link>
@@ -66,6 +71,7 @@
               class="nav-link"
               :class="{ selected: $router.name == 'departments' }"
               :to="{ name: 'departments' }"
+              @click="closeSidebar()"
             >
               {{ $t("ManageDepartments") }}
             </router-link>
@@ -77,8 +83,9 @@
                 selected: $router.name == 'departmentRecords' && user.super,
               }"
               :to="{ name: 'departmentRecords' }"
+              @click="closeSidebar()"
             >
-              {{ $t("ManageRecords") }}
+              {{ $t("ManageRecord") }}
             </router-link>
           </li>
         </ul>
@@ -94,6 +101,11 @@ export default {
     return {
       user: this.$store.state.user,
     };
+  },
+  methods: {
+    closeSidebar() {
+      if (window.innerWidth <= 1200) this.$store.commit("closeSidebar");
+    },
   },
 };
 </script>
@@ -146,5 +158,18 @@ export default {
 .panel .nav-link.selected {
   background-color: rgba(161, 194, 250, 0.16);
   color: #3367d6 !important;
+}
+
+@media (min-width: 1201px) {
+  .sidebar {
+    display: block !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .sidebar {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: none;
+  }
 }
 </style>

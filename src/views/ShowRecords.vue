@@ -10,7 +10,7 @@
         <div class="input-group input-group-sm">
           <div class="input-group-prepend">
             <label class="input-group-text" for="department">
-              {{ $t("Dept") }}
+              {{ $t("Department") }}
             </label>
           </div>
           <select
@@ -277,3 +277,12 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+@media (max-width: 1200px) {
+  .describe {
+    width: 150px;
+    white-space: normal;
+  }
+}
+</style>

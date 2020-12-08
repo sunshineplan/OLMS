@@ -3,7 +3,7 @@
     <a class="h3 title">{{ mode }}</a>
     <hr />
   </header>
-  <div class="form">
+  <div class="form" @keyup.enter="save()">
     <div class="form-row">
       <div class="form-group">
         <label for="username">{{ $t("Username") }}</label>
@@ -12,6 +12,7 @@
           v-model.trim="employee.username"
           id="username"
           required
+          autofocus
         />
         <div class="invalid-feedback">{{ $t("RequiredField") }}</div>
       </div>
@@ -28,7 +29,7 @@
       <label for="department">{{ $t("Department") }}</label>
       <select
         class="form-control"
-        v-model="employee.department"
+        v-model.number="employee.department"
         id="department"
         required
       >
@@ -51,7 +52,12 @@
     </div>
     <div class="form-group" v-if="user.super">
       <label for="role">{{ $t("Role") }}</label>
-      <select class="form-control" v-model="employee.role" id="role">
+      <select
+        class="form-control"
+        v-model.number="employee.role"
+        id="role"
+        @change="if (!employee.role) permission = [];"
+      >
         <option value="0">{{ $t("GeneralEmployee") }}</option>
         <option value="1">{{ $t("Administrator") }}</option>
       </select>
@@ -132,7 +138,7 @@ export default {
           if (data.role && !data.permission.length) {
             await BootstrapButtons.fire(
               this.$t("Error"),
-              this.$t("EmptyPermission"), //?go check
+              this.$t("EmptyPermission"),
               "error"
             );
             return;

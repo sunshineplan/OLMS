@@ -17,7 +17,7 @@ type translate map[string]string
 func init() {
 	bundle = i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
-	languages, err := filepath.Glob(joinPath(dir(Self), "languages/*.json"))
+	languages, err := filepath.Glob(joinPath(dir(Self), "locales/*.json"))
 	if err != nil {
 		return
 	}

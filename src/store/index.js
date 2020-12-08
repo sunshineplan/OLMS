@@ -1,5 +1,4 @@
 import { createStore } from 'vuex'
-import { post } from '../misc.js'
 
 export default createStore({
   state() {

@@ -57,6 +57,7 @@
         id="password"
         maxlength="20"
         required
+        autofocus
       />
       <div class="invalid-feedback">{{ $t("RequiredField") }}</div>
     </div>
@@ -93,6 +94,7 @@
 </template>
 
 <script>
+import Cookies from "js-cookie";
 import { BootstrapButtons, post, valid, validateEmail } from "../misc.js";
 
 const grecaptcha = window.grecaptcha;
@@ -116,7 +118,7 @@ export default {
   },
   methods: {
     changeLanguage() {
-      document.cookie = `lang=${this.lang}; Path=/; max-age=31536000`;
+      Cookies.set("lang", this.lang, { expires: 365 });
       BootstrapButtons.fire(
         this.$t("Success"),
         this.$t("LanguageChanged"),

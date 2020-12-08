@@ -3,10 +3,6 @@ import { BootstrapButtons, post } from '../misc.js'
 
 export default {
   methods: {
-    checkSize(size) {
-      if (this.smallSize != window.innerWidth <= size)
-        this.smallSize = !this.smallSize
-    },
     async confirm(type) {
       return await Swal.fire({
         title: this.$t('AreYouSure'),

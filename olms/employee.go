@@ -109,8 +109,8 @@ func addEmployee(c *gin.Context) {
 		message = "DepartmentRequired"
 	} else {
 		if sessions.Default(c).Get("userID") == "0" {
-			res, err := db.Exec("INSERT INTO user (username, realname, dept_id, role) VALUES (?, ?, ?, ?)",
-				strings.ToLower(employee.Username), employee.Realname, employee.DeptID, employee.Role)
+			res, err := db.Exec("INSERT INTO user (username, realname, dept_id) VALUES (?, ?, ?, ?)",
+				strings.ToLower(employee.Username), employee.Realname, employee.DeptID)
 			if err != nil {
 				log.Println("Failed to add employee:", err)
 				c.String(500, "")
@@ -123,13 +123,23 @@ func addEmployee(c *gin.Context) {
 				return
 			}
 			if employee.Role {
-				for _, permission := range employee.Permission {
-					if _, err := db.Exec(
-						"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, id); err != nil {
-						log.Println("Failed to add employee permission:", err)
+				if employee.Permission != "" {
+					if _, err := db.Exec("UPDATE user SET role = 1 WHERE id = ?", id); err != nil {
+						log.Println("Failed to save employee role:", err)
 						c.String(500, "")
 						return
 					}
+					for _, permission := range strings.Split(employee.Permission, ",") {
+						if _, err := db.Exec(
+							"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, id); err != nil {
+							log.Println("Failed to add employee permission:", err)
+							c.String(500, "")
+							return
+						}
+					}
+				} else {
+					c.JSON(200, gin.H{"status": 0, "message": "EmptyPermission"})
+					return
 				}
 			}
 			c.JSON(200, gin.H{"status": 1})
@@ -183,9 +193,9 @@ func editEmployee(c *gin.Context) {
 	} else {
 		if employee.Password == "" {
 			if _, err := db.Exec(
-				"UPDATE user SET username = ?, realname = ?, dept_id = ?, role = ? WHERE id = ?",
-				strings.ToLower(employee.Username), employee.Realname, employee.DeptID, employee.Role, employee.ID); err != nil {
-				log.Println("Failed to edit user:", err)
+				"UPDATE user SET username = ?, realname = ?, dept_id = ? WHERE id = ?",
+				strings.ToLower(employee.Username), employee.Realname, employee.DeptID, employee.ID); err != nil {
+				log.Println("Failed to edit employee:", err)
 				c.String(500, "")
 				return
 			}
@@ -197,10 +207,10 @@ func editEmployee(c *gin.Context) {
 				return
 			}
 			if _, err := db.Exec(
-				"UPDATE user SET username = ?, realname = ?, password = ?, dept_id = ?, role = ? WHERE id = ?",
-				strings.ToLower(employee.Username), employee.Realname, string(newPassword), employee.DeptID, employee.Role, employee.ID,
+				"UPDATE user SET username = ?, realname = ?, password = ?, dept_id = ? WHERE id = ?",
+				strings.ToLower(employee.Username), employee.Realname, string(newPassword), employee.DeptID, employee.ID,
 			); err != nil {
-				log.Println("Failed to edit user:", err)
+				log.Println("Failed to edit employee:", err)
 				c.String(500, "")
 				return
 			}
@@ -211,13 +221,23 @@ func editEmployee(c *gin.Context) {
 			return
 		}
 		if employee.Role {
-			for _, permission := range employee.Permission {
-				if _, err := db.Exec(
-					"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, employee.ID); err != nil {
-					log.Println("Failed to add user permission:", err)
+			if employee.Permission != "" {
+				if _, err := db.Exec("UPDATE user SET role = 1 WHERE id = ?", employee.ID); err != nil {
+					log.Println("Failed to save employee role:", err)
 					c.String(500, "")
 					return
 				}
+				for _, permission := range strings.Split(employee.Permission, ",") {
+					if _, err := db.Exec(
+						"INSERT INTO permission (dept_id, user_id) VALUES (?, ?)", permission, employee.ID); err != nil {
+						log.Println("Failed to save employee permission:", err)
+						c.String(500, "")
+						return
+					}
+				}
+			} else {
+				c.JSON(200, gin.H{"status": 0, "message": "EmptyPermission"})
+				return
 			}
 		}
 		c.JSON(200, gin.H{"status": 1})

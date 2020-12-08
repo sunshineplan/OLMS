@@ -8,7 +8,7 @@
         <div class="input-group input-group-sm">
           <div class="input-group-prepend">
             <label class="input-group-text" for="department">
-              {{ $t("Dept") }}
+              {{ $t("Department") }}
             </label>
           </div>
           <select

@@ -1,13 +1,13 @@
 <template>
   <a class="text-secondary" style="padding-left: 15px" v-if="total">
-    <span v-if="total == 1">{{ $t("Showing") }} 1 {{ $t("row") }}</span>
+    <span v-if="total == 1">{{ $t("Showing") }} 1 {{ $t("Row") }}</span>
     <span v-else-if="page == page">
-      {{ $t("Showing") }} {{ (page - 1) * 10 + 1 }}-{{ total }}
-      {{ $t("of") }} {{ total }} {{ $t("rows") }}
+      {{ $t("Showing") }} {{ (page - 1) * 10 + 1 }}-{{ total }} {{ $t("of") }}
+      {{ total }} {{ $t("Rows") }}
     </span>
     <span v-else>
       {{ $t("Showing") }} {{ (page - 1) * 10 + 1 }}-{{ page * 10 }}
-      {{ $t("of") }} {{ total }} {{ $t("rows") }}
+      {{ $t("Of") }} {{ total }} {{ $t("Rows") }}
     </span>
   </a>
   <slot></slot>
@@ -21,7 +21,7 @@
           <a class="page-link">...</a>
         </li>
         <li class="page-item" :class="{ active: i == page }">
-          <a class="page-link" @click="(page = i)">{{ i }}</a>
+          <a class="page-link" @click="page = i">{{ i }}</a>
         </li>
       </div>
       <li class="page-item" :disabled="page < page">
@@ -63,3 +63,14 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.page-item {
+  cursor: pointer;
+}
+
+.disabled,
+.active {
+  cursor: default;
+}
+</style>

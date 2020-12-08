@@ -9,7 +9,7 @@
         <div class="input-group input-group-sm">
           <div class="input-group-prepend">
             <label class="input-group-text" for="department">
-              {{ $t("Dept") }}
+              {{ $t("Department") }}
             </label>
           </div>
           <select
@@ -51,7 +51,15 @@
               {{ $t("Period") }}
             </label>
           </div>
-          <select class="custom-select" v-model="filter.period" id="period">
+          <select
+            class="custom-select"
+            v-model="filter.period"
+            id="period"
+            @change="
+              filter.year = '';
+              filter.month = '';
+            "
+          >
             <option value="month">{{ $t("Month") }}</option>
             <option value="year">{{ $t("Year") }}</option>
           </select>

@@ -3,7 +3,7 @@
     <a class="h3 title">{{ mode }}</a>
     <hr />
   </header>
-  <div class="form">
+  <div class="form" @keyup.enter="save()">
     <div class="form-row" v-if="!personal">
       <div class="form-group">
         <label for="department">{{ $t("Department") }}</label>
