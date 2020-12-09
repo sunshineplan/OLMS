@@ -110,7 +110,7 @@ func notify(id *idOptions, message string, localize translate) {
 		}
 	} else if len(id.Departments) == 1 {
 		var deptName string
-		if err := db.QueryRow("SELECT dept_name FROM department WHERE id = ?",
+		if err := db.QueryRow("SELECT deptname FROM department WHERE id = ?",
 			id.Departments[0]).Scan(&deptName); err != nil {
 			log.Println("Failed to get department:", err)
 			return

@@ -87,7 +87,7 @@ func getRecords(db *sql.DB, id *idOptions, options *searchOptions) (records []re
 		bc <- true
 	}()
 	rows, err := db.Query(fmt.Sprintf(stmt+orderBy+limit,
-		"record.id, employee.dept_id, dept_name, employee.id, realname, date, ABS(duration), type, status, describe, created"),
+		"record.id, employee.dept_id, deptname, employee.id, realname, date, ABS(duration), type, status, describe, created"),
 		args...)
 	if err != nil {
 		log.Println("Failed to get records:", err)

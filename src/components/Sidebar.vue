@@ -9,7 +9,6 @@
               class="nav-link"
               :class="{ selected: $router.name == 'personalRecords' }"
               :to="{ name: 'personalRecords' }"
-              @click="closeSidebar()"
             >
               {{ $t("EmployeeRecords") }}
             </router-link>
@@ -19,7 +18,6 @@
               class="nav-link"
               :class="{ selected: $router.name == 'personalStatistics' }"
               :to="{ name: 'personalStatistics' }"
-              @click="closeSidebar()"
             >
               {{ $t("EmployeeStatistics") }}
             </router-link>
@@ -36,7 +34,6 @@
                 selected: $router.name == 'departmentRecords' && !user.super,
               }"
               :to="{ name: 'departmentRecords' }"
-              @click="closeSidebar()"
             >
               {{ $t("DepartmentRecords") }}
             </router-link>
@@ -46,7 +43,6 @@
               class="nav-link"
               :class="{ selected: $router.name == 'departmentStatistics' }"
               :to="{ name: 'departmentStatistics' }"
-              @click="closeSidebar()"
             >
               {{ $t("DepartmentStatistics") }}
             </router-link>
@@ -61,9 +57,8 @@
               class="nav-link"
               :class="{ selected: $router.name == 'employees' }"
               :to="{ name: 'employees' }"
-              @click="closeSidebar()"
             >
-              {{ $t("ManageEmployees") }}
+              {{ $t("ManageEmployee") }}
             </router-link>
           </li>
           <li v-if="user.super">
@@ -71,9 +66,8 @@
               class="nav-link"
               :class="{ selected: $router.name == 'departments' }"
               :to="{ name: 'departments' }"
-              @click="closeSidebar()"
             >
-              {{ $t("ManageDepartments") }}
+              {{ $t("ManageDepartment") }}
             </router-link>
           </li>
           <li v-if="user.super">
@@ -82,8 +76,7 @@
               :class="{
                 selected: $router.name == 'departmentRecords' && user.super,
               }"
-              :to="{ name: 'departmentRecords' }"
-              @click="closeSidebar()"
+              to="/records"
             >
               {{ $t("ManageRecord") }}
             </router-link>

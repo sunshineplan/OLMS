@@ -33,10 +33,25 @@
           </select>
         </div>
         <div class="input-group">
-          <a class="btn btn-primary btn-sm" @click="doFilter()">
+          <a
+            class="btn btn-primary btn-sm"
+            @click="
+              this.sort = {};
+              this.$store.commit('sort', {});
+              this.$store.commit('page', 1);
+              doFilter();
+            "
+          >
             {{ $t("Filter") }}
           </a>
-          <a class="btn btn-primary btn-sm" @click="$store.dispatch('reset')">
+          <a
+            class="btn btn-primary btn-sm"
+            @click="
+              this.filter = {};
+              this.sort = {};
+              $store.dispatch('reset');
+            "
+          >
             {{ $t("Reset") }}
           </a>
         </div>
@@ -50,15 +65,71 @@
       <table class="table table-hover table-sm">
         <thead>
           <tr>
-            <th class="sortable" data-name="username">{{ $t("Username") }}</th>
-            <th class="sortable" data-name="realname">{{ $t("Realname") }}</th>
-            <th class="sortable" data-name="deptname">
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'username'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="doSort('username')"
+            >
+              {{ $t("Username") }}
+            </th>
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'realname'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="doSort('realname')"
+            >
+              {{ $t("Realname") }}
+            </th>
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'deptname'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="doSort('deptname')"
+            >
               {{ $t("Department") }}
             </th>
-            <th class="sortable" data-name="role" v-if="user.super">
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'role'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="doSort('role')"
+              v-if="user.super"
+            >
               {{ $t("Role") }}
             </th>
-            <th class="sortable" data-name="permission" v-if="user.super">
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'permission'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="doSort('permission')"
+              v-if="user.super"
+            >
               {{ $t("Permission") }}
             </th>
             <th v-if="user.super">{{ $t("Operation") }}</th>
@@ -97,6 +168,7 @@ export default {
       departments: this.$store.state.departments,
       employees: this.$store.state.employees,
       filter: this.$store.state.filter,
+      sort: this.$store.state.sort,
     };
   },
   computed: {
@@ -104,20 +176,35 @@ export default {
       return this.employees.lenght;
     },
     page() {
-      return this.state.page;
+      return this.$store.state.page;
     },
   },
   created() {
     this.filter = {};
+    this.sort = {};
+    this.$store.commit("page", 1);
+  },
+  mounted() {
+    document.title = this.$t("EmployeesList") + " - " + this.$t("OLMS");
   },
   methods: {
-    async doFilter() {
+    doFilter() {
       this.$store.commit("filter", this.filter);
       if (!this.filter.deptid) this.employees = this.$store.state.employees;
       else
         this.employees = this.$store.state.employees.filter(
           (i) => i.deptid == this.filter.deptid
         );
+    },
+    doSort(field) {
+      if (this.sort.sort == field && this.sort.order == "desc")
+        this.sort.order = "asc";
+      else this.sort = { sort: field, order: "desc" };
+      this.$store.commit("sort", this.sort);
+      this.employees.sort((a, b) => {
+        if (this.sort.order == "desc") return a[field] > b[field];
+        return a[field] < b[field];
+      });
     },
     add() {
       this.$router.push("/employee/add");

@@ -29,7 +29,7 @@ export default {
         return await BootstrapButtons.fire(this.$t('Error'), this.$t(json.message), 'error')
     },
     async year(mode) {
-      this.$store.commit('loading')
+      this.$store.commit('startLoading')
       let resp
       if (this.personal) resp = await fetch('/year')
       else {
@@ -43,21 +43,31 @@ export default {
       if (json.year === 0) this.years = []
       else
         this.years = Array(new Date().getFullYear() - json.year + 1).fill().map((_, i) => json.year + i)
-      this.$store.commit('loading')
+      this.$store.commit('stopLoading')
+    },
+    sortBy(field) {
+      if (this.sort.sort == field && this.sort.order == 'desc')
+        this.sort = { sort: field, order: 'asc' }
+      else this.sort = { sort: field, order: 'desc' }
+      this.$store.commit('sort', this.sort)
     },
     async load(mode) {
-      this.$store.commit('loading')
+      this.$store.commit('startLoading')
       if (this.personal) this.filter.personal = true
+      if (Object.keys(this.sort).length) {
+        this.filter.sort = this.sort.sort
+        this.filter.order = this.sort.order
+      }
       this.filter.page = this.page
       this.$store.commit('filter', this.filter)
       const resp = await post(`/${mode}`, this.filter)
       const json = await resp.json()
       this.records = json.rows
       this.total = json.total
-      this.$store.commit('loading')
+      this.$store.commit('stopLoading')
     },
     async download(mode) {
-      this.$store.commit('loading')
+      this.$store.commit('startLoading')
       this.$store.commit('filter', this.filter)
       const resp = await post(`/${mode}/export`, this.filter)
       if (resp.status == 404)
@@ -77,7 +87,7 @@ export default {
         )
         link.click()
       }
-      this.$store.commit('loading')
+      this.$store.commit('stopLoading')
     },
     async goback(reload) {
       if (reload)
@@ -87,6 +97,8 @@ export default {
     cancel(event) { if (event.key == 'Escape') this.goback() },
     async reset(mode) {
       this.filter = {}
+      this.sort = {}
+      this.$store.dispatch('reset')
       await this.load(mode)
     }
   }

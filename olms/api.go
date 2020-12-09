@@ -1,7 +1,6 @@
 package olms
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"strconv"
@@ -42,7 +41,7 @@ func info(c *gin.Context) {
 	}
 	defer db.Close()
 
-	var info gin.H
+	info := gin.H{}
 	if SiteKey != "" && SecretKey != "" {
 		info["recaptcha"] = SiteKey
 	}
@@ -144,12 +143,13 @@ func year(c *gin.Context) {
 		}
 	}
 
-	var year int
-	if err := db.QueryRow(stmt, args...).Scan(&year); err != nil && err != sql.ErrNoRows {
+	var y []byte
+	if err := db.QueryRow(stmt, args...).Scan(&y); err != nil {
 		log.Println("Failed to get year:", err)
 		c.String(500, "")
 		return
 	}
+	year, _ := strconv.Atoi(string(y))
 	c.JSON(200, gin.H{"year": year})
 }
 

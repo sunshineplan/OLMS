@@ -122,14 +122,13 @@ export default {
     },
   },
   mounted() {
-    document.title = this.mode;
+    document.title = this.mode + " - " + this.$t("OLMS");
     window.addEventListener("keyup", this.cancel);
   },
   beforeUnmount() {
     window.removeEventListener("keyup", this.cancel);
   },
   methods: {
-    //?how to judge admin add or personal add
     async save() {
       if (valid()) {
         this.validated = false;

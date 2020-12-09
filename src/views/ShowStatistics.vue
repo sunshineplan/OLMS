@@ -1,8 +1,7 @@
 <template>
   <header style="padding-left: 20px">
     <div style="height: 50px">
-      <a class="h3 title" v-if="personal">{{ $t("EmployeeStatistics") }}</a>
-      <a class="h3 title" v-else>{{ $t("DepartmentStatistics") }}</a>
+      <a class="h3 title">{{ mode }}</a>
     </div>
     <div class="toolbar">
       <div class="form-inline" v-if="!personal">
@@ -102,7 +101,15 @@
           </select>
         </div>
         <div class="input-group">
-          <a class="btn btn-primary btn-sm" @click="load('statistics')">
+          <a
+            class="btn btn-primary btn-sm"
+            @click="
+              this.sort = {};
+              this.$store.commit('sort', {});
+              this.$store.commit('page', 1);
+              load('statistics');
+            "
+          >
             {{ $t("Filter") }}
           </a>
           <a class="btn btn-primary btn-sm" @click="reset('statistics')">
@@ -120,16 +127,86 @@
       <table class="table table-hover table-sm">
         <thead>
           <tr>
-            <th class="sortable" data-name="period">{{ $t("Period") }}</th>
-            <th class="sortable" data-name="dept_name" v-if="!personal">
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'period'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('period')"
+            >
+              {{ $t("Period") }}
+            </th>
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'deptname'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('deptname')"
+              v-if="!personal"
+            >
               {{ $t("Department") }}
             </th>
-            <th class="sortable" data-name="realname" v-if="!personal">
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'realname'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('realname')"
+              v-if="!personal"
+            >
               {{ $t("Realname") }}
             </th>
-            <th class="sortable" data-name="overtime">{{ $t("Overtime") }}</th>
-            <th class="sortable" data-name="leave">{{ $t("Leave") }}</th>
-            <th class="sortable" data-name="summary">{{ $t("Summary") }}</th>
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'overtime'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('overtime')"
+            >
+              {{ $t("Overtime") }}
+            </th>
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'leave'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('leave')"
+            >
+              {{ $t("Leave") }}
+            </th>
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'summary'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('summary')"
+            >
+              {{ $t("Summary") }}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -137,9 +214,24 @@
             <td>{{ s.period }}</td>
             <td v-if="!personal">{{ s.deptname }}</td>
             <td v-if="!personal">{{ s.realname }}</td>
-            <td>{{ s.overtime }} {{ $t("Hours") }}</td>
-            <td>{{ s.leave }} {{ $t("Hours") }}</td>
-            <td>{{ s.summary }} {{ $t("Hours") }}</td>
+            <td>
+              {{ s.overtime }}
+              {{
+                s.overtime == 0 || s.overtime == 1 ? $t("Hour") : $t("Hours")
+              }}
+            </td>
+            <td>
+              {{ s.leave }}
+              {{ s.leave == 0 || s.leave == 1 ? $t("Hour") : $t("Hours") }}
+            </td>
+            <td>
+              {{ s.summary }}
+              {{
+                s.summary == 0 || Math.abs(s.summary) == 1
+                  ? $t("Hour")
+                  : $t("Hours")
+              }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -159,19 +251,29 @@ export default {
       statistics: [],
       total: 0,
       filter: this.$store.state.filter,
+      sort: this.$store.state.sort,
     };
   },
   computed: {
+    mode() {
+      return this.personal
+        ? this.$t("EmployeeStatistics")
+        : this.$t("DepartmentStatistics");
+    },
     employees() {
       return this.$store.state.employees.filter(
         (i) => i.deptid == this.record.deptid
       );
     },
     page() {
-      return this.state.page;
+      return this.$store.state.page;
     },
   },
   watch: {
+    async sort() {
+      this.$store.commit("page", 1);
+      await this.load("records");
+    },
     async page() {
       await this.load("statistics");
     },
@@ -179,6 +281,9 @@ export default {
   async created() {
     await this.year();
     await this.reset("statistics");
+  },
+  mounted() {
+    document.title = this.mode + " - " + this.$t("OLMS");
   },
 };
 </script>

@@ -37,7 +37,7 @@ func getStatistics(db *sql.DB, id *idOptions, options *searchOptions) (statistic
 	}
 
 	if options.Period == "month" {
-		fields = "period, dept_name, realname, overtime, leave, summary"
+		fields = "period, deptname, realname, overtime, leave, summary"
 		if options.Month == "" {
 			if options.Year != "" {
 				stmt += " AND substr(period,1,4) = ?"
@@ -48,7 +48,7 @@ func getStatistics(db *sql.DB, id *idOptions, options *searchOptions) (statistic
 			args = append(args, fmt.Sprintf("%v-%v", options.Year, options.Month))
 		}
 	} else {
-		fields = "substr(period,1,4) period, dept_name, realname, sum(overtime), sum(leave), sum(summary)"
+		fields = "substr(period,1,4) period, deptname, realname, sum(overtime), sum(leave), sum(summary)"
 		group = " GROUP BY period, dept_id, user_id"
 		orderBy = " ORDER BY period DESC"
 	}

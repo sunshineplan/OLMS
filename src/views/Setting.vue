@@ -13,7 +13,7 @@
           class="form-control"
           v-model="email"
           id="email"
-          placeholder="{{ $t('Email') }})"
+          :placeholder="$t('Email')"
           @change="subscribe = false"
         />
       </div>
@@ -114,7 +114,7 @@ export default {
     };
   },
   mounted() {
-    document.title = this.$t("Setting");
+    document.title = this.$t("Setting") + " - " + this.$t("OLMS");
   },
   methods: {
     changeLanguage() {

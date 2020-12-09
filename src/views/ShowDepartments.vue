@@ -38,6 +38,9 @@ export default {
       departments: this.$store.state.departments,
     };
   },
+  mounted() {
+    document.title = this.$t("DepartmentsList") + " - " + this.$t("OLMS");
+  },
   methods: {
     add() {
       this.$router.push("/department/add");

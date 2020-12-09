@@ -112,7 +112,7 @@ export default {
     this.permission = this.employee.permission.split(",");
   },
   mounted() {
-    document.title = this.mode;
+    document.title = this.mode + " - " + this.$t("OLMS");
     window.addEventListener("keyup", this.cancel);
   },
   beforeUnmount() {

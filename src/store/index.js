@@ -14,11 +14,12 @@ export default createStore({
       employee: {},
       record: {},
       filter: {},
+      sort: {},
       page: 1
     }
   },
   mutations: {
-    user(state, user) { state.username = user },
+    user(state, user) { state.user = user },
     startLoading(state) { state.loading += 1 },
     stopLoading(state) { state.loading -= 1 },
     closeSidebar(state) { state.showSidebar = false },
@@ -31,6 +32,7 @@ export default createStore({
     employee(state, employee) { state.employee = employee },
     record(state, record) { state.record = record },
     filter(state, filter) { state.filter = filter },
+    sort(state, sort) { state.sort = sort },
     page(state, page) { state.page = page }
   },
   actions: {
@@ -38,12 +40,14 @@ export default createStore({
       commit('startLoading')
       const resp = await fetch('/info')
       const json = await resp.json()
-      let user = json.user
-      if (user.id == 0) user.super = true
-      commit('user', user)
-      commit('departments', json.departments)
-      commit('employees', json.employees)
-      commit('recaptcha', json.recaptcha)
+      if (Object.keys(json).length) {
+        let user = json.user
+        if (user.id == 0) user.super = true
+        commit('user', user)
+        commit('departments', json.departments)
+        commit('employees', json.employees)
+        commit('recaptcha', json.recaptcha)
+      }
       commit('stopLoading')
     },
     delDepartment({ commit, state }, id) {
@@ -54,6 +58,7 @@ export default createStore({
     },
     reset({ commit }) {
       commit('filter', {})
+      commit('sort', {})
       commit('page', 1)
     }
   }

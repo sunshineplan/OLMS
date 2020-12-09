@@ -3,26 +3,26 @@
     :is="script"
     src="https://www.recaptcha.net/recaptcha/api.js"
     v-if="recaptcha"
-  ></component>
+  />
   <nav class="navbar navbar-light topbar">
     <div class="d-flex" style="height: 100%">
       <a class="toggle" v-if="user && smallSize" @click="toggle">
         <i class="material-icons menu">menu</i>
       </a>
       <a class="brand full" href="/">
-        {{ $t("OvertimeAndLeaveManagementSystem") }}
+        {{ t("OvertimeAndLeaveManagementSystem") }}
       </a>
-      <a class="brand short" href="/">{{ $t("OLMS") }}</a>
+      <a class="brand short" href="/">{{ t("OLMS") }}</a>
     </div>
     <div class="navbar-nav flex-row" v-if="user">
       <a class="nav-link" v-text="user.realname"></a>
       <router-link class="nav-link link" to="/setting">
-        {{ $t("Setting") }}
+        {{ t("Setting") }}
       </router-link>
-      <a class="nav-link link" href="/logout">{{ $t("Logout") }}</a>
+      <a class="nav-link link" href="/logout">{{ t("Logout") }}</a>
     </div>
     <div class="navbar-nav flex-row" v-else>
-      <a class="nav-link">{{ $t("Login") }}</a>
+      <a class="nav-link">{{ t("Login") }}</a>
     </div>
   </nav>
   <Login v-if="!user" />
@@ -51,19 +51,29 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import Login from "./components/Login.vue";
 import Sidebar from "./components/Sidebar.vue";
+
 export default {
   name: "App",
+  setup() {
+    const { t, locale } = useI18n();
+    return { t, locale };
+  },
   components: { Login, Sidebar },
   data() {
     return {
-      user: this.$store.state.user,
-      recaptcha: this.$store.state.recaptcha,
       smallSize: window.innerWidth <= 1200,
     };
   },
   computed: {
+    user() {
+      return this.$store.state.user;
+    },
+    recaptcha() {
+      return this.$store.state.recaptcha;
+    },
     loading() {
       return this.$store.state.loading;
     },
@@ -131,6 +141,19 @@ a:hover {
   width: 250px;
 }
 
+.content {
+  position: fixed;
+  top: 0;
+  padding-top: 90px;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.toolbar {
+  padding-bottom: 10px;
+}
+
 .table-responsive {
   min-height: 300px;
   padding: 0 10px;
@@ -189,7 +212,30 @@ td:hover {
   width: 70px;
 }
 
+.sortable {
+  cursor: pointer;
+  background-position: right;
+  background-repeat: no-repeat;
+  padding-right: 30px !important;
+}
+
+.default {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAQAAADYWf5HAAAAkElEQVQoz7X QMQ5AQBCF4dWQSJxC5wwax1Cq1e7BAdxD5SL+Tq/QCM1oNiJidwox0355mXnG/DrEtIQ6azioNZQxI0ykPhTQIwhCR+BmBYtlK7kLJYwWCcJA9M4qdrZrd8pPjZWPtOqdRQy320YSV17OatFC4euts6z39GYMKRPCTKY9UnPQ6P+GtMRfGtPnBCiqhAeJPmkqAAAAAElFTkSuQmCC");
+}
+
+.asc {
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAByUDbMAAAAZ0lEQVQ4y2NgGLKgquEuFxBPAGI2ahhWCsS/gDibUoO0gPgxEP8H4ttArEyuQYxAPBdqEAxPBImTY5gjEL9DM+wTENuQahAvEO9DMwiGdwAxOymGJQLxTyD+jgWDxCMZRsEoGAVoAADeemwtPcZI2wAAAABJRU5ErkJggg==);
+}
+
+.desc {
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAByUDbMAAAAZUlEQVQ4y2NgGAWjYBSggaqGu5FA/BOIv2PBIPFEUgxjB+IdQPwfC94HxLykus4GiD+hGfQOiB3J8SojEE9EM2wuSJzcsFMG4ttQgx4DsRalkZENxL+AuJQaMcsGxBOAmGvopk8AVz1sLZgg0bsAAAAASUVORK5CYII=);
+}
+
 @media (max-width: 1200px) {
+  .content {
+    padding-left: 0 !important;
+  }
+
   table {
     table-layout: auto;
   }
@@ -252,15 +298,6 @@ td:hover {
   display: none;
 }
 
-.content {
-  position: fixed;
-  top: 0;
-  padding-top: 90px;
-  height: 100%;
-  width: 100%;
-  overflow-y: auto;
-}
-
 .loading {
   position: fixed;
   z-index: 2;
@@ -288,10 +325,6 @@ td:hover {
 
   .full {
     display: none;
-  }
-
-  .content {
-    padding-left: 0 !important;
   }
 
   .loading {

@@ -1,52 +1,54 @@
 <template>
-  <header>
-    <h3
-      class="d-flex justify-content-center align-items-center"
-      style="height: 100%"
-    >
-      {{ $t("Login") }}
-    </h3>
-  </header>
-  <div class="login" @keyup.enter="login()">
-    <div class="form-group">
-      <label for="username">{{ $t("Username") }}</label>
-      <input
-        autofocus
-        class="form-control"
-        v-model.trim="username"
-        id="username"
-        maxlength="20"
-        :placeholder="$t('Username')"
-        required
-      />
+  <div class="content">
+    <header>
+      <h3
+        class="d-flex justify-content-center align-items-center"
+        style="height: 100%"
+      >
+        {{ $t("Login") }}
+      </h3>
+    </header>
+    <div class="login" @keyup.enter="login()">
+      <div class="form-group">
+        <label for="username">{{ $t("Username") }}</label>
+        <input
+          autofocus
+          class="form-control"
+          v-model.trim="username"
+          id="username"
+          maxlength="20"
+          :placeholder="$t('Username')"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="password">{{ $t("Password") }}</label>
+        <input
+          class="form-control"
+          type="password"
+          v-model.trim="password"
+          id="password"
+          maxlength="20"
+          :placeholder="$t('Password')"
+          required
+        />
+      </div>
+      <div class="form-group form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          v-model="rememberme"
+          id="rememberme"
+        />
+        <label class="form-check-label" for="rememberme">
+          {{ $t("RememberMe") }}
+        </label>
+      </div>
+      <hr />
+      <button class="btn btn-primary login" @click="login()">
+        {{ $t("Login") }}
+      </button>
     </div>
-    <div class="form-group">
-      <label for="password">{{ $t("Password") }}</label>
-      <input
-        class="form-control"
-        type="password"
-        v-model.trim="password"
-        id="password"
-        maxlength="20"
-        :placeholder="$t('Password')"
-        required
-      />
-    </div>
-    <div class="form-group form-check">
-      <input
-        type="checkbox"
-        class="form-check-input"
-        v-model="rememberme"
-        id="rememberme"
-      />
-      <label class="form-check-label" for="rememberme">
-        {{ $t("RememberMe") }}
-      </label>
-    </div>
-    <hr />
-    <button class="btn btn-primary login" @click="login()">
-      {{ $t("Login") }}
-    </button>
   </div>
 </template>
 
@@ -68,7 +70,7 @@ export default {
     };
   },
   mounted() {
-    document.title = "Log In";
+    document.title = this.$t("Login") + " - " + this.$t("OLMS");
     this.username = localStorage.getItem("username");
     if (this.recaptcha) {
       grecaptcha.ready(() => {

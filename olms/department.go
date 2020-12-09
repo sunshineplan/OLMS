@@ -58,10 +58,10 @@ func addDepartment(c *gin.Context) {
 	var exist, message string
 	if department.Name == "" {
 		message = "DepartmentRequired"
-	} else if err := db.QueryRow("SELECT id FROM department WHERE dept_name = ?", department.Name).Scan(&exist); err == nil {
+	} else if err := db.QueryRow("SELECT id FROM department WHERE deptname = ?", department.Name).Scan(&exist); err == nil {
 		message = "DepartmentExist"
 	} else {
-		if _, err := db.Exec("INSERT INTO department (dept_name) VALUES (?)", department.Name); err != nil {
+		if _, err := db.Exec("INSERT INTO department (deptname) VALUES (?)", department.Name); err != nil {
 			log.Println("Failed to add department:", err)
 			c.String(500, "")
 			return
@@ -89,13 +89,13 @@ func editDepartment(c *gin.Context) {
 	var old, exist, message string
 	if department.Name == "" {
 		message = "DepartmentRequired"
-	} else if db.QueryRow("SELECT dept_name FROM department WHERE id = ?", department.ID).Scan(&old); old == department.Name {
+	} else if db.QueryRow("SELECT deptname FROM department WHERE id = ?", department.ID).Scan(&old); old == department.Name {
 		message = "SameDepartment"
-	} else if err := db.QueryRow("SELECT id FROM department WHERE dept_name = ? AND id != ?",
+	} else if err := db.QueryRow("SELECT id FROM department WHERE deptname = ? AND id != ?",
 		department.ID, department.Name).Scan(&exist); err == nil {
 		message = "DepartmentExist"
 	} else {
-		if _, err := db.Exec("UPDATE department SET dept_name = ? WHERE id = ?",
+		if _, err := db.Exec("UPDATE department SET deptname = ? WHERE id = ?",
 			department.Name, department.ID); err != nil {
 			log.Println("Failed to edit department:", err)
 			c.String(500, "")

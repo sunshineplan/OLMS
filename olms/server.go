@@ -29,7 +29,7 @@ func Run() {
 		log.Fatalln("Failed to get secret:", err)
 	}
 
-	gin.SetMode(gin.ReleaseMode)
+	//gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	Server.Handler = router
 	router.Use(gin.Recovery())

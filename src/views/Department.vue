@@ -46,7 +46,7 @@ export default {
     };
   },
   mounted() {
-    document.title = this.mode;
+    document.title = this.mode + " - " + this.$t("OLMS");
     window.addEventListener("keyup", this.cancel);
   },
   beforeUnmount() {

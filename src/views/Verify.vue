@@ -84,7 +84,7 @@ export default {
     };
   },
   mounted() {
-    document.title = this.$t("VerifyRecord");
+    document.title = this.$t("VerifyRecord") + " - " + this.$t("OLMS");
     window.addEventListener("keyup", this.cancel);
   },
   beforeUnmount() {

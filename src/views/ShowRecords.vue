@@ -1,9 +1,7 @@
 <template>
   <header style="padding-left: 20px">
     <div style="height: 50px">
-      <a class="h3 title" v-if="personal">{{ $t("EmployeeRecords") }}</a>
-      <a class="h3 title" v-else-if="user.super">{{ $t("AllRecords") }}</a>
-      <a class="h3 title" v-else>{{ $t("DepartmentRecords") }}</a>
+      <a class="h3 title">{{ mode }}</a>
     </div>
     <div class="toolbar">
       <div class="form-inline" v-if="!personal">
@@ -116,7 +114,15 @@
           <input class="form-control" v-model="filter.describe" id="describe" />
         </div>
         <div class="input-group">
-          <a class="btn btn-primary btn-sm" @click="load('records')">
+          <a
+            class="btn btn-primary btn-sm"
+            @click="
+              this.sort = {};
+              this.$store.commit('sort', {});
+              this.$store.commit('page', 1);
+              load('records');
+            "
+          >
             {{ $t("Filter") }}
           </a>
           <a class="btn btn-primary btn-sm" @click="reset('records')">
@@ -138,7 +144,14 @@
           <tr>
             <th
               class="sortable"
-              data-name="deptname"
+              :class="
+                sort.sort == 'deptname'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('deptname')"
               style="width: 150px"
               v-if="!personal"
             >
@@ -146,28 +159,93 @@
             </th>
             <th
               class="sortable"
-              data-name="realname"
+              :class="
+                sort.sort == 'realname'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('realname')"
               style="width: 100px"
               v-if="!personal"
             >
               {{ $t("Realname") }}
             </th>
-            <th class="sortable" data-name="date" style="width: 150px">
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'date'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('date')"
+              style="width: 150px"
+            >
               {{ $t("Date") }}
             </th>
-            <th class="sortable" data-name="type" style="width: 80px">
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'type'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('type')"
+              style="width: 80px"
+            >
               {{ $t("Type") }}
             </th>
-            <th class="sortable" data-name="duration" style="width: 100px">
+            <th
+              class="sortable"
+              @click="sortBy('duration')"
+              style="width: 100px"
+            >
               {{ $t("Duration") }}
             </th>
-            <th class="describe sortable" data-name="describe">
+            <th
+              class="describe sortable"
+              :class="
+                sort.sort == 'describe'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('describe')"
+            >
               {{ $t("Describe") }}
             </th>
-            <th class="sortable" data-name="created" style="width: 100px">
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'created'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('created')"
+              style="width: 100px"
+            >
               {{ $t("Created") }}
             </th>
-            <th class="sortable" data-name="status" style="width: 100px">
+            <th
+              class="sortable"
+              :class="
+                sort.sort == 'status'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
+              @click="sortBy('status')"
+              style="width: 100px"
+            >
               {{ $t("Status") }}
             </th>
             <th style="width: 100px">{{ $t("Operation") }}</th>
@@ -183,17 +261,19 @@
               }}
             </td>
             <td>{{ r.type ? $t("Overtime") : $t("Leave") }}</td>
-            <td>{{ r.duration }} {{ $t("Hours") }}</td>
+            <td>
+              {{ r.duration }} {{ r.duration == 1 ? $t("Hour") : $t("Hours") }}
+            </td>
             <td class="describe">{{ r.describe }}</td>
             <td>{{ r.created.split("T")[0] }}</td>
             <td>
-              {{
-                r.status
-                  ? r.status == 1
-                    ? $t("Verified")
-                    : $t("Rejected")
-                  : $t("Unverified")
-              }}
+              <a class="text-success" v-if="r.status == 1">
+                {{ $t("Verified") }}
+              </a>
+              <a class="text-danger" v-else-if="r.status == 2">
+                {{ $t("Rejected") }}
+              </a>
+              <a class="text-muted" v-else>{{ $t("Unverified") }}</a>
             </td>
             <td v-if="personal">
               <a
@@ -237,19 +317,30 @@ export default {
       records: [],
       total: 0,
       filter: this.$store.state.filter,
+      sort: this.$store.state.sort,
     };
   },
   computed: {
+    mode() {
+      return this.personal
+        ? this.$t("EmployeeRecords")
+        : this.user.super
+        ? this.$t("AllRecords")
+        : this.$t("DepartmentRecords");
+    },
     employees() {
       return this.$store.state.employees.filter(
         (i) => i.deptid == this.record.deptid
       );
     },
     page() {
-      return this.state.page;
+      return this.$store.state.page;
     },
   },
   watch: {
+    async sort() {
+      await this.load("records");
+    },
     async page() {
       await this.load("records");
     },
@@ -257,6 +348,9 @@ export default {
   async created() {
     await this.year();
     await this.reset("records");
+  },
+  mounted() {
+    document.title = this.mode + " - " + this.$t("OLMS");
   },
   methods: {
     add(personal) {

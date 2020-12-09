@@ -15,7 +15,7 @@ type employee struct {
 	ID         int    `json:"id"`
 	Username   string `json:"username"`
 	Realname   string `json:"realname"`
-	Password   string
+	Password   string `json:"password"`
 	DeptID     int    `json:"deptid"`
 	DeptName   string `json:"deptname"`
 	Role       bool   `json:"role"`
@@ -23,7 +23,7 @@ type employee struct {
 }
 
 func getUser(db *sql.DB, id interface{}) (user employee, err error) {
-	if id == "0" {
+	if id == 0 {
 		user = employee{ID: 0, Realname: "root", Role: true}
 		return
 	}
