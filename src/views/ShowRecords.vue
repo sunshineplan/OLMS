@@ -306,12 +306,18 @@
 </template>
 
 <script>
+import Pagination from "../components/Pagination.vue";
+
 export default {
   name: "ShowRecords",
+  components: { Pagination },
   data() {
     return {
       user: this.$store.state.user,
-      personal: this.$router.name == "departmentRecords" ? false : true,
+      personal:
+        this.$router.currentRoute.value.name == "departmentRecords"
+          ? false
+          : true,
       departments: this.$store.state.departments,
       years: [],
       records: [],
@@ -330,7 +336,7 @@ export default {
     },
     employees() {
       return this.$store.state.employees.filter(
-        (i) => i.deptid == this.record.deptid
+        (i) => i.deptid == this.filter.deptid
       );
     },
     page() {

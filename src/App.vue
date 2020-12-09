@@ -201,7 +201,7 @@ td:hover {
 }
 
 #department {
-  width: 150px;
+  width: 135px;
 }
 
 #employee {
@@ -252,7 +252,6 @@ td:hover {
   padding: 0 10px 0 0;
   background-color: #1a73e8;
   user-select: none;
-  padding-bottom: 10px;
 }
 
 .topbar .nav-link {

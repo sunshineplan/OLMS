@@ -72,7 +72,10 @@
             <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
           </select>
         </div>
-        <div class="input-group input-group-sm">
+        <div
+          class="input-group input-group-sm"
+          v-show="filter.period == 'month'"
+        >
           <div class="input-group-prepend">
             <label class="input-group-text" for="month">
               {{ $t("Month") }}
@@ -82,7 +85,6 @@
             class="custom-select"
             v-model="filter.month"
             id="month"
-            v-show="filter.period == 'month'"
             :disabled="filter.year == ''"
           >
             <option value="">{{ $t("All") }}</option>
@@ -240,12 +242,18 @@
 </template>
 
 <script>
+import Pagination from "../components/Pagination.vue";
+
 export default {
   name: "ShowStatistics",
+  components: { Pagination },
   data() {
     return {
       user: this.$store.state.user,
-      personal: this.$router.name == "departmentStatistics" ? false : true,
+      personal:
+        this.$router.currentRoute.value.name == "departmentStatistics"
+          ? false
+          : true,
       departments: this.$store.state.departments,
       years: [],
       statistics: [],

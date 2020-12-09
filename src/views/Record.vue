@@ -104,7 +104,10 @@ export default {
   data() {
     return {
       user: this.$store.state.user,
-      personal: this.$router.name == "departmentRecord" ? false : true,
+      personal:
+        this.$router.currentRoute.value.name == "departmentRecord"
+          ? false
+          : true,
       departments: this.$store.state.departments,
       mode:
         this.$route.params.mode == "add"

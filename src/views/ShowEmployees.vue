@@ -24,9 +24,9 @@
         </div>
         <div class="input-group input-group-sm" v-if="user.super">
           <div class="input-group-prepend">
-            <label class="input-group-text" for="type">{{ $t("Type") }}</label>
+            <label class="input-group-text" for="role">{{ $t("Role") }}</label>
           </div>
-          <select class="custom-select" v-model="filter.type" id="type">
+          <select class="custom-select" v-model="filter.role" id="role">
             <option value="">{{ $t("All") }}</option>
             <option value="0">{{ $t("GeneralEmployee") }}</option>
             <option value="1">{{ $t("Administrator") }}</option>
@@ -36,9 +36,9 @@
           <a
             class="btn btn-primary btn-sm"
             @click="
-              this.sort = {};
-              this.$store.commit('sort', {});
-              this.$store.commit('page', 1);
+              sort = {};
+              $store.commit('sort', {});
+              $store.commit('page', 1);
               doFilter();
             "
           >
@@ -47,9 +47,10 @@
           <a
             class="btn btn-primary btn-sm"
             @click="
-              this.filter = {};
-              this.sort = {};
+              filter = { deptid: 0, role: '' };
+              sort = {};
               $store.dispatch('reset');
+              employees = $store.state.employees;
             "
           >
             {{ $t("Reset") }}
@@ -160,8 +161,11 @@
 </template>
 
 <script>
+import Pagination from "../components/Pagination.vue";
+
 export default {
   name: "ShowEmployees",
+  components: { Pagination },
   data() {
     return {
       user: this.$store.state.user,
@@ -173,14 +177,14 @@ export default {
   },
   computed: {
     total() {
-      return this.employees.lenght;
+      return this.employees.length;
     },
     page() {
       return this.$store.state.page;
     },
   },
   created() {
-    this.filter = {};
+    this.filter = { deptid: 0, role: "" };
     this.sort = {};
     this.$store.commit("page", 1);
   },
@@ -190,10 +194,20 @@ export default {
   methods: {
     doFilter() {
       this.$store.commit("filter", this.filter);
-      if (!this.filter.deptid) this.employees = this.$store.state.employees;
-      else
+      if (!this.filter.deptid && !this.filter.role)
+        this.employees = this.$store.state.employees;
+      else if (this.filter.deptid && !this.filter.role)
         this.employees = this.$store.state.employees.filter(
           (i) => i.deptid == this.filter.deptid
+        );
+      else if (!this.filter.deptid && this.filter.role)
+        this.employees = this.$store.state.employees.filter(
+          (i) => Number(i.role) == this.filter.role
+        );
+      else
+        this.employees = this.$store.state.employees.filter(
+          (i) =>
+            i.deptid == this.filter.deptid && Number(i.role) == this.filter.role
         );
     },
     doSort(field) {
@@ -202,8 +216,14 @@ export default {
       else this.sort = { sort: field, order: "desc" };
       this.$store.commit("sort", this.sort);
       this.employees.sort((a, b) => {
-        if (this.sort.order == "desc") return a[field] > b[field];
-        return a[field] < b[field];
+        if (a[field] == b[field]) return 0;
+        if (this.sort.order == "desc")
+          if (a[field] > b[field]) return 1;
+          else return -1;
+        else {
+          if (a[field] > b[field]) return -1;
+          else return 1;
+        }
       });
     },
     add() {

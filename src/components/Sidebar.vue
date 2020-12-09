@@ -7,7 +7,9 @@
           <li>
             <router-link
               class="nav-link"
-              :class="{ selected: $router.name == 'personalRecords' }"
+              :class="{
+                selected: $router.currentRoute.value.name == 'personalRecords',
+              }"
               :to="{ name: 'personalRecords' }"
             >
               {{ $t("EmployeeRecords") }}
@@ -16,7 +18,10 @@
           <li>
             <router-link
               class="nav-link"
-              :class="{ selected: $router.name == 'personalStatistics' }"
+              :class="{
+                selected:
+                  $router.currentRoute.value.name == 'personalStatistics',
+              }"
               :to="{ name: 'personalStatistics' }"
             >
               {{ $t("EmployeeStatistics") }}
@@ -31,7 +36,9 @@
             <router-link
               class="nav-link"
               :class="{
-                selected: $router.name == 'departmentRecords' && !user.super,
+                selected:
+                  $router.currentRoute.value.name == 'departmentRecords' &&
+                  !user.super,
               }"
               :to="{ name: 'departmentRecords' }"
             >
@@ -41,7 +48,10 @@
           <li>
             <router-link
               class="nav-link"
-              :class="{ selected: $router.name == 'departmentStatistics' }"
+              :class="{
+                selected:
+                  $router.currentRoute.value.name == 'departmentStatistics',
+              }"
               :to="{ name: 'departmentStatistics' }"
             >
               {{ $t("DepartmentStatistics") }}
@@ -55,7 +65,9 @@
           <li>
             <router-link
               class="nav-link"
-              :class="{ selected: $router.name == 'employees' }"
+              :class="{
+                selected: $router.currentRoute.value.name == 'employees',
+              }"
               :to="{ name: 'employees' }"
             >
               {{ $t("ManageEmployee") }}
@@ -64,7 +76,9 @@
           <li v-if="user.super">
             <router-link
               class="nav-link"
-              :class="{ selected: $router.name == 'departments' }"
+              :class="{
+                selected: $router.currentRoute.value.name == 'departments',
+              }"
               :to="{ name: 'departments' }"
             >
               {{ $t("ManageDepartment") }}
@@ -74,9 +88,11 @@
             <router-link
               class="nav-link"
               :class="{
-                selected: $router.name == 'departmentRecords' && user.super,
+                selected:
+                  $router.currentRoute.value.name == 'departmentRecords' &&
+                  user.super,
               }"
-              to="/records"
+              :to="{ name: 'departmentRecords' }"
             >
               {{ $t("ManageRecord") }}
             </router-link>
