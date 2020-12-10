@@ -2,34 +2,20 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
-    name: 'personalRecords',
     path: '/',
-    component: () => import(/* webpackChunkName: 'records' */ '../views/ShowRecords.vue')
+    component: () => import(/* webpackChunkName: 'record' */ '../views/ShowRecords.vue')
   },
   {
-    name: 'personalStatistics',
     path: '/statistics',
-    component: () => import(/* webpackChunkName: 'statistics' */ '../views/ShowStatistics.vue')
+    component: () => import(/* webpackChunkName: 'statistic' */ '../views/ShowStatistics.vue')
   },
   {
-    name: 'departmentRecords',
-    path: '/records',
-    component: () => import(/* webpackChunkName: 'records' */ '../views/ShowRecords.vue')
-  },
-  {
-    name: 'departmentStatistics',
-    path: '/statistics',
-    component: () => import(/* webpackChunkName: 'statistics' */ '../views/ShowStatistics.vue')
-  },
-  {
-    name: 'departments',
     path: '/departments',
-    component: () => import(/* webpackChunkName: 'departments' */ '../views/ShowDepartments.vue')
+    component: () => import(/* webpackChunkName: 'department' */ '../views/ShowDepartments.vue')
   },
   {
-    name: 'employees',
     path: '/employees',
-    component: () => import(/* webpackChunkName: 'employees' */ '../views/ShowEmployees.vue')
+    component: () => import(/* webpackChunkName: 'employee' */ '../views/ShowEmployees.vue')
   },
   {
     path: '/setting',
@@ -44,18 +30,12 @@ const routes = [
     component: () => import(/* webpackChunkName: 'employee' */ '../views/Employee.vue')
   },
   {
-    name: 'personalRecord',
-    path: '/record/:mode',
-    component: () => import(/* webpackChunkName: 'record' */ '../views/Record.vue')
-  },
-  {
-    name: 'departmentRecord',
     path: '/record/:mode',
     component: () => import(/* webpackChunkName: 'record' */ '../views/Record.vue')
   },
   {
     path: '/record/verify',
-    component: () => import(/* webpackChunkName: 'verify' */ '../views/Verify.vue')
+    component: () => import(/* webpackChunkName: 'record' */ '../views/Verify.vue')
   }
 ]
 

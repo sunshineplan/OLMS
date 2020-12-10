@@ -8,12 +8,9 @@
             <a
               class="nav-link"
               :class="{
-                selected: $router.currentRoute.value.name == 'personalRecords',
+                selected: $router.currentRoute.value.path == '/' && personal,
               }"
-              @click="
-                $store.commit('personal', true);
-                goto({ name: 'personalRecords' });
-              "
+              @click="goto('/', true)"
             >
               {{ $t("EmployeeRecords") }}
             </a>
@@ -23,12 +20,9 @@
               class="nav-link"
               :class="{
                 selected:
-                  $router.currentRoute.value.name == 'personalStatistics',
+                  $router.currentRoute.value.path == '/statistics' && personal,
               }"
-              @click="
-                $store.commit('personal', true);
-                goto({ name: 'personalStatistics' });
-              "
+              @click="goto('/statistics', true)"
             >
               {{ $t("EmployeeStatistics") }}
             </a>
@@ -43,13 +37,11 @@
               class="nav-link"
               :class="{
                 selected:
-                  $router.currentRoute.value.name == 'departmentRecords' &&
+                  $router.currentRoute.value.path == '/' &&
+                  !personal &&
                   !user.super,
               }"
-              @click="
-                $store.commit('personal', false);
-                goto({ name: 'departmentRecords' });
-              "
+              @click="goto('/', false)"
             >
               {{ $t("DepartmentRecords") }}
             </a>
@@ -59,12 +51,9 @@
               class="nav-link"
               :class="{
                 selected:
-                  $router.currentRoute.value.name == 'departmentStatistics',
+                  $router.currentRoute.value.path == '/statistics' && !personal,
               }"
-              @click="
-                $store.commit('personal', false);
-                goto({ name: 'departmentStatistics' });
-              "
+              @click="goto('/statistics', false)"
             >
               {{ $t("DepartmentStatistics") }}
             </a>
@@ -78,9 +67,9 @@
             <a
               class="nav-link"
               :class="{
-                selected: $router.currentRoute.value.name == 'employees',
+                selected: $router.currentRoute.value.path == '/employees',
               }"
-              @click="goto({ name: 'employees' })"
+              @click="goto('/employees')"
             >
               {{ $t("ManageEmployee") }}
             </a>
@@ -89,9 +78,9 @@
             <a
               class="nav-link"
               :class="{
-                selected: $router.currentRoute.value.name == 'departments',
+                selected: $router.currentRoute.value.path == '/departments',
               }"
-              @click="goto({ name: 'departments' })"
+              @click="goto('/departments')"
             >
               {{ $t("ManageDepartment") }}
             </a>
@@ -100,14 +89,9 @@
             <a
               class="nav-link"
               :class="{
-                selected:
-                  $router.currentRoute.value.name == 'departmentRecords' &&
-                  user.super,
+                selected: $router.currentRoute.value.path == '/' && user.super,
               }"
-              @click="
-                $store.commit('personal', false);
-                goto({ name: 'departmentRecords' });
-              "
+              @click="goto('/', false)"
             >
               {{ $t("ManageRecord") }}
             </a>
@@ -126,9 +110,15 @@ export default {
       user: this.$store.state.user,
     };
   },
+  computed: {
+    personal() {
+      return this.$store.state.personal;
+    },
+  },
   methods: {
-    goto(router) {
+    goto(router, personal) {
       if (window.innerWidth <= 1200) this.$store.commit("closeSidebar");
+      if (personal != undefined) this.$store.commit("personal", personal);
       this.$router.push(router);
     },
   },

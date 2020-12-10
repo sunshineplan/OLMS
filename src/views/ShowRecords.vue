@@ -139,7 +139,7 @@
         </div>
       </div>
     </div>
-    <a class="btn btn-primary" @click="add(personal)">{{ $t("New") }}</a>
+    <a class="btn btn-primary" @click="add()">{{ $t("New") }}</a>
     <p></p>
   </header>
   <Pagination :total="total">
@@ -291,7 +291,7 @@
               <a
                 class="btn btn-outline-primary btn-sm"
                 :class="{ disabled: !r.status }"
-                @click="edit(r, personal)"
+                @click="edit(r)"
               >
                 {{ $t("Edit") }}
               </a>
@@ -355,8 +355,10 @@ export default {
     },
   },
   watch: {
-    personal() {
+    async personal() {
       document.title = this.mode + " - " + this.$t("OLMS");
+      await this.year();
+      await this.reset();
     },
     async sort(sort) {
       if (Object.keys(sort).length) {
@@ -376,16 +378,12 @@ export default {
     document.title = this.mode + " - " + this.$t("OLMS");
   },
   methods: {
-    add(personal) {
-      if (personal)
-        this.$router.push({ name: "personalRecord", params: { mode: "add" } });
-      this.$router.push({ name: "departmentRecord", params: { mode: "add" } });
+    add() {
+      this.$router.push("/record/add");
     },
-    edit(record, personal) {
+    edit(record) {
       this.$store.commit("record", record);
-      if (personal)
-        this.$router.push({ name: "personalRecord", params: { mode: "edit" } });
-      this.$router.push({ name: "departmentRecord", params: { mode: "edit" } });
+      this.$router.push("/record/edit");
     },
     verify(record) {
       this.$store.commit("record", record);

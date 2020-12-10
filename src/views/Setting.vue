@@ -95,6 +95,7 @@
 
 <script>
 import Cookies from "js-cookie";
+import i18n, { loadLocaleMessages } from "../i18n";
 import { BootstrapButtons, post, valid, validateEmail } from "../misc.js";
 
 const grecaptcha = window.grecaptcha;
@@ -117,13 +118,17 @@ export default {
     document.title = this.$t("Setting") + " - " + this.$t("OLMS");
   },
   methods: {
-    changeLanguage() {
+    async changeLanguage() {
       Cookies.set("lang", this.lang, { expires: 365 });
+      await loadLocaleMessages(i18n, this.lang);
+      this.$i18n.locale = this.lang;
+      document.querySelector("html").setAttribute("lang", this.lang);
       BootstrapButtons.fire(
         this.$t("Success"),
         this.$t("LanguageChanged"),
         "success"
       );
+      this.$router.replace("/setting");
     },
     async doSubscribe() {
       let data;

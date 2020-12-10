@@ -282,8 +282,10 @@ export default {
     },
   },
   watch: {
-    personal() {
+    async personal() {
       document.title = this.mode + " - " + this.$t("OLMS");
+      await this.year();
+      await this.reset();
     },
     async sort(sort) {
       if (Object.keys(sort).length) {

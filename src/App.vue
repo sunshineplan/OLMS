@@ -10,19 +10,19 @@
         <i class="material-icons menu">menu</i>
       </a>
       <a class="brand full" href="/">
-        {{ t("OvertimeAndLeaveManagementSystem") }}
+        {{ $t("OvertimeAndLeaveManagementSystem") }}
       </a>
-      <a class="brand short" href="/">{{ t("OLMS") }}</a>
+      <a class="brand short" href="/">{{ $t("OLMS") }}</a>
     </div>
     <div class="navbar-nav flex-row" v-if="user">
       <a class="nav-link" v-text="user.realname"></a>
       <router-link class="nav-link link" to="/setting">
-        {{ t("Setting") }}
+        {{ $t("Setting") }}
       </router-link>
-      <a class="nav-link link" href="/logout">{{ t("Logout") }}</a>
+      <a class="nav-link link" href="/logout">{{ $t("Logout") }}</a>
     </div>
     <div class="navbar-nav flex-row" v-else>
-      <a class="nav-link">{{ t("Login") }}</a>
+      <a class="nav-link">{{ $t("Login") }}</a>
     </div>
   </nav>
   <Login v-if="!user" />
@@ -51,16 +51,13 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
+import Cookies from "js-cookie";
+import i18n, { loadLocaleMessages } from "./i18n";
 import Login from "./components/Login.vue";
 import Sidebar from "./components/Sidebar.vue";
 
 export default {
   name: "App",
-  setup() {
-    const { t, locale } = useI18n();
-    return { t, locale };
-  },
   components: { Login, Sidebar },
   data() {
     return {
@@ -82,12 +79,17 @@ export default {
     },
   },
   async created() {
+    const lang = Cookies.get("lang");
+    if (lang) {
+      await loadLocaleMessages(i18n, lang);
+      this.$i18n.locale = lang;
+    }
+    document.querySelector("html").setAttribute("lang", this.$i18n.locale);
     await this.$store.dispatch("info");
     if (!this.user) this.$router.push("/login");
     else {
       if (this.user.role) {
         this.$store.commit("personal", false);
-        this.$router.push({ name: "departmentRecords" });
       }
     }
   },
