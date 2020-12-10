@@ -5,27 +5,33 @@
         <a class="navbar-brand">{{ $t("EmployeePanel") }}</a>
         <ul class="navbar-nav">
           <li>
-            <router-link
+            <a
               class="nav-link"
               :class="{
                 selected: $router.currentRoute.value.name == 'personalRecords',
               }"
-              :to="{ name: 'personalRecords' }"
+              @click="
+                $store.commit('personal', true);
+                goto({ name: 'personalRecords' });
+              "
             >
               {{ $t("EmployeeRecords") }}
-            </router-link>
+            </a>
           </li>
           <li>
-            <router-link
+            <a
               class="nav-link"
               :class="{
                 selected:
                   $router.currentRoute.value.name == 'personalStatistics',
               }"
-              :to="{ name: 'personalStatistics' }"
+              @click="
+                $store.commit('personal', true);
+                goto({ name: 'personalStatistics' });
+              "
             >
               {{ $t("EmployeeStatistics") }}
-            </router-link>
+            </a>
           </li>
         </ul>
       </div>
@@ -33,29 +39,35 @@
         <a class="navbar-brand">{{ $t("DepartmentPanel") }}</a>
         <ul class="navbar-nav">
           <li v-if="!user.super">
-            <router-link
+            <a
               class="nav-link"
               :class="{
                 selected:
                   $router.currentRoute.value.name == 'departmentRecords' &&
                   !user.super,
               }"
-              :to="{ name: 'departmentRecords' }"
+              @click="
+                $store.commit('personal', false);
+                goto({ name: 'departmentRecords' });
+              "
             >
               {{ $t("DepartmentRecords") }}
-            </router-link>
+            </a>
           </li>
           <li>
-            <router-link
+            <a
               class="nav-link"
               :class="{
                 selected:
                   $router.currentRoute.value.name == 'departmentStatistics',
               }"
-              :to="{ name: 'departmentStatistics' }"
+              @click="
+                $store.commit('personal', false);
+                goto({ name: 'departmentStatistics' });
+              "
             >
               {{ $t("DepartmentStatistics") }}
-            </router-link>
+            </a>
           </li>
         </ul>
       </div>
@@ -63,39 +75,42 @@
         <a class="navbar-brand">{{ $t("ControlPanel") }}</a>
         <ul class="navbar-nav">
           <li>
-            <router-link
+            <a
               class="nav-link"
               :class="{
                 selected: $router.currentRoute.value.name == 'employees',
               }"
-              :to="{ name: 'employees' }"
+              @click="goto({ name: 'employees' })"
             >
               {{ $t("ManageEmployee") }}
-            </router-link>
+            </a>
           </li>
           <li v-if="user.super">
-            <router-link
+            <a
               class="nav-link"
               :class="{
                 selected: $router.currentRoute.value.name == 'departments',
               }"
-              :to="{ name: 'departments' }"
+              @click="goto({ name: 'departments' })"
             >
               {{ $t("ManageDepartment") }}
-            </router-link>
+            </a>
           </li>
           <li v-if="user.super">
-            <router-link
+            <a
               class="nav-link"
               :class="{
                 selected:
                   $router.currentRoute.value.name == 'departmentRecords' &&
                   user.super,
               }"
-              :to="{ name: 'departmentRecords' }"
+              @click="
+                $store.commit('personal', false);
+                goto({ name: 'departmentRecords' });
+              "
             >
               {{ $t("ManageRecord") }}
-            </router-link>
+            </a>
           </li>
         </ul>
       </div>
@@ -112,8 +127,9 @@ export default {
     };
   },
   methods: {
-    closeSidebar() {
+    goto(router) {
       if (window.innerWidth <= 1200) this.$store.commit("closeSidebar");
+      this.$router.push(router);
     },
   },
 };
@@ -178,7 +194,6 @@ export default {
 @media (max-width: 1200px) {
   .sidebar {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    display: none;
   }
 }
 </style>

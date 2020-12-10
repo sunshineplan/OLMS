@@ -27,12 +27,12 @@ type record struct {
 	Created  time.Time `json:"created"`
 }
 
-func getRecords(db *sql.DB, id *idOptions, options *searchOptions) (records []record, total int, err error) {
+func getRecords(db *sql.DB, id *idOptions, options *searchOptions) ([]record, int, error) {
 	stmt := "SELECT %s FROM record JOIN employee ON user_id = employee.id WHERE"
 
 	var args []interface{}
 	var orderBy, limit string
-	bc := make(chan bool, 1)
+	c := make(chan error, 1)
 	if id.User != nil {
 		stmt += " user_id = ?"
 		args = append(args, id.User)
@@ -72,42 +72,44 @@ func getRecords(db *sql.DB, id *idOptions, options *searchOptions) (records []re
 		limit = fmt.Sprintf(" LIMIT ?, ?")
 		args = append(args, int(options.Page-1)*perPage, perPage)
 	} else {
-		bc <- true
+		c <- nil
 	}
 	if options.Sort != "" {
 		orderBy = fmt.Sprintf(" ORDER BY %v %v", options.Sort, options.Order)
 	} else {
 		orderBy = " ORDER BY created DESC"
 	}
+
+	var total int
 	go func() {
-		if err := db.QueryRow(fmt.Sprintf(stmt, "count(*)"), args...).Scan(&total); err != nil {
-			log.Println("Failed to get total records:", err)
-			bc <- false
-		}
-		bc <- true
+		c <- db.QueryRow(fmt.Sprintf(stmt, "count(*)"), args...).Scan(&total)
 	}()
+
 	rows, err := db.Query(fmt.Sprintf(stmt+orderBy+limit,
 		"record.id, employee.dept_id, deptname, employee.id, realname, date, ABS(duration), type, status, describe, created"),
 		args...)
 	if err != nil {
 		log.Println("Failed to get records:", err)
-		return
+		return nil, 0, err
 	}
 	defer rows.Close()
+
+	records := []record{}
 	for rows.Next() {
 		var r record
-		if err = rows.Scan(
+		if err := rows.Scan(
 			&r.ID, &r.DeptID, &r.DeptName, &r.UserID, &r.Realname, &r.Date, &r.Duration, &r.Type, &r.Status, &r.Describe, &r.Created,
 		); err != nil {
 			log.Println("Failed to scan record:", err)
-			return
+			return nil, 0, err
 		}
 		records = append(records, r)
 	}
-	if v := <-bc; !v {
-		err = fmt.Errorf("Failed to get total records")
+	if err := <-c; err != nil {
+		log.Println("Failed to get total records:", err)
+		return nil, 0, err
 	}
-	return
+	return records, total, nil
 }
 
 func addRecord(c *gin.Context) {

@@ -23,11 +23,15 @@ type employee struct {
 }
 
 func getUser(db *sql.DB, id interface{}) (user employee, err error) {
+	var permission []byte
 	if id == 0 {
-		user = employee{ID: 0, Realname: "root", Role: true}
+		if err = db.QueryRow("SELECT group_concat(id) FROM department").Scan(&permission); err != nil {
+			log.Println("Failed to get super permission:", err)
+			return
+		}
+		user = employee{ID: 0, Role: true, Permission: string(permission)}
 		return
 	}
-	var permission []byte
 	if err = db.QueryRow("SELECT * FROM employee WHERE id = ?", id).Scan(
 		&user.ID, &user.Username, &user.Realname, &user.DeptID, &user.DeptName, &user.Role, &permission); err != nil {
 		log.Println("Failed to get user:", err)
@@ -37,40 +41,40 @@ func getUser(db *sql.DB, id interface{}) (user employee, err error) {
 	return
 }
 
-func getEmployees(db *sql.DB, ids []string, super bool) (employees []employee, err error) {
-	var rows *sql.Rows
+func getEmployees(db *sql.DB, ids []string, super bool) ([]employee, error) {
+	employees := []employee{}
 	if super {
-		rows, err = db.Query("SELECT * FROM employee")
+		rows, err := db.Query("SELECT * FROM employee")
 		if err != nil {
 			log.Println("Failed to get employees:", err)
-			return
+			return nil, err
 		}
 		for rows.Next() {
 			var e employee
 			var permission []byte
-			if err = rows.Scan(&e.ID, &e.Username, &e.Realname, &e.DeptID, &e.DeptName, &e.Role, &permission); err != nil {
+			if err := rows.Scan(&e.ID, &e.Username, &e.Realname, &e.DeptID, &e.DeptName, &e.Role, &permission); err != nil {
 				log.Println("Failed to scan department:", err)
-				return
+				return nil, err
 			}
 			e.Permission = string(permission)
 			employees = append(employees, e)
 		}
 	} else {
-		rows, err = db.Query("SELECT * FROM employee WHERE id IN (" + strings.Join(ids, ", ") + ")")
+		rows, err := db.Query("SELECT id, username, realname, dept_id, deptname FROM employee WHERE id IN (" + strings.Join(ids, ", ") + ")")
 		if err != nil {
 			log.Println("Failed to get employees:", err)
-			return
+			return nil, err
 		}
 		for rows.Next() {
 			var e employee
-			if err = rows.Scan(&e.ID, &e.Username, &e.Realname, &e.DeptID, &e.DeptName); err != nil {
+			if err := rows.Scan(&e.ID, &e.Username, &e.Realname, &e.DeptID, &e.DeptName); err != nil {
 				log.Println("Failed to scan department:", err)
-				return
+				return nil, err
 			}
 			employees = append(employees, e)
 		}
 	}
-	return
+	return employees, nil
 }
 
 func addEmployee(c *gin.Context) {

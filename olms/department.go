@@ -13,32 +13,34 @@ type department struct {
 	Name string `json:"name"`
 }
 
-func getDepartments(db *sql.DB, ids []string, super bool) (departments []department, err error) {
+func getDepartments(db *sql.DB, ids []string, super bool) ([]department, error) {
 	var rows *sql.Rows
+	var err error
 	if super {
 		rows, err = db.Query("SELECT * FROM department")
 		if err != nil {
 			log.Println("Failed to get departments:", err)
-			return
+			return nil, err
 		}
 	} else {
 		rows, err = db.Query("SELECT * FROM department WHERE id IN (" + strings.Join(ids, ", ") + ")")
 		if err != nil {
 			log.Println("Failed to get departments:", err)
-			return
+			return nil, err
 		}
 	}
 	defer rows.Close()
 
+	departments := []department{}
 	for rows.Next() {
 		var department department
-		if err = rows.Scan(&department.ID, &department.Name); err != nil {
+		if err := rows.Scan(&department.ID, &department.Name); err != nil {
 			log.Println("Failed to scan department:", err)
-			return
+			return nil, err
 		}
 		departments = append(departments, department)
 	}
-	return
+	return departments, nil
 }
 
 func addDepartment(c *gin.Context) {

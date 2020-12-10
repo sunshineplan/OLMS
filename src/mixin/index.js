@@ -62,7 +62,7 @@ export default {
       this.$store.commit('filter', this.filter)
       const resp = await post(`/${mode}`, this.filter)
       const json = await resp.json()
-      this.records = json.rows
+      this[mode] = json.rows
       this.total = json.total
       this.$store.commit('stopLoading')
     },
@@ -83,7 +83,7 @@ export default {
           resp.headers
             .get('Content-Disposition')
             .split('filename=')[1]
-            .replace(/'/g, '')
+            .replace(/"/g, '')
         )
         link.click()
       }
@@ -94,12 +94,6 @@ export default {
         await this.$store.dispatch('info')
       this.$router.go(-1)
     },
-    cancel(event) { if (event.key == 'Escape') this.goback() },
-    async reset(mode) {
-      this.filter = {}
-      this.sort = {}
-      this.$store.dispatch('reset')
-      await this.load(mode)
-    }
+    cancel(event) { if (event.key == 'Escape') this.goback() }
   }
 }

@@ -47,9 +47,7 @@
           <a
             class="btn btn-primary btn-sm"
             @click="
-              filter = { deptid: 0, role: '' };
-              sort = {};
-              $store.dispatch('reset');
+              reset();
               employees = $store.state.employees;
             "
           >
@@ -184,9 +182,7 @@ export default {
     },
   },
   created() {
-    this.filter = { deptid: 0, role: "" };
-    this.sort = {};
-    this.$store.commit("page", 1);
+    this.reset();
   },
   mounted() {
     document.title = this.$t("EmployeesList") + " - " + this.$t("OLMS");
@@ -232,6 +228,11 @@ export default {
     edit(employee) {
       this.$store.commit("employee", employee);
       this.$router.push("/employee/edit");
+    },
+    reset() {
+      this.filter = { deptid: 0, role: "" };
+      this.sort = {};
+      this.$store.dispatch("reset", this.filter);
     },
   },
 };

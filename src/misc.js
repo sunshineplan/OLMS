@@ -13,10 +13,12 @@ export const valid = () => {
 }
 
 export const post = (url, data) => {
+  let json = {}
+  Object.keys(data).forEach(key => data[key] !== '' && (json[key] = data[key]))
   return fetch(url, {
     method: 'post',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+    body: JSON.stringify(json)
   })
 }
 

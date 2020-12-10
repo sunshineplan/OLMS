@@ -16,16 +16,16 @@ func (r *record) format(localize map[string]string) (f map[string]interface{}) {
 	json.Unmarshal(b, &f)
 	for k, v := range f {
 		switch k {
-		case "Date":
-			f[localize[k]] = strings.Split(f["Date"].(string), "T")[0]
-		case "Type":
+		case "date":
+			f[localize[k]] = strings.Split(f["date"].(string), "T")[0]
+		case "type":
 			switch v.(bool) {
 			case false:
 				f[localize[k]] = localize["Leave"]
 			case true:
 				f[localize[k]] = localize["Overtime"]
 			}
-		case "Status":
+		case "status":
 			switch int(v.(float64)) {
 			case 0:
 				f[localize[k]] = localize["Unverified"]

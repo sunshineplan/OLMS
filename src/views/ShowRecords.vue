@@ -15,7 +15,10 @@
             class="custom-select"
             v-model.number="filter.deptid"
             id="department"
-            @change="year('department')"
+            @change="
+              filter.userid = 0;
+              year('department');
+            "
           >
             <option value="0">{{ $t("All") }}</option>
             <option v-for="d in departments" :key="d.id" :value="d.id">
@@ -50,7 +53,9 @@
           </div>
           <select class="custom-select" v-model="filter.year" id="year">
             <option value="">{{ $t("All") }}</option>
-            <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+            <option v-for="y in years" :key="y" :value="String(y)">
+              {{ y }}
+            </option>
           </select>
         </div>
         <div class="input-group input-group-sm">
@@ -117,15 +122,15 @@
           <a
             class="btn btn-primary btn-sm"
             @click="
-              this.sort = {};
-              this.$store.commit('sort', {});
-              this.$store.commit('page', 1);
+              sort = {};
+              $store.commit('sort', {});
+              $store.commit('page', 1);
               load('records');
             "
           >
             {{ $t("Filter") }}
           </a>
-          <a class="btn btn-primary btn-sm" @click="reset('records')">
+          <a class="btn btn-primary btn-sm" @click="reset()">
             {{ $t("Reset") }}
           </a>
           <a class="btn btn-info btn-sm" @click="download('records')">
@@ -202,6 +207,13 @@
             </th>
             <th
               class="sortable"
+              :class="
+                sort.sort == 'duration'
+                  ? sort.order == 'desc'
+                    ? 'desc'
+                    : 'asc'
+                  : 'default'
+              "
               @click="sortBy('duration')"
               style="width: 100px"
             >
@@ -281,7 +293,7 @@
                 :class="{ disabled: !r.status }"
                 @click="edit(r, personal)"
               >
-                {{ t("Edit") }}
+                {{ $t("Edit") }}
               </a>
             </td>
             <td v-else-if="!user.super">
@@ -290,12 +302,12 @@
                 :class="{ disabled: r.status }"
                 @click="verify(r)"
               >
-                {{ t("Verify") }}
+                {{ $t("Verify") }}
               </a>
             </td>
             <td v-else>
               <a class="btn btn-outline-primary btn-sm" @click="edit(r)">
-                {{ t("Edit") }}
+                {{ $t("Edit") }}
               </a>
             </td>
           </tr>
@@ -314,10 +326,6 @@ export default {
   data() {
     return {
       user: this.$store.state.user,
-      personal:
-        this.$router.currentRoute.value.name == "departmentRecords"
-          ? false
-          : true,
       departments: this.$store.state.departments,
       years: [],
       records: [],
@@ -327,6 +335,9 @@ export default {
     };
   },
   computed: {
+    personal() {
+      return this.$store.state.personal;
+    },
     mode() {
       return this.personal
         ? this.$t("EmployeeRecords")
@@ -344,8 +355,14 @@ export default {
     },
   },
   watch: {
-    async sort() {
-      await this.load("records");
+    personal() {
+      document.title = this.mode + " - " + this.$t("OLMS");
+    },
+    async sort(sort) {
+      if (Object.keys(sort).length) {
+        this.$store.commit("page", 1);
+        await this.load("records");
+      }
     },
     async page() {
       await this.load("records");
@@ -353,7 +370,7 @@ export default {
   },
   async created() {
     await this.year();
-    await this.reset("records");
+    await this.reset();
   },
   mounted() {
     document.title = this.mode + " - " + this.$t("OLMS");
@@ -373,6 +390,20 @@ export default {
     verify(record) {
       this.$store.commit("record", record);
       this.$router.push("/record/verify");
+    },
+    async reset() {
+      this.filter = {
+        deptid: 0,
+        userid: 0,
+        year: "",
+        month: "",
+        type: "",
+        status: "",
+        describe: "",
+      };
+      this.sort = {};
+      this.$store.dispatch("reset", this.filter);
+      await this.load("records");
     },
   },
 };

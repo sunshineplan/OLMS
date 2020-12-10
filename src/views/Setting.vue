@@ -137,6 +137,7 @@ export default {
             this.$t("EmailNotValid"),
             "error"
           );
+          return;
         }
       } else data = { subscribe: 0 };
       const resp = await post("/subscribe", data);

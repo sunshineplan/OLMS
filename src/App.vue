@@ -84,7 +84,12 @@ export default {
   async created() {
     await this.$store.dispatch("info");
     if (!this.user) this.$router.push("/login");
-    else this.$router.push({ name: "departmentRecords" });
+    else {
+      if (this.user.role) {
+        this.$store.commit("personal", false);
+        this.$router.push({ name: "departmentRecords" });
+      }
+    }
   },
   mounted() {
     window.addEventListener("resize", this.checkSize);
@@ -175,12 +180,12 @@ td:hover {
   white-space: normal;
 }
 
-.btn-primary {
-  margin-right: 4px;
+.btn + .btn {
+  margin-left: 4px;
 }
 
 .btn-info {
-  margin-left: 8px;
+  margin-left: 8px !important;
 }
 
 .form-row {
@@ -304,13 +309,16 @@ td:hover {
   left: 250px;
   height: calc(100% - 70px);
   width: calc(100% - 250px);
-  display: none;
+  display: flex;
 }
 
-@media (min-width: 1201px) {
-  .toggle {
-    display: none;
-  }
+.slide-leave-active,
+.slide-enter-active {
+  transition: 0.5s;
+}
+.slide-enter-from,
+.slide-leave-to {
+  transform: translate(-100%, 0);
 }
 
 @media (max-width: 1200px) {

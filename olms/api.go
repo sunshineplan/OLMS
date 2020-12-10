@@ -50,11 +50,16 @@ func info(c *gin.Context) {
 		c.JSON(200, info)
 		return
 	}
-	user, err := getUser(db, userID)
-	if err != nil {
-		log.Println("Failed to get user:", err)
-		c.String(500, "")
-		return
+	var user employee
+	if userID == 0 {
+		user = employee{ID: 0, Realname: "root", Role: true}
+	} else {
+		user, err = getUser(db, userID)
+		if err != nil {
+			log.Println("Failed to get user:", err)
+			c.String(500, "")
+			return
+		}
 	}
 	info["user"] = user
 	if user.Role {
@@ -156,6 +161,7 @@ func year(c *gin.Context) {
 func api(c *gin.Context, mode string, export bool) {
 	var option searchOptions
 	if err := c.BindJSON(&option); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}
@@ -212,7 +218,7 @@ func api(c *gin.Context, mode string, export bool) {
 					fmt.Sprintf("%s%s%s.csv", localize["Records"], option.Year, option.Month),
 					[]string{
 						localize["DeptName"],
-						localize["Name"],
+						localize["Realname"],
 						localize["Date"],
 						localize["Type"],
 						localize["Duration"],
@@ -242,7 +248,7 @@ func api(c *gin.Context, mode string, export bool) {
 					[]string{
 						localize["Period"],
 						localize["DeptName"],
-						localize["Name"],
+						localize["Realname"],
 						localize["Overtime"],
 						localize["Leave"],
 						localize["Summary"]},

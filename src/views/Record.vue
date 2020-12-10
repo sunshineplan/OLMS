@@ -13,7 +13,7 @@
           id="department"
           required
         >
-          <option disabled>-- {{ $t("SelectDepartment") }} --</option>
+          <option value="0" disabled>-- {{ $t("SelectDepartment") }} --</option>
           <option v-for="d in departments" :key="d.id" :value="d.id">
             {{ d.name }}
           </option>
@@ -28,7 +28,7 @@
           :disabled="!record.deptid"
           required
         >
-          <option disabled>-- {{ $t("SelectEmployee") }} --</option>
+          <option value="0" disabled>-- {{ $t("SelectEmployee") }} --</option>
           <option v-for="e in employees" :key="e.id" :value="e.id">
             {{ e.realname }}
           </option>
@@ -48,9 +48,9 @@
     <div class="form-row">
       <div class="form-group">
         <label for="type">{{ $t("Type") }}</label>
-        <select class="form-control" v-model.number="record.type" id="type">
-          <option value="1">{{ $t("Overtime") }}</option>
-          <option value="0">{{ $t("Leave") }}</option>
+        <select class="form-control" v-model="record.type" id="type">
+          <option :value="true">{{ $t("Overtime") }}</option>
+          <option :value="false">{{ $t("Leave") }}</option>
         </select>
       </div>
       <div class="form-group">
@@ -113,7 +113,10 @@ export default {
         this.$route.params.mode == "add"
           ? this.$t("AddRecord")
           : this.$t("EditRecord"),
-      record: this.$route.params.mode == "edit" ? this.$store.state.record : {},
+      record:
+        this.$route.params.mode == "edit"
+          ? this.$store.state.record
+          : { deptid: 0, userid: 0, type: true, status: 0 },
       validated: false,
     };
   },
@@ -123,6 +126,10 @@ export default {
         (i) => i.deptid == this.record.deptid
       );
     },
+  },
+  created() {
+    if (this.record.date)
+      this.record.date = this.record.date.replace(":00Z", "");
   },
   mounted() {
     document.title = this.mode + " - " + this.$t("OLMS");
@@ -164,3 +171,9 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.form-control {
+  width: 250px !important;
+}
+</style>

@@ -29,11 +29,11 @@
       <label for="department">{{ $t("Department") }}</label>
       <select
         class="form-control"
-        v-model.number="employee.department"
+        v-model.number="employee.deptid"
         id="department"
         required
       >
-        <option disabled>-- {{ $t("SelectDepartment") }} --</option>
+        <option value="0" disabled>-- {{ $t("SelectDepartment") }} --</option>
         <option v-for="d in departments" :key="d.id" :value="d.id">
           {{ d.name }}
         </option>
@@ -50,16 +50,16 @@
       />
       <small class="form-text text-muted">{{ $t("LeaveBlankPassword") }}</small>
     </div>
-    <div class="form-group" v-if="user.super">
+    <div class="form-group" v-if="user.super" v-show="employee.deptid">
       <label for="role">{{ $t("Role") }}</label>
       <select
         class="form-control"
-        v-model.number="employee.role"
+        v-model="employee.role"
         id="role"
         @change="if (!employee.role) permission = [];"
       >
-        <option value="0">{{ $t("GeneralEmployee") }}</option>
-        <option value="1">{{ $t("Administrator") }}</option>
+        <option :value="false">{{ $t("GeneralEmployee") }}</option>
+        <option :value="true">{{ $t("Administrator") }}</option>
       </select>
     </div>
     <div class="form-group" v-if="user.super" v-show="employee.role">
@@ -72,7 +72,9 @@
         v-model="permission"
         id="permission"
       >
-        <option v-for="d in departments" :key="d.id" :value="d.id"></option>
+        <option v-for="d in departments" :key="d.id" :value="d.id">
+          {{ d.name }}
+        </option>
       </select>
     </div>
     <button class="btn btn-primary" @click="save()">
@@ -103,13 +105,16 @@ export default {
           ? this.$t("AddEmployee")
           : this.$t("EditEmployee"),
       employee:
-        this.$route.params.mode == "edit" ? this.$store.state.employee : {},
+        this.$route.params.mode == "edit"
+          ? this.$store.state.employee
+          : { deptid: 0, role: false },
       permission: [],
       validated: false,
     };
   },
   created() {
-    this.permission = this.employee.permission.split(",");
+    if (this.$route.params.mode == "edit")
+      this.permission = this.employee.permission.split(",");
   },
   mounted() {
     document.title = this.mode + " - " + this.$t("OLMS");
@@ -166,3 +171,9 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.form-control {
+  width: 250px !important;
+}
+</style>

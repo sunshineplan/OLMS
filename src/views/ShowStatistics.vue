@@ -15,7 +15,10 @@
             class="custom-select"
             v-model.number="filter.deptid"
             id="department"
-            @change="year('department')"
+            @change="
+              filter.userid = 0;
+              year('department');
+            "
           >
             <option value="0">{{ $t("All") }}</option>
             <option v-for="d in departments" :key="d.id" :value="d.id">
@@ -69,7 +72,9 @@
           </div>
           <select class="custom-select" v-model="filter.year" id="year">
             <option value="">{{ $t("All") }}</option>
-            <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+            <option v-for="y in years" :key="y" :value="String(y)">
+              {{ y }}
+            </option>
           </select>
         </div>
         <div
@@ -106,15 +111,15 @@
           <a
             class="btn btn-primary btn-sm"
             @click="
-              this.sort = {};
-              this.$store.commit('sort', {});
-              this.$store.commit('page', 1);
+              sort = {};
+              $store.commit('sort', {});
+              $store.commit('page', 1);
               load('statistics');
             "
           >
             {{ $t("Filter") }}
           </a>
-          <a class="btn btn-primary btn-sm" @click="reset('statistics')">
+          <a class="btn btn-primary btn-sm" @click="reset()">
             {{ $t("Reset") }}
           </a>
           <a class="btn btn-info btn-sm" @click="download('statistics')">
@@ -250,10 +255,6 @@ export default {
   data() {
     return {
       user: this.$store.state.user,
-      personal:
-        this.$router.currentRoute.value.name == "departmentStatistics"
-          ? false
-          : true,
       departments: this.$store.state.departments,
       years: [],
       statistics: [],
@@ -263,6 +264,9 @@ export default {
     };
   },
   computed: {
+    personal() {
+      return this.$store.state.personal;
+    },
     mode() {
       return this.personal
         ? this.$t("EmployeeStatistics")
@@ -270,7 +274,7 @@ export default {
     },
     employees() {
       return this.$store.state.employees.filter(
-        (i) => i.deptid == this.record.deptid
+        (i) => i.deptid == this.filter.deptid
       );
     },
     page() {
@@ -278,9 +282,14 @@ export default {
     },
   },
   watch: {
-    async sort() {
-      this.$store.commit("page", 1);
-      await this.load("records");
+    personal() {
+      document.title = this.mode + " - " + this.$t("OLMS");
+    },
+    async sort(sort) {
+      if (Object.keys(sort).length) {
+        this.$store.commit("page", 1);
+        await this.load("statistics");
+      }
     },
     async page() {
       await this.load("statistics");
@@ -288,10 +297,24 @@ export default {
   },
   async created() {
     await this.year();
-    await this.reset("statistics");
+    await this.reset();
   },
   mounted() {
     document.title = this.mode + " - " + this.$t("OLMS");
+  },
+  methods: {
+    async reset() {
+      this.filter = {
+        deptid: 0,
+        userid: 0,
+        period: "month",
+        year: "",
+        month: "",
+      };
+      this.sort = {};
+      this.$store.dispatch("reset", this.filter);
+      await this.load("statistics");
+    },
   },
 };
 </script>

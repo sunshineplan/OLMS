@@ -9,7 +9,7 @@
         <label for="department">{{ $t("Department") }}</label>
         <input
           class="form-control"
-          v-text="record.deptname"
+          :value="record.deptname"
           id="department"
           readonly
         />
@@ -18,7 +18,7 @@
         <label for="employee">{{ $t("Employee") }}</label>
         <input
           class="form-control"
-          v-text="record.realname"
+          :value="record.realname"
           id="employee"
           readonly
         />
@@ -28,7 +28,7 @@
       <label for="date">{{ $t("Date") }}</label>
       <input
         class="form-control"
-        v-text="record.date.replace(':00Z', '').replace('T', ' ')"
+        :value="record.date.replace(':00Z', '').replace('T', ' ')"
         id="date"
         readonly
       />
@@ -37,7 +37,7 @@
       <label for="type">{{ $t("Type") }}</label>
       <input
         class="form-control"
-        v-text="record.type ? $t('Overtime') : $t('Leave')"
+        :value="record.type ? $t('Overtime') : $t('Leave')"
         id="type"
         readonly
       />
@@ -46,7 +46,7 @@
       <label for="duration">{{ $t("Duration") }}</label>
       <input
         class="form-control"
-        v-text="record.duration"
+        :value="record.duration"
         id="duration"
         readonly
       />
@@ -100,3 +100,9 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.form-control {
+  width: 250px !important;
+}
+</style>

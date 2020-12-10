@@ -12,19 +12,20 @@
   </a>
   <slot></slot>
   <nav v-if="total">
-    <ul
-      class="pagination justify-content-center"
-      v-for="(i, index) in items"
-      :key="i"
-    >
+    <ul class="pagination justify-content-center">
       <li class="page-item" :class="{ disabled: page <= 1 }">
         <a class="page-link" @click="page--">{{ $t("Previous") }}</a>
       </li>
-      <li class="page-item" v-if="index > 1 && i - items[index - 1] > 1">
-        <a class="page-link">...</a>
-      </li>
-      <li class="page-item" :class="{ active: i == page }">
-        <a class="page-link" @click="page = i">{{ i }}</a>
+      <li
+        class="page-item"
+        v-for="(i, index) in items"
+        :key="i"
+        :class="{ active: i == page }"
+      >
+        <a class="page-link" v-if="index > 1 && i - items[index - 1] > 1"
+          >...</a
+        >
+        <a class="page-link" v-else @click="page = i">{{ i }}</a>
       </li>
       <li class="page-item" :class="{ disabled: page == pages }">
         <a class="page-link" @click="page++">{{ $t("Next") }}</a>

@@ -9,6 +9,7 @@ export default createStore({
       departments: [],
       employees: [],
       recaptcha: null,
+      personal: true,
       years: [],
       department: {},
       employee: {},
@@ -27,6 +28,7 @@ export default createStore({
     departments(state, departments) { state.departments = departments },
     employees(state, employees) { state.employees = employees },
     recaptcha(state, recaptcha) { state.recaptcha = recaptcha },
+    personal(state, personal) { state.personal = personal },
     years(state, years) { state.years = years },
     department(state, department) { state.department = department },
     employee(state, employee) { state.employee = employee },
@@ -56,8 +58,8 @@ export default createStore({
     delEmployee({ commit, state }, id) {
       commit('employees', state.employees.filter(i => i.id != id))
     },
-    reset({ commit }) {
-      commit('filter', {})
+    reset({ commit }, filter) {
+      commit('filter', filter)
       commit('sort', {})
       commit('page', 1)
     }
