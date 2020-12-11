@@ -8,7 +8,8 @@
             <a
               class="nav-link"
               :class="{
-                selected: $router.currentRoute.value.path == '/' && personal,
+                selected:
+                  $router.currentRoute.value.path == '/' && personalRecord,
               }"
               @click="goto('/', true)"
             >
@@ -20,7 +21,8 @@
               class="nav-link"
               :class="{
                 selected:
-                  $router.currentRoute.value.path == '/statistics' && personal,
+                  $router.currentRoute.value.path == '/statistics' &&
+                  personalStatistic,
               }"
               @click="goto('/statistics', true)"
             >
@@ -38,7 +40,7 @@
               :class="{
                 selected:
                   $router.currentRoute.value.path == '/' &&
-                  !personal &&
+                  !personalRecord &&
                   !user.super,
               }"
               @click="goto('/', false)"
@@ -51,7 +53,8 @@
               class="nav-link"
               :class="{
                 selected:
-                  $router.currentRoute.value.path == '/statistics' && !personal,
+                  $router.currentRoute.value.path == '/statistics' &&
+                  !personalStatistic,
               }"
               @click="goto('/statistics', false)"
             >
@@ -91,7 +94,7 @@
               :class="{
                 selected: $router.currentRoute.value.path == '/' && user.super,
               }"
-              @click="goto('/', false)"
+              @click="goto('/')"
             >
               {{ $t("ManageRecord") }}
             </a>
@@ -108,18 +111,25 @@ export default {
   data() {
     return {
       user: this.$store.state.user,
+      smallSize: window.innerWidth <= 1200,
     };
   },
   computed: {
-    personal() {
-      return this.$store.state.personal;
+    personalRecord() {
+      return this.$store.state.personalRecord;
+    },
+    personalStatistic() {
+      return this.$store.state.personalStatistic;
     },
   },
   methods: {
     goto(router, personal) {
-      if (window.innerWidth <= 1200) this.$store.commit("closeSidebar");
-      if (personal != undefined) this.$store.commit("personal", personal);
-      this.$router.push(router);
+      this.closeSidebar(() => {
+        if (personal != undefined)
+          if (router == "/") this.$store.commit("personalRecord", personal);
+          else this.$store.commit("personalStatistic", personal);
+        this.$router.push(router);
+      });
     },
   },
 };

@@ -120,9 +120,9 @@ export default {
   methods: {
     async changeLanguage() {
       Cookies.set("lang", this.lang, { expires: 365 });
-      await loadLocaleMessages(i18n, this.lang);
       this.$i18n.locale = this.lang;
-      document.querySelector("html").setAttribute("lang", this.lang);
+      await loadLocaleMessages(i18n, this.$i18n.locale);
+      document.querySelector("html").setAttribute("lang", this.$i18n.locale);
       BootstrapButtons.fire(
         this.$t("Success"),
         this.$t("LanguageChanged"),

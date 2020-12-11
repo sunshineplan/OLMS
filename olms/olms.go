@@ -46,7 +46,7 @@ func verifyResponse(action, remoteip, response string) bool {
 
 func checkPermission(db *sql.DB, c *gin.Context, option *idOptions) bool {
 	userID := sessions.Default(c).Get("userID")
-	if userID == "0" {
+	if userID == 0 {
 		return true
 	}
 
@@ -85,11 +85,11 @@ func checkRecord(db *sql.DB, c *gin.Context, id int, self bool) (record record, 
 	}
 	if self {
 		userID := sessions.Default(c).Get("userID")
-		if userID == "0" {
+		if userID == 0 {
 			ok = true
 			return
 		}
-		ok = userID == strconv.Itoa(record.UserID)
+		ok = userID == record.UserID
 		return
 	}
 	ok = checkPermission(db, c, &idOptions{Departments: []string{strconv.Itoa(record.DeptID)}})

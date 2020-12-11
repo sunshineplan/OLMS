@@ -14,7 +14,7 @@ export const valid = () => {
 
 export const post = (url, data) => {
   let json = {}
-  Object.keys(data).forEach(key => data[key] !== '' && (json[key] = data[key]))
+  if (data) Object.keys(data).forEach(key => data[key] !== '' && (json[key] = data[key]))
   return fetch(url, {
     method: 'post',
     headers: { 'Content-Type': 'application/json' },

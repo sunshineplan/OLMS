@@ -7,6 +7,7 @@ export default createI18n({
   globalInjection: true,
   locale: 'en',
   fallbackLocale: 'en',
+  messages: {}
 })
 
 export async function loadLocaleMessages(i18n, locale) {

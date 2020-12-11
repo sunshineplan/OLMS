@@ -46,6 +46,7 @@ func getDepartments(db *sql.DB, ids []string, super bool) ([]department, error) 
 func addDepartment(c *gin.Context) {
 	var department department
 	if err := c.BindJSON(&department); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}
@@ -77,6 +78,7 @@ func addDepartment(c *gin.Context) {
 func editDepartment(c *gin.Context) {
 	var department department
 	if err := c.BindJSON(&department); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}
@@ -112,8 +114,8 @@ func editDepartment(c *gin.Context) {
 func deleteDepartment(c *gin.Context) {
 	db, err := getDB()
 	if err != nil {
-		log.Print(err)
-		c.String(503, "Failed to connect to database.")
+		log.Println("Failed to connect to database:", err)
+		c.String(503, "")
 		return
 	}
 	defer db.Close()
@@ -121,12 +123,12 @@ func deleteDepartment(c *gin.Context) {
 	id := c.Param("id")
 	var exist string
 	if err := db.QueryRow("SELECT realname FROM user WHERE dept_id = ?", id).Scan(&exist); err == nil {
-		c.String(500, "Can't delete department which has employee.")
+		c.String(500, "DeleteNonEmptyDepartment")
 		return
 	}
 	if _, err := db.Exec("DELETE FROM department WHERE id = ?", id); err != nil {
-		log.Print(err)
-		c.String(500, "Failed to delete department.")
+		log.Println("Failed to delete department:", err)
+		c.String(500, "")
 		return
 	}
 	c.JSON(200, gin.H{"status": 1})

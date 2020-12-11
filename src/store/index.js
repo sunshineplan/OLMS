@@ -9,7 +9,8 @@ export default createStore({
       departments: [],
       employees: [],
       recaptcha: null,
-      personal: true,
+      personalRecord: null,
+      personalStatistic: null,
       years: [],
       department: {},
       employee: {},
@@ -28,7 +29,8 @@ export default createStore({
     departments(state, departments) { state.departments = departments },
     employees(state, employees) { state.employees = employees },
     recaptcha(state, recaptcha) { state.recaptcha = recaptcha },
-    personal(state, personal) { state.personal = personal },
+    personalRecord(state, personalRecord) { state.personalRecord = personalRecord },
+    personalStatistic(state, personalStatistic) { state.personalStatistic = personalStatistic },
     years(state, years) { state.years = years },
     department(state, department) { state.department = department },
     employee(state, employee) { state.employee = employee },
@@ -49,6 +51,8 @@ export default createStore({
         commit('departments', json.departments)
         commit('employees', json.employees)
         commit('recaptcha', json.recaptcha)
+      } else {
+        commit('user', false)
       }
       commit('stopLoading')
     },

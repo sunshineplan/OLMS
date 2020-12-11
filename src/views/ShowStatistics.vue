@@ -265,7 +265,7 @@ export default {
   },
   computed: {
     personal() {
-      return this.$store.state.personal;
+      return this.$store.state.personalStatistic;
     },
     mode() {
       return this.personal
@@ -273,9 +273,11 @@ export default {
         : this.$t("DepartmentStatistics");
     },
     employees() {
-      return this.$store.state.employees.filter(
-        (i) => i.deptid == this.filter.deptid
-      );
+      if (this.personal == false)
+        return this.$store.state.employees.filter(
+          (i) => i.deptid == this.filter.deptid
+        );
+      return [];
     },
     page() {
       return this.$store.state.page;

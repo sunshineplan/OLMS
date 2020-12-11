@@ -127,7 +127,8 @@ export default {
     async save() {
       if (valid()) {
         this.validated = false;
-        let url, data;
+        let url;
+        const data = {};
         if (this.$route.params.mode == "add") url = "/employee/add";
         else {
           url = "/employee/edit";
@@ -135,12 +136,10 @@ export default {
         }
         data.username = this.employee.username;
         data.realname = this.employee.realname;
-        data.deptid = this.employee.department;
+        data.deptid = this.employee.deptid;
         if (this.user.super) {
           data.password = this.employee.password;
-          data.role = this.employee.role;
-          data.permission = this.permission;
-          if (data.role && !data.permission.length) {
+          if (this.employee.role && !this.permission.length) {
             await BootstrapButtons.fire(
               this.$t("Error"),
               this.$t("EmptyPermission"),
@@ -148,9 +147,11 @@ export default {
             );
             return;
           }
+          data.role = this.employee.role;
+          data.permission = this.permission.join(",");
         }
         const resp = await post(url, data);
-        await this.check(resp, async () => {
+        await this.checkResp(resp, async () => {
           await this.checkJson(await resp.json(), async () =>
             this.goback(true)
           );

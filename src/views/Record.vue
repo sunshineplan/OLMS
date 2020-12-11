@@ -104,7 +104,7 @@ export default {
   data() {
     return {
       user: this.$store.state.user,
-      personal: this.$store.state.personal,
+      personal: this.$store.state.personalRecord,
       departments: this.$store.state.departments,
       mode:
         this.$route.params.mode == "add"
@@ -139,18 +139,23 @@ export default {
     async save() {
       if (valid()) {
         this.validated = false;
-        let url;
-        if (this.$route.params.mode == "add") url = "/record/add";
-        else url = "/record/edit/" + this.record.id;
-        let data = {
-          department: this.record.department,
-          employee: this.record.employee,
-          date: this.record.date,
+        const data = {
+          date: this.record.date + ":00Z",
           type: this.record.type,
           duration: this.record.duration,
           describe: this.record.describe,
         };
-        if (this.user.super) data = this.record;
+        if (!this.personal) {
+          data.deptid = this.record.deptid;
+          data.userid = this.record.userid;
+        }
+        if (this.user.super) data.status = this.record.status;
+        let url;
+        if (this.$route.params.mode == "add") url = "/record/add";
+        else {
+          url = "/record/edit";
+          data.id = this.record.id;
+        }
         const resp = await post(url, data);
         await this.checkResp(resp, async () => {
           await this.checkJson(await resp.json(), () => this.goback());

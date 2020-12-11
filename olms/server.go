@@ -29,7 +29,7 @@ func Run() {
 		log.Fatalln("Failed to get secret:", err)
 	}
 
-	//gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	Server.Handler = router
 	router.Use(gin.Recovery())
@@ -81,7 +81,7 @@ func Run() {
 	record.Use(authRequired)
 	record.POST("/add", addRecord)
 	record.POST("/edit", editRecord)
-	record.POST("/verify", adminRequired, verifyRecord)
+	record.POST("/verify/:id", adminRequired, verifyRecord)
 	record.POST("/delete/:id", deleteRecord)
 
 	employee := router.Group("/employee")

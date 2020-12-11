@@ -4,7 +4,7 @@ import { BootstrapButtons, post } from '../misc.js'
 export default {
   methods: {
     async confirm(type) {
-      return await Swal.fire({
+      const confirm = await Swal.fire({
         title: this.$t('AreYouSure'),
         text: this.$t('Delete' + type),
         icon: 'warning',
@@ -16,7 +16,18 @@ export default {
           cancelButton: 'swal btn btn-primary'
         },
         buttonsStyling: false
-      }).isConfirmed
+      })
+      return confirm.isConfirmed
+    },
+    closeSidebar(func) {
+      if (func) {
+        if (this.smallSize) {
+          this.$store.commit('closeSidebar')
+          setTimeout(() => func(), 500)
+        } else (
+          func()
+        )
+      } else if (this.smallSize) this.$store.commit('closeSidebar')
     },
     async checkResp(resp, success) {
       if (resp.ok) return success()

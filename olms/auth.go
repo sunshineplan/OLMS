@@ -24,7 +24,7 @@ func adminRequired(c *gin.Context) {
 	switch userID {
 	case nil:
 		c.AbortWithStatus(401)
-	case "0":
+	case 0:
 	default:
 		db, err := getDB()
 		if err != nil {
@@ -49,7 +49,7 @@ func superRequired(c *gin.Context) {
 	userID := sessions.Default(c).Get("userID")
 	if userID == nil {
 		c.AbortWithStatus(401)
-	} else if userID != "0" {
+	} else if userID != 0 {
 		c.AbortWithStatus(403)
 	}
 }
@@ -61,6 +61,7 @@ func login(c *gin.Context) {
 		Recaptcha          string
 	}
 	if err := c.BindJSON(&login); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}
@@ -133,6 +134,7 @@ func login(c *gin.Context) {
 func setting(c *gin.Context) {
 	var setting struct{ Password, Password1, Password2, Recaptcha string }
 	if err := c.BindJSON(&setting); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}

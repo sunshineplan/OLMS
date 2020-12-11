@@ -4,7 +4,7 @@
     src="https://www.recaptcha.net/recaptcha/api.js"
     v-if="recaptcha"
   />
-  <nav class="navbar navbar-light topbar">
+  <nav class="navbar navbar-light topbar" v-if="user != null">
     <div class="d-flex" style="height: 100%">
       <a class="toggle" v-if="user && smallSize" @click="toggle">
         <i class="material-icons menu">menu</i>
@@ -16,17 +16,17 @@
     </div>
     <div class="navbar-nav flex-row" v-if="user">
       <a class="nav-link" v-text="user.realname"></a>
-      <router-link class="nav-link link" to="/setting">
+      <a class="nav-link link" @click="setting()">
         {{ $t("Setting") }}
-      </router-link>
+      </a>
       <a class="nav-link link" href="/logout">{{ $t("Logout") }}</a>
     </div>
     <div class="navbar-nav flex-row" v-else>
       <a class="nav-link">{{ $t("Login") }}</a>
     </div>
   </nav>
-  <Login v-if="!user" />
-  <div v-else>
+  <Login v-if="user == false" />
+  <div v-else-if="user">
     <transition name="slide">
       <Sidebar v-show="showSidebar || !smallSize" />
     </transition>
@@ -34,7 +34,7 @@
       class="content"
       style="padding-left: 200px"
       :style="{ opacity: loading ? 0.5 : 1 }"
-      @mousedown="closeSidebar"
+      @mousedown="closeSidebar()"
     >
       <router-view />
     </div>
@@ -80,17 +80,14 @@ export default {
   },
   async created() {
     const lang = Cookies.get("lang");
-    if (lang) {
-      await loadLocaleMessages(i18n, lang);
-      this.$i18n.locale = lang;
-    }
+    if (lang) this.$i18n.locale = lang;
+    await loadLocaleMessages(i18n, this.$i18n.locale);
     document.querySelector("html").setAttribute("lang", this.$i18n.locale);
     await this.$store.dispatch("info");
     if (!this.user) this.$router.push("/login");
     else {
-      if (this.user.role) {
-        this.$store.commit("personal", false);
-      }
+      const personal = this.user.role ? false : true;
+      this.$store.commit("personalRecord", personal);
     }
   },
   mounted() {
@@ -104,11 +101,11 @@ export default {
       if (this.smallSize != window.innerWidth <= 1200)
         this.smallSize = !this.smallSize;
     },
+    setting() {
+      this.closeSidebar(() => this.$router.push("/setting"));
+    },
     toggle() {
       this.$store.commit("toggleSidebar");
-    },
-    closeSidebar() {
-      if (this.smallSize) this.$store.commit("closeSidebar");
     },
   },
 };
@@ -318,6 +315,7 @@ td:hover {
 .slide-enter-active {
   transition: 0.5s;
 }
+
 .slide-enter-from,
 .slide-leave-to {
   transform: translate(-100%, 0);

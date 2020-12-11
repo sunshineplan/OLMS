@@ -60,7 +60,8 @@ func getEmployees(db *sql.DB, ids []string, super bool) ([]employee, error) {
 			employees = append(employees, e)
 		}
 	} else {
-		rows, err := db.Query("SELECT id, username, realname, dept_id, deptname FROM employee WHERE id IN (" + strings.Join(ids, ", ") + ")")
+		rows, err := db.Query(
+			"SELECT id, username, realname, dept_id, deptname FROM employee WHERE dept_id IN (" + strings.Join(ids, ", ") + ")")
 		if err != nil {
 			log.Println("Failed to get employees:", err)
 			return nil, err
@@ -68,7 +69,7 @@ func getEmployees(db *sql.DB, ids []string, super bool) ([]employee, error) {
 		for rows.Next() {
 			var e employee
 			if err := rows.Scan(&e.ID, &e.Username, &e.Realname, &e.DeptID, &e.DeptName); err != nil {
-				log.Println("Failed to scan department:", err)
+				log.Println("Failed to scan employee:", err)
 				return nil, err
 			}
 			employees = append(employees, e)
@@ -80,6 +81,7 @@ func getEmployees(db *sql.DB, ids []string, super bool) ([]employee, error) {
 func addEmployee(c *gin.Context) {
 	var employee employee
 	if err := c.BindJSON(&employee); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}
@@ -112,8 +114,8 @@ func addEmployee(c *gin.Context) {
 	} else if employee.DeptID == 0 {
 		message = "DepartmentRequired"
 	} else {
-		if sessions.Default(c).Get("userID") == "0" {
-			res, err := db.Exec("INSERT INTO user (username, realname, dept_id) VALUES (?, ?, ?, ?)",
+		if sessions.Default(c).Get("userID") == 0 {
+			res, err := db.Exec("INSERT INTO user (username, realname, dept_id) VALUES (?, ?, ?)",
 				strings.ToLower(employee.Username), employee.Realname, employee.DeptID)
 			if err != nil {
 				log.Println("Failed to add employee:", err)
@@ -165,6 +167,7 @@ func addEmployee(c *gin.Context) {
 func editEmployee(c *gin.Context) {
 	var employee employee
 	if err := c.BindJSON(&employee); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}
@@ -241,6 +244,12 @@ func editEmployee(c *gin.Context) {
 				}
 			} else {
 				c.JSON(200, gin.H{"status": 0, "message": "EmptyPermission"})
+				return
+			}
+		} else {
+			if _, err := db.Exec("UPDATE user SET role = 0 WHERE id = ?", employee.ID); err != nil {
+				log.Println("Failed to save employee role:", err)
+				c.String(500, "")
 				return
 			}
 		}

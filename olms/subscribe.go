@@ -49,6 +49,7 @@ func subscribe(c *gin.Context) {
 		Email     string
 	}
 	if err := c.BindJSON(&subscribe); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}

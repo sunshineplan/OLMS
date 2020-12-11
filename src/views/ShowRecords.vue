@@ -290,7 +290,7 @@
             <td v-if="personal">
               <a
                 class="btn btn-outline-primary btn-sm"
-                :class="{ disabled: !r.status }"
+                :class="{ disabled: r.status }"
                 @click="edit(r)"
               >
                 {{ $t("Edit") }}
@@ -336,7 +336,7 @@ export default {
   },
   computed: {
     personal() {
-      return this.$store.state.personal;
+      return this.$store.state.personalRecord;
     },
     mode() {
       return this.personal
@@ -346,19 +346,23 @@ export default {
         : this.$t("DepartmentRecords");
     },
     employees() {
-      return this.$store.state.employees.filter(
-        (i) => i.deptid == this.filter.deptid
-      );
+      if (this.personal == false)
+        return this.$store.state.employees.filter(
+          (i) => i.deptid == this.filter.deptid
+        );
+      return [];
     },
     page() {
       return this.$store.state.page;
     },
   },
   watch: {
-    async personal() {
-      document.title = this.mode + " - " + this.$t("OLMS");
-      await this.year();
-      await this.reset();
+    async personal(to, from) {
+      if (from != null) {
+        document.title = this.mode + " - " + this.$t("OLMS");
+        await this.year();
+        await this.reset();
+      }
     },
     async sort(sort) {
       if (Object.keys(sort).length) {

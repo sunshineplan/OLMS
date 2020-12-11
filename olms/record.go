@@ -119,6 +119,7 @@ func addRecord(c *gin.Context) {
 	}
 	var r record
 	if err := c.BindJSON(&r); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}
@@ -211,6 +212,7 @@ func editRecord(c *gin.Context) {
 	}
 	var r record
 	if err := c.BindJSON(&r); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}
@@ -242,7 +244,7 @@ func editRecord(c *gin.Context) {
 		return
 	}
 	userID := sessions.Default(c).Get("userID")
-	if userID != "0" {
+	if userID != 0 {
 		if record.Status != 0 {
 			c.JSON(200, gin.H{"status": 0, "message": "UpdateRecordNotVerified"})
 			return
@@ -289,8 +291,9 @@ func verifyRecord(c *gin.Context) {
 		c.String(403, "reCAPTCHAChallengeFailed")
 		return
 	}
-	var r record
+	var r struct{ Status bool }
 	if err := c.BindJSON(&r); err != nil {
+		log.Println("Failed to get option:", err)
 		c.String(400, "")
 		return
 	}
@@ -303,7 +306,13 @@ func verifyRecord(c *gin.Context) {
 	}
 	defer db.Close()
 
-	record, ok := checkRecord(db, c, r.ID, false)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		log.Println("Failed to get id:", err)
+		c.String(400, "")
+		return
+	}
+	record, ok := checkRecord(db, c, id, false)
 	if !ok {
 		c.String(403, "")
 		return
@@ -313,10 +322,11 @@ func verifyRecord(c *gin.Context) {
 		c.String(400, "")
 		return
 	}
-	if r.Status != 1 && r.Status != 2 {
-		log.Println("Unknow status.")
-		c.String(400, "")
-		return
+	var status int
+	if r.Status {
+		status = 1
+	} else {
+		status = 2
 	}
 
 	user, err := getUser(db, sessions.Default(c).Get("userID"))
@@ -327,14 +337,14 @@ func verifyRecord(c *gin.Context) {
 	}
 	ip, _, _ := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
 	if _, err := db.Exec("UPDATE record SET status = ?, verifiedby = ? WHERE id = ?",
-		r.Status, fmt.Sprintf("%d-%s-%s", user.ID, ip, c.ClientIP()), r.ID); err != nil {
+		status, fmt.Sprintf("%d-%s-%s", user.ID, ip, c.ClientIP()), id); err != nil {
 		log.Println("Failed to verify record:", err)
 		c.String(500, "")
 		return
 	}
 	localize := localize(c)
 	var result string
-	if r.Status == 1 {
+	if r.Status {
 		result = localize["Verified"]
 	} else {
 		result = localize["Rejected"]
