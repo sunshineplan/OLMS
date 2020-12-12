@@ -10,6 +10,7 @@ installOLMS() {
     mv /var/www/olms* /var/www/olms
     cd /var/www/olms
     bash build.sh
+    ./olms install
 }
 
 configOLMS() {
@@ -30,11 +31,6 @@ configOLMS() {
     sed -i "s/\$port/$port/" /var/www/olms/config.ini
     sed -i "s/\$sitekey/$sitekey/" /var/www/olms/config.ini
     sed -i "s/\$secretkey/$secretkey/" /var/www/olms/config.ini
-}
-
-setupsystemd() {
-    cp -s /var/www/olms/scripts/olms.service /etc/systemd/system
-    systemctl enable olms
     service olms start
 }
 
@@ -70,7 +66,6 @@ main() {
     installSoftware
     installOLMS
     configOLMS
-    setupsystemd
     writeLogrotateScrip
     createCronTask
     setupNGINX

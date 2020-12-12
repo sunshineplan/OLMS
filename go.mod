@@ -10,7 +10,7 @@ require (
 	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/mattn/go-sqlite3 v1.14.5
 	github.com/nicksnyder/go-i18n/v2 v2.1.1
-	github.com/sunshineplan/utils v0.0.0-20201112132214-a65f6c365251
+	github.com/sunshineplan/utils v0.0.0-20201212122036-7a2495910f72
 	github.com/vharitonsky/iniflags v0.0.0-20180513140207-a33cd0b5f3de
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
 	golang.org/x/sys v0.0.0-20201202213521-69691e467435 // indirect

@@ -1,38 +1,18 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: [ "Test" ]
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    types: 
+      - completed
 
 jobs:
-  build:
-    name: Create Release
-    runs-on: windows-latest
+  release:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-
-      - name: Setup Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '15'
-
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: '1.x'
-
-      - name: Test Vue Code
-        run: |
-          npm i --no-package-lock
-          npm run build
-
-      - name: Test Go Code
-        run: |
-          go mod download
-          go build -v ./...
 
       - name: Delete Old Release
         uses: actions/github-script@v3
@@ -63,11 +43,8 @@ jobs:
             })
 
       - name: Get Current Date
-        uses: actions/github-script@v3
         id: date
-        with:
-          script: |
-            core.setOutput("date", new Date(new Date().getTime()+(8*3600*1000)).toISOString().split('T')[0])
+        run: echo "::set-output name=date::$(TZ=CST date +'%Y-%m-%d')"
 
       - name: Create Release
         uses: actions/create-release@v1

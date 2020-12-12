@@ -12,14 +12,17 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sunshineplan/utils"
-	"github.com/sunshineplan/utils/winsvc"
+	"github.com/sunshineplan/utils/service"
 	"github.com/vharitonsky/iniflags"
 )
 
-var svc = winsvc.Service{
+var svc = service.Service{
 	Name: "OLMS",
-	Desc: "Overtime and Leave Management System",
+	Desc: "Instance to serve Overtime and Leave Management System",
 	Exec: olms.Run,
+	Options: service.Options{
+		Dependencies: []string{"After=network.target"},
+	},
 }
 
 func usage() {
@@ -49,7 +52,7 @@ func main() {
 	iniflags.SetAllowMissingConfigFile(true)
 	iniflags.Parse()
 
-	if winsvc.IsWindowsService() {
+	if service.IsWindowsService() {
 		svc.Run(false)
 		return
 	}

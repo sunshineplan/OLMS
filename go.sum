@@ -45,8 +45,8 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
-github.com/sunshineplan/utils v0.0.0-20201112132214-a65f6c365251 h1:jFk5BczcHDPrXRP1+7q+i59kexc+ny7YyqnJEMfTlSk=
-github.com/sunshineplan/utils v0.0.0-20201112132214-a65f6c365251/go.mod h1:fJ8/Fjbd50RwQ8/wxBmBgkuDHfcXrCJu6c/iRsgkYok=
+github.com/sunshineplan/utils v0.0.0-20201212122036-7a2495910f72 h1:BjbN7dIlgxfBaWyQkzs/2NshQNTbKVnnLUyzaUlAItc=
+github.com/sunshineplan/utils v0.0.0-20201212122036-7a2495910f72/go.mod h1:fJ8/Fjbd50RwQ8/wxBmBgkuDHfcXrCJu6c/iRsgkYok=
 github.com/ugorji/go v1.1.7 h1:/68gy2h+1mWMrwZFeD1kQialdSzAb432dtpeJ42ovdo=
 github.com/ugorji/go v1.1.7/go.mod h1:kZn38zHttfInRq0xu/PH0az30d+z6vm202qpg1oXVMw=
 github.com/ugorji/go/codec v1.1.7 h1:2SvQaVZ1ouYrrKKwoSk2pzd4A9evlKJb9oTL+OaLUSs=
