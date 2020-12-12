@@ -6,8 +6,23 @@
   />
   <nav class="navbar navbar-light topbar" v-if="user != null">
     <div class="d-flex" style="height: 100%">
-      <a class="toggle" v-if="user && smallSize" @click="toggle">
-        <i class="material-icons menu">menu</i>
+      <a
+        class="toggle"
+        v-if="user && smallSize"
+        @click="toggle"
+        @mouseenter="hover = true"
+        @mouseleave="hover = false"
+      >
+        <svg viewBox="0 0 70 70" width="40" height="30">
+          <rect
+            v-for="y in [10, 30, 50]"
+            :key="y"
+            :y="y"
+            width="100%"
+            height="10"
+            :fill="hover ? '#1a73e8' : 'white'"
+          />
+        </svg>
       </a>
       <a class="brand full" href="/">
         {{ $t("OvertimeAndLeaveManagementSystem") }}
@@ -61,6 +76,7 @@ export default {
   components: { Login, Sidebar },
   data() {
     return {
+      hover: false,
       smallSize: window.innerWidth <= 1200,
     };
   },
@@ -276,12 +292,7 @@ td:hover {
 }
 
 .toggle:hover {
-  color: #1a73e8 !important;
   background-color: rgb(232, 232, 232);
-}
-
-.material-icons.menu {
-  font-size: 30px;
 }
 
 .brand {
