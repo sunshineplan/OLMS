@@ -96,7 +96,7 @@
 <script>
 import Cookies from "js-cookie";
 import i18n, { loadLocaleMessages } from "../i18n";
-import { BootstrapButtons, post, valid, validateEmail } from "../misc.js";
+import { post, valid, validateEmail } from "../misc.js";
 
 const grecaptcha = window.grecaptcha;
 
@@ -123,11 +123,7 @@ export default {
       this.$i18n.locale = this.lang;
       await loadLocaleMessages(i18n, this.$i18n.locale);
       document.querySelector("html").setAttribute("lang", this.$i18n.locale);
-      BootstrapButtons.fire(
-        this.$t("Success"),
-        this.$t("LanguageChanged"),
-        "success"
-      );
+      this.prompt("Success", "LanguageChanged", "success");
       this.$router.replace("/setting");
     },
     async doSubscribe() {
@@ -137,28 +133,16 @@ export default {
           data = { subscribe: 1, email: this.email };
         else {
           this.subscribe = false;
-          await BootstrapButtons.fire(
-            this.$t("Error"),
-            this.$t("EmailNotValid"),
-            "error"
-          );
+          await this.prompt("Error", "EmailNotValid", "error");
           return;
         }
       } else data = { subscribe: 0 };
       const resp = await post("/subscribe", data);
       if ((await resp.json().status) == 1)
-        await BootstrapButtons.fire(
-          this.$t("Success"),
-          this.$t("SubscribeChanged"),
-          "success"
-        );
+        await this.prompt("Success", "SubscribeChanged", "success");
       else {
         this.subscribe = false;
-        await BootstrapButtons.fire(
-          this.$t("Error"),
-          this.$t("EmailNotValid"),
-          "error"
-        );
+        await this.prompt("Error", "EmailNotValid", "error");
       }
     },
     async changePassword() {
@@ -177,15 +161,11 @@ export default {
         await this.checkResp(resp, async () => {
           const json = await resp.json();
           if (json.status == 1) {
-            await BootstrapButtons.fire(
-              this.$t("Success"),
-              this.$t("PasswordChanged"),
-              "success"
-            );
+            await this.prompt("Success", "PasswordChanged", "success");
             this.$store.commit("user", null);
             this.$router.push("/login");
           } else {
-            await BootstrapButtons.fire("Error", json.message, "error");
+            await this.prompt("Error", json.message, "error");
             if (json.error == 1) this.password = "";
             else {
               this.password1 = "";

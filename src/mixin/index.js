@@ -1,8 +1,16 @@
 import Swal from 'sweetalert2'
-import { BootstrapButtons, post } from '../misc.js'
+import { post } from '../misc.js'
 
 export default {
   methods: {
+    prompt(title, content, icon) {
+      const prompt = Swal.mixin({
+        customClass: { confirmButton: 'swal btn btn-primary' },
+        confirmButtonText: this.$t('OK'),
+        buttonsStyling: false
+      })
+      return prompt.fire(this.$t(title), this.$t(content), icon)
+    },
     async confirm(type) {
       const confirm = await Swal.fire({
         title: this.$t('AreYouSure'),
@@ -32,12 +40,12 @@ export default {
     async checkResp(resp, success) {
       if (resp.ok) return success()
       else
-        return await BootstrapButtons.fire(this.$t('Error'), this.$t(await resp.text()), 'error')
+        return await this.prompt('Error', await resp.text(), 'error')
     },
     async checkJson(json, success) {
       if (json.status) return success()
       else
-        return await BootstrapButtons.fire(this.$t('Error'), this.$t(json.message), 'error')
+        return await this.prompt('Error', json.message, 'error')
     },
     async year(mode) {
       this.$store.commit('startLoading')
@@ -82,7 +90,7 @@ export default {
       this.$store.commit('filter', this.filter)
       const resp = await post(`/${mode}/export`, this.filter)
       if (resp.status == 404)
-        await BootstrapButtons.fire(this.$t('Info'), this.$t('NoResult'), 'info')
+        await this.prompt('Info', 'NoResult', 'info')
       else {
         const blob = new Blob(
           [new Uint8Array([0xef, 0xbb, 0xbf]), await resp.blob()],

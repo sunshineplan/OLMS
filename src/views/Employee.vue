@@ -92,7 +92,7 @@
 </template>
 
 <script>
-import { BootstrapButtons, post, valid } from "../misc.js";
+import { post, valid } from "../misc.js";
 
 export default {
   name: "Employee",
@@ -140,11 +140,7 @@ export default {
         if (this.user.super) {
           data.password = this.employee.password;
           if (this.employee.role && !this.permission.length) {
-            await BootstrapButtons.fire(
-              this.$t("Error"),
-              this.$t("EmptyPermission"),
-              "error"
-            );
+            await this.prompt("Error", "EmptyPermission", "error");
             return;
           }
           data.role = this.employee.role;

@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import { BootstrapButtons, post } from "../misc.js";
+import { post } from "../misc.js";
 
 const grecaptcha = window.grecaptcha;
 
@@ -89,17 +89,9 @@ export default {
     },
     async login() {
       if (!document.querySelector("#username").checkValidity())
-        await BootstrapButtons.fire(
-          this.$t("Error"),
-          this.$t("EmptyUsername"),
-          "error"
-        );
+        await this.prompt("Error", "EmptyUsername", "error");
       else if (!document.querySelector("#password").checkValidity())
-        await BootstrapButtons.fire(
-          this.$t("Error"),
-          this.$t("EmptyPassword"),
-          "error"
-        );
+        await this.prompt("Error", "EmptyPassword", "error");
       else {
         let data = {
           username: this.username,
