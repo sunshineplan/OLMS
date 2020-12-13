@@ -67,7 +67,7 @@
 
 <script>
 import Cookies from "js-cookie";
-import i18n, { loadLocaleMessages } from "./i18n";
+import { loadLocaleMessages } from "./i18n";
 import Login from "./components/Login.vue";
 import Sidebar from "./components/Sidebar.vue";
 
@@ -97,7 +97,7 @@ export default {
   async created() {
     const lang = Cookies.get("lang");
     if (lang) this.$i18n.locale = lang;
-    await loadLocaleMessages(i18n, this.$i18n.locale);
+    await loadLocaleMessages(this.$i18n.locale);
     document.querySelector("html").setAttribute("lang", this.$i18n.locale);
     await this.$store.dispatch("info");
     if (!this.user) this.$router.push("/login");

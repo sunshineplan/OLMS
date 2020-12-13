@@ -95,7 +95,7 @@
 
 <script>
 import Cookies from "js-cookie";
-import i18n, { loadLocaleMessages } from "../i18n";
+import { loadLocaleMessages } from "../i18n";
 import { post, valid, validateEmail } from "../misc.js";
 
 const grecaptcha = window.grecaptcha;
@@ -121,7 +121,7 @@ export default {
     async changeLanguage() {
       Cookies.set("lang", this.lang, { expires: 365 });
       this.$i18n.locale = this.lang;
-      await loadLocaleMessages(i18n, this.$i18n.locale);
+      await loadLocaleMessages(this.$i18n.locale);
       document.querySelector("html").setAttribute("lang", this.$i18n.locale);
       this.prompt("Success", "LanguageChanged", "success");
       this.$router.replace("/setting");
