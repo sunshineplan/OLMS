@@ -111,7 +111,6 @@ export default {
   data() {
     return {
       user: this.$store.state.user,
-      smallSize: window.innerWidth <= 1200,
     };
   },
   computed: {
@@ -183,12 +182,6 @@ export default {
 .panel .nav-link.selected {
   background-color: rgba(161, 194, 250, 0.16);
   color: #3367d6 !important;
-}
-
-@media (min-width: 1201px) {
-  .sidebar {
-    display: block !important;
-  }
 }
 
 @media (max-width: 1200px) {

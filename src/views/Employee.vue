@@ -168,9 +168,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.form-control {
-  width: 250px !important;
-}
-</style>

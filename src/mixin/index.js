@@ -29,13 +29,13 @@ export default {
     },
     closeSidebar(func) {
       if (func) {
-        if (this.smallSize) {
+        if (window.innerWidth <= 1200) {
           this.$store.commit('closeSidebar')
-          setTimeout(() => func(), 500)
+          setTimeout(func, 500)
         } else (
           func()
         )
-      } else if (this.smallSize) this.$store.commit('closeSidebar')
+      } else this.$store.commit('closeSidebar')
     },
     async checkResp(resp, success) {
       if (resp.ok) return success()

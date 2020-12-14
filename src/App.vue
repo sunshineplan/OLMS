@@ -24,10 +24,10 @@
           />
         </svg>
       </a>
-      <a class="brand full" href="/">
+      <a class="brand" href="/" v-if="smallSize">{{ $t("OLMS") }}</a>
+      <a class="brand" href="/" v-else>
         {{ $t("OvertimeAndLeaveManagementSystem") }}
       </a>
-      <a class="brand short" href="/">{{ $t("OLMS") }}</a>
     </div>
     <div class="navbar-nav flex-row" v-if="user">
       <a class="nav-link" v-text="user.realname"></a>
@@ -128,138 +128,7 @@ export default {
 </script>
 
 <style>
-:root {
-  --sk-color: #1a73e8;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", "Microsoft YaHei New",
-    "Microsoft Yahei", 微软雅黑, 宋体, SimSun, STXihei, 华文细黑, sans-serif;
-}
-
-a:hover {
-  text-decoration: none;
-}
-
-.form,
-.lang,
-.subscribe {
-  padding: 0 20px;
-}
-
-.h3 {
-  cursor: default;
-}
-
-.input-group {
-  padding: 5px 10px 5px 0px;
-  max-width: 240px;
-}
-
-.form-control {
-  width: 250px;
-}
-
-.content {
-  position: fixed;
-  top: 0;
-  padding-top: 90px;
-  height: 100%;
-  width: 100%;
-  overflow-y: auto;
-}
-
-.toolbar {
-  padding-bottom: 10px;
-}
-
-.table-responsive {
-  min-height: 300px;
-  padding: 0 10px;
-  cursor: default;
-}
-
-table,
-table.record {
-  table-layout: fixed;
-}
-
-td {
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-td:hover {
-  white-space: normal;
-}
-
-.btn + .btn {
-  margin-left: 4px;
-}
-
-.btn-info {
-  margin-left: 8px !important;
-}
-
-.form-row {
-  margin-right: 0px;
-  margin-left: 0px;
-}
-
-.form-row .form-group {
-  padding-right: 30px;
-}
-
-.delete {
-  margin-top: 8px;
-}
-
-.swal {
-  margin: 8px 6px;
-}
-
-#department {
-  width: 135px;
-}
-
-#employee {
-  width: 95px;
-}
-
-#year {
-  width: 70px;
-}
-
-.sortable {
-  cursor: pointer;
-  background-position: right;
-  background-repeat: no-repeat;
-  padding-right: 30px !important;
-}
-
-.default {
-  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAQAAADYWf5HAAAAkElEQVQoz7X QMQ5AQBCF4dWQSJxC5wwax1Cq1e7BAdxD5SL+Tq/QCM1oNiJidwox0355mXnG/DrEtIQ6azioNZQxI0ykPhTQIwhCR+BmBYtlK7kLJYwWCcJA9M4qdrZrd8pPjZWPtOqdRQy320YSV17OatFC4euts6z39GYMKRPCTKY9UnPQ6P+GtMRfGtPnBCiqhAeJPmkqAAAAAElFTkSuQmCC");
-}
-
-.asc {
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAByUDbMAAAAZ0lEQVQ4y2NgGLKgquEuFxBPAGI2ahhWCsS/gDibUoO0gPgxEP8H4ttArEyuQYxAPBdqEAxPBImTY5gjEL9DM+wTENuQahAvEO9DMwiGdwAxOymGJQLxTyD+jgWDxCMZRsEoGAVoAADeemwtPcZI2wAAAABJRU5ErkJggg==);
-}
-
-.desc {
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAByUDbMAAAAZUlEQVQ4y2NgGAWjYBSggaqGu5FA/BOIv2PBIPFEUgxjB+IdQPwfC94HxLykus4GiD+hGfQOiB3J8SojEE9EM2wuSJzcsFMG4ttQgx4DsRalkZENxL+AuJQaMcsGxBOAmGvopk8AVz1sLZgg0bsAAAAASUVORK5CYII=);
-}
-
-@media (max-width: 1200px) {
-  .content {
-    padding-left: 0 !important;
-  }
-
-  table {
-    table-layout: auto;
-  }
-}
+@import "./style.css";
 </style>
 
 <style scoped>
@@ -308,10 +177,6 @@ td:hover {
   text-decoration: none;
 }
 
-.short {
-  display: none;
-}
-
 .loading {
   position: fixed;
   z-index: 2;
@@ -335,14 +200,6 @@ td:hover {
 @media (max-width: 1200px) {
   .brand {
     padding-left: 10px;
-  }
-
-  .short {
-    display: inline;
-  }
-
-  .full {
-    display: none;
   }
 
   .loading {
