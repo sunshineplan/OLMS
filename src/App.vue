@@ -1,9 +1,4 @@
 <template>
-  <component
-    :is="script"
-    src="https://www.recaptcha.net/recaptcha/api.js"
-    v-if="recaptcha"
-  />
   <nav class="navbar navbar-light topbar" v-if="user != null">
     <div class="d-flex" style="height: 100%">
       <a
@@ -51,7 +46,7 @@
       :style="{ opacity: loading ? 0.5 : 1 }"
       @mousedown="closeSidebar()"
     >
-      <router-view />
+      <router-view v-if="!recaptcha || (recaptcha && ready)" />
     </div>
   </div>
   <div class="loading" v-show="loading">
@@ -84,14 +79,14 @@ export default {
     user() {
       return this.$store.state.user;
     },
-    recaptcha() {
-      return this.$store.state.recaptcha;
-    },
     loading() {
       return this.$store.state.loading;
     },
     showSidebar() {
       return this.$store.state.showSidebar;
+    },
+    ready() {
+      return this.$store.state.ready;
     },
   },
   async created() {
@@ -100,6 +95,16 @@ export default {
     await loadLocaleMessages(this.$i18n.locale);
     document.querySelector("html").setAttribute("lang", this.$i18n.locale);
     await this.$store.dispatch("info");
+    if (this.recaptcha) {
+      const script = document.createElement("script");
+      script.setAttribute(
+        "src",
+        "https://www.recaptcha.net/recaptcha/api.js?render=" + this.recaptcha
+      );
+      script.async = true;
+      document.head.appendChild(script);
+      this.$store.commit("ready");
+    }
     if (!this.user) this.$router.push("/login");
     else {
       const personal = this.user.role ? false : true;

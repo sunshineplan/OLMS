@@ -4,6 +4,7 @@ export default createStore({
   state() {
     return {
       user: null,
+      ready: false,
       showSidebar: false,
       loading: 0,
       departments: [],
@@ -22,6 +23,7 @@ export default createStore({
   },
   mutations: {
     user(state, user) { state.user = user },
+    ready(state) { state.ready = true },
     startLoading(state) { state.loading += 1 },
     stopLoading(state) { state.loading -= 1 },
     closeSidebar(state) { state.showSidebar = false },
@@ -44,13 +46,16 @@ export default createStore({
       commit('startLoading')
       const resp = await fetch('/info')
       const json = await resp.json()
+      if (json.recaptcha) {
+        commit('recaptcha', json.recaptcha)
+        delete json.recaptcha
+      }
       if (Object.keys(json).length) {
         let user = json.user
         if (user.id == 0) user.super = true
         commit('user', user)
         commit('departments', json.departments)
         commit('employees', json.employees)
-        commit('recaptcha', json.recaptcha)
       } else {
         commit('user', false)
       }

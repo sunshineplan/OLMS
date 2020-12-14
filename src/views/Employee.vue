@@ -92,7 +92,7 @@
 </template>
 
 <script>
-import { post, valid } from "../misc.js";
+import { valid } from "../misc.js";
 
 export default {
   name: "Employee",
@@ -146,7 +146,7 @@ export default {
           data.role = this.employee.role;
           data.permission = this.permission.join(",");
         }
-        const resp = await post(url, data);
+        const resp = await this.post(url, data);
         await this.checkResp(resp, async () => {
           await this.checkJson(await resp.json(), async () =>
             this.goback(true)
@@ -157,7 +157,7 @@ export default {
     async del() {
       if (await this.confirm("Employee")) {
         await this.checkResp(
-          await post("/employee/delete/" + this.employee.id),
+          await this.post("/employee/delete/" + this.employee.id),
           async () => {
             await this.$store.dispatch("delEmployee", this.employee.id);
             this.goback();

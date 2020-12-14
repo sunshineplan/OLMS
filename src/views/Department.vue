@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { post, valid } from "../misc.js";
+import { valid } from "../misc.js";
 
 export default {
   name: "Department",
@@ -58,8 +58,10 @@ export default {
         this.validated = false;
         let resp;
         if (this.$route.params.mode == "add")
-          resp = await post("/department/add", { name: this.department.name });
-        else resp = await post("/department/edit", this.department);
+          resp = await this.post("/department/add", {
+            name: this.department.name,
+          });
+        else resp = await this.post("/department/edit", this.department);
         await this.checkResp(resp, async () => {
           await this.checkJson(await resp.json(), async () =>
             this.goback(true)
@@ -70,7 +72,7 @@ export default {
     async del() {
       if (await this.confirm("Department")) {
         await this.checkResp(
-          await post("/department/delete/" + this.department.id),
+          await this.post("/department/delete/" + this.department.id),
           async () => {
             await this.$store.dispatch("delDepartment", this.department.id);
             this.goback();

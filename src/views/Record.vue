@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import { post, valid } from "../misc.js";
+import { valid } from "../misc.js";
 
 export default {
   name: "Record",
@@ -156,7 +156,7 @@ export default {
           url = "/record/edit";
           data.id = this.record.id;
         }
-        const resp = await post(url, data);
+        const resp = await this.post(url, data, "record");
         await this.checkResp(resp, async () => {
           await this.checkJson(await resp.json(), () => this.goback());
         });
@@ -165,7 +165,7 @@ export default {
     async del() {
       if (await this.confirm("Record")) {
         await this.checkResp(
-          await post("/record/delete/" + this.record.id),
+          await this.post("/record/delete/" + this.record.id),
           () => this.goback()
         );
       }

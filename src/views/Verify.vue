@@ -74,8 +74,6 @@
 </template>
 
 <script>
-import { post } from "../misc.js";
-
 export default {
   name: "Verify",
   data() {
@@ -92,7 +90,11 @@ export default {
   },
   methods: {
     async verify(status) {
-      const resp = await post("/record/verify/" + this.record.id, { status });
+      const resp = await this.post(
+        `/record/verify/${this.record.id}`,
+        { status },
+        "verify"
+      );
       await this.checkResp(resp, async () => {
         await this.checkJson(await resp.json(), () => this.goback());
       });

@@ -113,14 +113,18 @@ func getRecords(db *sql.DB, id *idOptions, options *searchOptions) ([]record, in
 }
 
 func addRecord(c *gin.Context) {
-	if !verifyResponse("record", c.ClientIP(), c.PostForm("recaptcha")) {
-		c.String(403, "reCAPTCHAChallengeFailed")
-		return
+	var r struct {
+		record
+		Recaptcha string
 	}
-	var r record
 	if err := c.BindJSON(&r); err != nil {
 		log.Println("Failed to get option:", err)
 		c.String(400, "")
+		return
+	}
+
+	if !verifyResponse("record", c.ClientIP(), r.Recaptcha) {
+		c.String(403, "reCAPTCHAChallengeFailed")
 		return
 	}
 
@@ -206,14 +210,18 @@ func addRecord(c *gin.Context) {
 }
 
 func editRecord(c *gin.Context) {
-	if !verifyResponse("record", c.ClientIP(), c.PostForm("recaptcha")) {
-		c.String(403, "reCAPTCHAChallengeFailed")
-		return
+	var r struct {
+		record
+		Recaptcha string
 	}
-	var r record
 	if err := c.BindJSON(&r); err != nil {
 		log.Println("Failed to get option:", err)
 		c.String(400, "")
+		return
+	}
+
+	if !verifyResponse("record", c.ClientIP(), r.Recaptcha) {
+		c.String(403, "reCAPTCHAChallengeFailed")
 		return
 	}
 
@@ -287,14 +295,18 @@ func editRecord(c *gin.Context) {
 }
 
 func verifyRecord(c *gin.Context) {
-	if !verifyResponse("verify", c.ClientIP(), c.PostForm("recaptcha")) {
-		c.String(403, "reCAPTCHAChallengeFailed")
-		return
+	var r struct {
+		Status    bool
+		Recaptcha string
 	}
-	var r struct{ Status bool }
 	if err := c.BindJSON(&r); err != nil {
 		log.Println("Failed to get option:", err)
 		c.String(400, "")
+		return
+	}
+
+	if !verifyResponse("verify", c.ClientIP(), r.Recaptcha) {
+		c.String(403, "reCAPTCHAChallengeFailed")
 		return
 	}
 

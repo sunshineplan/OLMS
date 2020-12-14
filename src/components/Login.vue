@@ -53,10 +53,6 @@
 </template>
 
 <script>
-import { post } from "../misc.js";
-
-const grecaptcha = window.grecaptcha;
-
 export default {
   name: "Login",
   data() {
@@ -66,40 +62,25 @@ export default {
       username: "",
       password: "",
       rememberme: false,
-      token: "",
     };
   },
   mounted() {
     document.title = this.$t("Login") + " - " + this.$t("OLMS");
     this.username = localStorage.getItem("username");
-    if (this.recaptcha) {
-      grecaptcha.ready(() => {
-        this.execute();
-        setInterval(() => {
-          this.execute();
-        }, 100000);
-      });
-    }
   },
   methods: {
-    execute() {
-      grecaptcha
-        .execute(this.recaptcha, { action: "login" })
-        .then((token) => (this.token = token));
-    },
     async login() {
       if (!document.querySelector("#username").checkValidity())
         await this.prompt("Error", "EmptyUsername", "error");
       else if (!document.querySelector("#password").checkValidity())
         await this.prompt("Error", "EmptyPassword", "error");
       else {
-        let data = {
+        const data = {
           username: this.username,
           password: this.password,
           rememberme: this.rememberme,
         };
-        if (this.recaptcha) data.recaptcha = this.token;
-        const resp = await post("/login", data);
+        const resp = await this.post("/login", data, "login");
         this.checkResp(resp, () => {
           if (this.username != "root")
             localStorage.setItem("username", this.username);

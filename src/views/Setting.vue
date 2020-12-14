@@ -96,9 +96,7 @@
 <script>
 import Cookies from "js-cookie";
 import { loadLocaleMessages } from "../i18n";
-import { post, valid, validateEmail } from "../misc.js";
-
-const grecaptcha = window.grecaptcha;
+import { valid, validateEmail } from "../misc.js";
 
 export default {
   name: "Setting",
@@ -148,7 +146,7 @@ export default {
           return;
         }
       } else data = { subscribe: false };
-      const resp = await post("/subscribe", data);
+      const resp = await this.post("/subscribe", data);
       await this.checkResp(resp, async () => {
         const json = await resp.json();
         if (json.status == 1)
@@ -167,11 +165,7 @@ export default {
           password1: this.password1,
           password2: this.password2,
         };
-        if (this.recaptcha)
-          data.recaptcha = await grecaptcha.execute(this.recaptcha, {
-            action: "setting",
-          });
-        const resp = await post("/setting", data);
+        const resp = await this.post("/setting", data, "setting");
         await this.checkResp(resp, async () => {
           const json = await resp.json();
           if (json.status == 1) {

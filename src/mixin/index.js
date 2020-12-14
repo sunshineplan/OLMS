@@ -1,8 +1,21 @@
 import Swal from 'sweetalert2'
-import { post } from '../misc.js'
 
 export default {
+  computed: {
+    recaptcha() { return this.$store.state.recaptcha }
+  },
   methods: {
+    async post(url, data, challenge) {
+      const json = {}
+      if (data) Object.keys(data).forEach(key => data[key] !== '' && (json[key] = data[key]))
+      if (this.recaptcha && challenge)
+          json.recaptcha = await window.grecaptcha.execute(this.recaptcha, { action: challenge });
+      return fetch(url, {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(json)
+      })
+    },
     prompt(title, content, icon) {
       const prompt = Swal.mixin({
         customClass: { confirmButton: 'swal btn btn-primary' },
@@ -56,7 +69,7 @@ export default {
         if (mode == 'department') data = { deptid: this.filter.deptid }
         else if (mode == 'employee') data = { userid: this.filter.userid }
         else data = {}
-        resp = await post('/year', data)
+        resp = await this.post('/year', data)
       }
       const json = await resp.json()
       if (json.year === 0) this.years = []
@@ -79,7 +92,7 @@ export default {
       }
       this.filter.page = this.page
       this.$store.commit('filter', this.filter)
-      const resp = await post(`/${mode}`, this.filter)
+      const resp = await this.post(`/${mode}`, this.filter, mode)
       const json = await resp.json()
       this[mode] = json.rows
       this.total = json.total
@@ -88,7 +101,7 @@ export default {
     async download(mode) {
       this.$store.commit('startLoading')
       this.$store.commit('filter', this.filter)
-      const resp = await post(`/${mode}/export`, this.filter)
+      const resp = await this.post(`/${mode}/export`, this.filter, mode)
       if (resp.status == 404)
         await this.prompt('Info', 'NoResult', 'info')
       else {
