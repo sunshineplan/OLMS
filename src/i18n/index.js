@@ -11,12 +11,11 @@ const i18n = createI18n({
 })
 
 export async function loadLocaleMessages(locale) {
-  if (!i18n.global.availableLocales.includes(locale)) {
-    if (!SUPPORT_LOCALES.includes(locale)) {
-      return false
-    }
+  if (!SUPPORT_LOCALES.includes(locale))
+    locale = i18n.global.fallbackLocale.value
+  if (!i18n.global.availableLocales.includes(locale))
     i18n.global.setLocaleMessage(locale, await import(/* webpackChunkName: 'locale-[request]' */ `../../locales/${locale}.json`))
-  }
+  i18n.global.locale.value = locale
 }
 
 export default i18n

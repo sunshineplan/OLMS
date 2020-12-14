@@ -90,9 +90,8 @@ export default {
     },
   },
   async created() {
-    const lang = Cookies.get("lang");
-    if (lang) this.$i18n.locale = lang;
-    await loadLocaleMessages(this.$i18n.locale);
+    const lang = Cookies.get("lang") || navigator.language;
+    await loadLocaleMessages(lang);
     document.querySelector("html").setAttribute("lang", this.$i18n.locale);
     await this.$store.dispatch("info");
     if (this.recaptcha) {

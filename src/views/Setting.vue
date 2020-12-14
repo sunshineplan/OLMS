@@ -121,9 +121,8 @@ export default {
   methods: {
     async changeLanguage() {
       Cookies.set("lang", this.lang, { expires: 365 });
-      this.$i18n.locale = this.lang;
-      await loadLocaleMessages(this.$i18n.locale);
-      document.querySelector("html").setAttribute("lang", this.$i18n.locale);
+      await loadLocaleMessages(this.lang);
+      document.querySelector("html").setAttribute("lang", this.lang);
       this.prompt("Success", "LanguageChanged", "success");
       this.$router.replace("/setting");
     },
