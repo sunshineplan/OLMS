@@ -106,6 +106,7 @@
     "Realname": "Realname",
     "realname": "Realname",
     "reCAPTCHAChallengeFailed": "reCAPTCHA Challenge Failed.",
+    "reCAPTCHALoadingFailed": "reCAPTCHA Loading Failed. Please retry later.",
     "Records": "Records",
     "Reject": "Reject",
     "Rejected": "Rejected",

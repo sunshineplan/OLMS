@@ -103,7 +103,14 @@ export default {
       );
       script.async = true;
       document.head.appendChild(script);
-      this.$store.commit("ready");
+      setTimeout(() => {
+        const grecaptcha = window.grecaptcha;
+        if (grecaptcha)
+          grecaptcha.ready(() => {
+            this.$store.commit("ready");
+          });
+        else this.prompt("Error", "reCAPTCHALoadingFailed", "error");
+      }, 500);
     }
     if (!this.user) this.$router.push("/login");
     else {

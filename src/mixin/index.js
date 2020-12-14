@@ -9,7 +9,7 @@ export default {
       const json = {}
       if (data) Object.keys(data).forEach(key => data[key] !== '' && (json[key] = data[key]))
       if (this.recaptcha && challenge)
-          json.recaptcha = await window.grecaptcha.execute(this.recaptcha, { action: challenge });
+        json.recaptcha = await window.grecaptcha.execute(this.recaptcha, { action: challenge });
       return fetch(url, {
         method: 'post',
         headers: { 'Content-Type': 'application/json' },

@@ -58,7 +58,6 @@ export default {
   data() {
     return {
       user: this.$store.state.user,
-      recaptcha: this.$store.state.recaptcha,
       username: "",
       password: "",
       rememberme: false,
@@ -80,12 +79,16 @@ export default {
           password: this.password,
           rememberme: this.rememberme,
         };
-        const resp = await this.post("/login", data, "login");
-        this.checkResp(resp, () => {
-          if (this.username != "root")
-            localStorage.setItem("username", this.username);
-          window.location = "/";
-        });
+        const login = async () => {
+          const resp = await this.post("/login", data, "login");
+          this.checkResp(resp, () => {
+            if (this.username != "root")
+              localStorage.setItem("username", this.username);
+            window.location = "/";
+          });
+        };
+        if (!this.recaptcha) login();
+        else window.grecaptcha.ready(login);
       }
     },
   },
