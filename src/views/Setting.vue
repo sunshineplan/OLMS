@@ -14,7 +14,7 @@
           v-model="email"
           id="email"
           :placeholder="$t('Email')"
-          @change="subscribe = false"
+          @input="subscribe = false"
         />
       </div>
       <div class="form-group form-check">
@@ -106,13 +106,16 @@ export default {
     return {
       recaptcha: this.$store.state.recaptcha,
       email: "",
-      subscribe: "",
+      subscribe: false,
       lang: document.documentElement.lang,
       password: "",
       password1: "",
       password2: "",
       validated: false,
     };
+  },
+  async created() {
+    await this.getSubscribe();
   },
   mounted() {
     document.title = this.$t("Setting") + " - " + this.$t("OLMS");
@@ -126,24 +129,35 @@ export default {
       this.prompt("Success", "LanguageChanged", "success");
       this.$router.replace("/setting");
     },
+    async getSubscribe() {
+      const resp = await fetch("/subscribe");
+      await this.checkResp(resp, async () => {
+        const json = await resp.json();
+        this.subscribe = json.subscribe;
+        if (json.subscribe) this.email = json.email;
+      });
+    },
     async doSubscribe() {
       let data;
       if (this.subscribe) {
         if (validateEmail(this.email))
-          data = { subscribe: 1, email: this.email };
+          data = { subscribe: true, email: this.email };
         else {
           this.subscribe = false;
           await this.prompt("Error", "EmailNotValid", "error");
           return;
         }
-      } else data = { subscribe: 0 };
+      } else data = { subscribe: false };
       const resp = await post("/subscribe", data);
-      if ((await resp.json().status) == 1)
-        await this.prompt("Success", "SubscribeChanged", "success");
-      else {
-        this.subscribe = false;
-        await this.prompt("Error", "EmailNotValid", "error");
-      }
+      await this.checkResp(resp, async () => {
+        const json = await resp.json();
+        if (json.status == 1)
+          await this.prompt("Success", "SubscribeChanged", "success");
+        else {
+          this.subscribe = false;
+          await this.prompt("Error", "Error", "error");
+        }
+      });
     },
     async changePassword() {
       if (valid()) {

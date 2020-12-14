@@ -40,7 +40,11 @@ func getSubscribe(c *gin.Context) {
 		c.String(500, "")
 		return
 	}
-	c.JSON(200, gin.H{"subscribe": subscribe, "Email": email})
+	if subscribe {
+		c.JSON(200, gin.H{"subscribe": true, "email": email})
+	} else {
+		c.JSON(200, gin.H{"subscribe": false})
+	}
 }
 
 func subscribe(c *gin.Context) {
