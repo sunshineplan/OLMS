@@ -98,7 +98,6 @@ export default {
   name: "Employee",
   data() {
     return {
-      user: this.$store.state.user,
       departments: this.$store.state.departments,
       mode:
         this.$route.params.mode == "add"

@@ -57,7 +57,6 @@ export default {
   name: "Login",
   data() {
     return {
-      user: this.$store.state.user,
       username: "",
       password: "",
       rememberme: false,

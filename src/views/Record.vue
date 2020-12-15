@@ -103,7 +103,6 @@ export default {
   name: "Record",
   data() {
     return {
-      user: this.$store.state.user,
       personal: this.$store.state.personalRecord,
       departments: this.$store.state.departments,
       mode:

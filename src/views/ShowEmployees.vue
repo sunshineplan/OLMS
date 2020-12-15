@@ -120,7 +120,6 @@ export default {
   },
   data() {
     return {
-      user: this.$store.state.user,
       departments: this.$store.state.departments,
       employees: this.$store.state.employees,
       filter: this.$store.state.filter,

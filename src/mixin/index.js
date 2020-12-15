@@ -2,6 +2,7 @@ import Swal from 'sweetalert2'
 
 export default {
   computed: {
+    user() { return this.$store.state.user },
     recaptcha() { return this.$store.state.recaptcha }
   },
   methods: {

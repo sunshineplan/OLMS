@@ -235,7 +235,6 @@ export default {
   },
   data() {
     return {
-      user: this.$store.state.user,
       departments: this.$store.state.departments,
       years: [],
       records: [],

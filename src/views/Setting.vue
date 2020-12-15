@@ -102,7 +102,6 @@ export default {
   name: "Setting",
   data() {
     return {
-      recaptcha: this.$store.state.recaptcha,
       email: "",
       subscribe: false,
       lang: document.documentElement.lang,
