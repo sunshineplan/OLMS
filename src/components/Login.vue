@@ -17,7 +17,7 @@
           v-model.trim="username"
           id="username"
           maxlength="20"
-          :placeholder="$t('Username')"
+          :placeholder="$t('username')"
           required
         />
       </div>

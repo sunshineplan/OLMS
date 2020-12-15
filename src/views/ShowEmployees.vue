@@ -107,11 +107,17 @@
 </template>
 
 <script>
-import Pagination from "../components/Pagination.vue";
+import { defineAsyncComponent } from "vue";
 
 export default {
   name: "ShowEmployees",
-  components: { Pagination },
+  components: {
+    Pagination: defineAsyncComponent(() =>
+      import(
+        /* webpackChunkName: "show" */ "../components/Pagination.vue"
+      )
+    ),
+  },
   data() {
     return {
       user: this.$store.state.user,

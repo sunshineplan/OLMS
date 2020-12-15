@@ -62,13 +62,19 @@
 
 <script>
 import Cookies from "js-cookie";
+import { defineAsyncComponent } from "vue";
 import { loadLocaleMessages } from "./i18n";
-import Login from "./components/Login.vue";
-import Sidebar from "./components/Sidebar.vue";
 
 export default {
   name: "App",
-  components: { Login, Sidebar },
+  components: {
+    Login: defineAsyncComponent(() =>
+      import(/* webpackChunkName: "config" */ "./components/Login.vue")
+    ),
+    Sidebar: defineAsyncComponent(() =>
+      import(/* webpackChunkName: "show" */ "./components/Sidebar.vue")
+    ),
+  },
   data() {
     return {
       hover: false,

@@ -3,39 +3,39 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
-    component: () => import(/* webpackChunkName: 'record' */ '../views/ShowRecords.vue')
+    component: () => import(/* webpackChunkName: 'show' */ '../views/ShowRecords.vue')
   },
   {
     path: '/statistics',
-    component: () => import(/* webpackChunkName: 'statistic' */ '../views/ShowStatistics.vue')
+    component: () => import(/* webpackChunkName: 'show' */ '../views/ShowStatistics.vue')
   },
   {
     path: '/departments',
-    component: () => import(/* webpackChunkName: 'department' */ '../views/ShowDepartments.vue')
+    component: () => import(/* webpackChunkName: 'manage' */ '../views/ShowDepartments.vue')
   },
   {
     path: '/employees',
-    component: () => import(/* webpackChunkName: 'employee' */ '../views/ShowEmployees.vue')
+    component: () => import(/* webpackChunkName: 'manage' */ '../views/ShowEmployees.vue')
   },
   {
     path: '/setting',
-    component: () => import(/* webpackChunkName: 'setting' */ '../views/Setting.vue')
+    component: () => import(/* webpackChunkName: 'config' */ '../views/Setting.vue')
   },
   {
     path: '/department/:mode',
-    component: () => import(/* webpackChunkName: 'department' */ '../views/Department.vue')
+    component: () => import(/* webpackChunkName: 'manage' */ '../views/Department.vue')
   },
   {
     path: '/employee/:mode',
-    component: () => import(/* webpackChunkName: 'employee' */ '../views/Employee.vue')
+    component: () => import(/* webpackChunkName: 'manage' */ '../views/Employee.vue')
   },
   {
     path: '/record/:mode',
-    component: () => import(/* webpackChunkName: 'record' */ '../views/Record.vue')
+    component: () => import(/* webpackChunkName: 'show' */ '../views/Record.vue')
   },
   {
     path: '/record/verify',
-    component: () => import(/* webpackChunkName: 'record' */ '../views/Verify.vue')
+    component: () => import(/* webpackChunkName: 'manage' */ '../views/Verify.vue')
   }
 ]
 
