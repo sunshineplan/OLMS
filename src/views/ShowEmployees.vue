@@ -3,59 +3,14 @@
     <div style="height: 50px">
       <a class="h3 title">{{ $t("EmployeesList") }}</a>
     </div>
-    <div class="toolbar">
-      <div class="form-inline">
-        <div class="input-group input-group-sm">
-          <div class="input-group-prepend">
-            <label class="input-group-text" for="department">
-              {{ $t("Department") }}
-            </label>
-          </div>
-          <select
-            class="custom-select"
-            v-model.number="filter.deptid"
-            id="department"
-          >
-            <option value="0">{{ $t("All") }}</option>
-            <option v-for="d in departments" :key="d.id" :value="d.id">
-              {{ d.name }}
-            </option>
-          </select>
-        </div>
-        <div class="input-group input-group-sm" v-if="user.super">
-          <div class="input-group-prepend">
-            <label class="input-group-text" for="role">{{ $t("role") }}</label>
-          </div>
-          <select class="custom-select" v-model="filter.role" id="role">
-            <option value="">{{ $t("All") }}</option>
-            <option value="0">{{ $t("GeneralEmployee") }}</option>
-            <option value="1">{{ $t("Administrator") }}</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <a
-            class="btn btn-primary btn-sm"
-            @click="
-              sort = {};
-              $store.commit('sort', {});
-              $store.commit('page', 1);
-              doFilter();
-            "
-          >
-            {{ $t("Filter") }}
-          </a>
-          <a
-            class="btn btn-primary btn-sm"
-            @click="
-              reset();
-              employees = $store.state.employees;
-            "
-          >
-            {{ $t("Reset") }}
-          </a>
-        </div>
-      </div>
-    </div>
+    <Toolbar
+      mode="employees"
+      :filter="filter"
+      :departments="departments"
+      @update="updateFilter"
+      @filter="doFilter"
+      @reset="reset"
+    />
     <a class="btn btn-primary" @click="add()">{{ $t("Add") }}</a>
     <p></p>
   </header>
@@ -112,10 +67,11 @@ import { defineAsyncComponent } from "vue";
 export default {
   name: "ShowEmployees",
   components: {
+    Toolbar: defineAsyncComponent(() =>
+      import(/* webpackChunkName: "show" */ "../components/Toolbar.vue")
+    ),
     Pagination: defineAsyncComponent(() =>
-      import(
-        /* webpackChunkName: "show" */ "../components/Pagination.vue"
-      )
+      import(/* webpackChunkName: "show" */ "../components/Pagination.vue")
     ),
   },
   data() {
@@ -156,6 +112,9 @@ export default {
   },
   methods: {
     doFilter() {
+      this.sort = {};
+      this.$store.commit("sort", {});
+      this.$store.commit("page", 1);
       this.$store.commit("filter", this.filter);
       if (!this.filter.deptid && !this.filter.role)
         this.employees = this.$store.state.employees;
@@ -200,6 +159,7 @@ export default {
       this.filter = { deptid: 0, role: "" };
       this.sort = {};
       this.$store.dispatch("reset", this.filter);
+      this.employees = this.$store.state.employees;
     },
   },
 };

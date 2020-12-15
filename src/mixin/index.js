@@ -78,6 +78,9 @@ export default {
         this.years = Array(new Date().getFullYear() - json.year + 1).fill().map((_, i) => json.year + i)
       this.$store.commit('stopLoading')
     },
+    updateFilter(field, value) {
+      this.filter[field] = value;
+    },
     sortBy(field) {
       if (this.sort.sort == field && this.sort.order == 'desc')
         this.sort = { sort: field, order: 'asc' }
