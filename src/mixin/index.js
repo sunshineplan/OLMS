@@ -43,12 +43,12 @@ export default {
     },
     closeSidebar(func) {
       if (func) {
-        if (window.innerWidth <= 1200) {
-          this.$store.commit('closeSidebar')
-          setTimeout(func, 500)
-        } else (
+        if (window.innerWidth > 1200 || !this.$store.state.showSidebar)
           func()
-        )
+        else {
+          this.$store.commit('closeSidebar')
+          setTimeout(func, 300)
+        }
       } else this.$store.commit('closeSidebar')
     },
     async checkResp(resp, success) {

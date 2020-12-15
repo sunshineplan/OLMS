@@ -1,28 +1,10 @@
 <template>
   <nav class="navbar navbar-light topbar" v-if="user != null">
     <div class="d-flex" style="height: 100%">
-      <a
-        class="toggle"
-        v-if="user && smallSize"
-        @click="toggle"
-        @mouseenter="hover = true"
-        @mouseleave="hover = false"
-      >
-        <svg viewBox="0 0 70 70" width="40" height="30">
-          <rect
-            v-for="y in [10, 30, 50]"
-            :key="y"
-            :y="y"
-            width="100%"
-            height="10"
-            :fill="hover ? '#1a73e8' : 'white'"
-          />
-        </svg>
-      </a>
-      <a class="brand" href="/" v-if="smallSize">{{ $t("OLMS") }}</a>
-      <a class="brand" href="/" v-else>
+      <a class="brand full" href="/">
         {{ $t("OvertimeAndLeaveManagementSystem") }}
       </a>
+      <a class="brand short" href="/">{{ $t("OLMS") }}</a>
     </div>
     <div class="navbar-nav flex-row" v-if="user">
       <a class="nav-link" v-text="user.realname"></a>
@@ -37,9 +19,7 @@
   </nav>
   <Login v-if="user == false" />
   <div v-else-if="user">
-    <transition name="slide">
-      <Sidebar v-show="showSidebar || !smallSize" />
-    </transition>
+    <Sidebar />
     <div
       class="content"
       style="padding-left: 200px"
@@ -75,21 +55,9 @@ export default {
       import(/* webpackChunkName: "show" */ "./components/Sidebar.vue")
     ),
   },
-  data() {
-    return {
-      hover: false,
-      smallSize: window.innerWidth <= 1200,
-    };
-  },
   computed: {
-    user() {
-      return this.$store.state.user;
-    },
     loading() {
       return this.$store.state.loading;
-    },
-    showSidebar() {
-      return this.$store.state.showSidebar;
     },
     ready() {
       return this.$store.state.ready;
@@ -123,22 +91,9 @@ export default {
       this.$store.commit("personalRecord", personal);
     }
   },
-  mounted() {
-    window.addEventListener("resize", this.checkSize);
-  },
-  beforeUnmount() {
-    window.removeEventListener("resize", this.checkSize);
-  },
   methods: {
-    checkSize() {
-      if (this.smallSize != window.innerWidth <= 1200)
-        this.smallSize = !this.smallSize;
-    },
     setting() {
       this.closeSidebar(() => this.$router.push("/setting"));
-    },
-    toggle() {
-      this.$store.commit("toggleSidebar");
     },
   },
 };
@@ -172,13 +127,8 @@ export default {
   cursor: pointer;
 }
 
-.toggle {
-  padding: 20px;
-  color: white !important;
-}
-
-.toggle:hover {
-  background-color: rgb(232, 232, 232);
+.short {
+  display: none;
 }
 
 .brand {
@@ -204,19 +154,17 @@ export default {
   display: flex;
 }
 
-.slide-leave-active,
-.slide-enter-active {
-  transition: 0.5s;
-}
-
-.slide-enter-from,
-.slide-leave-to {
-  transform: translate(-100%, 0);
-}
-
 @media (max-width: 1200px) {
+  .short {
+    display: inline;
+  }
+
+  .full {
+    display: none;
+  }
+
   .brand {
-    padding-left: 10px;
+    padding-left: 90px;
   }
 
   .loading {
