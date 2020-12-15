@@ -58,10 +58,12 @@ func Run() {
 	auth := router.Group("/")
 	auth.GET("/info", info)
 	auth.POST("/login", login)
-	auth.GET("/logout", authRequired, func(c *gin.Context) {
+	auth.GET("/logout", func(c *gin.Context) {
 		session := sessions.Default(c)
-		session.Clear()
-		session.Save()
+		if session.Get("userID") != nil {
+			session.Clear()
+			session.Save()
+		}
 		c.Redirect(302, "/")
 	})
 	auth.POST("/setting", authRequired, setting)
