@@ -10,7 +10,7 @@
     </header>
     <div class="login" @keyup.enter="login()">
       <div class="form-group">
-        <label for="username">{{ $t("Username") }}</label>
+        <label for="username">{{ $t("username") }}</label>
         <input
           autofocus
           class="form-control"

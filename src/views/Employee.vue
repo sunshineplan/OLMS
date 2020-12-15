@@ -6,7 +6,7 @@
   <div class="form" @keyup.enter="save()">
     <div class="form-row">
       <div class="form-group">
-        <label for="username">{{ $t("Username") }}</label>
+        <label for="username">{{ $t("username") }}</label>
         <input
           class="form-control"
           v-model.trim="employee.username"
@@ -17,7 +17,7 @@
         <div class="invalid-feedback">{{ $t("RequiredField") }}</div>
       </div>
       <div class="form-group">
-        <label for="realname">{{ $t("Realname") }}</label>
+        <label for="realname">{{ $t("realname") }}</label>
         <input
           class="form-control"
           v-model.trim="employee.realname"
@@ -51,7 +51,7 @@
       <small class="form-text text-muted">{{ $t("LeaveBlankPassword") }}</small>
     </div>
     <div class="form-group" v-if="user.super" v-show="employee.deptid">
-      <label for="role">{{ $t("Role") }}</label>
+      <label for="role">{{ $t("role") }}</label>
       <select
         class="form-control"
         v-model="employee.role"
@@ -64,7 +64,7 @@
     </div>
     <div class="form-group" v-if="user.super" v-show="employee.role">
       <label for="permission">
-        {{ $t("Permission") }} ({{ $t("MultipleChoice") }})
+        {{ $t("permission") }} ({{ $t("MultipleChoice") }})
       </label>
       <select
         multiple

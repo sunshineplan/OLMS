@@ -24,7 +24,7 @@
         </div>
         <div class="input-group input-group-sm" v-if="user.super">
           <div class="input-group-prepend">
-            <label class="input-group-text" for="role">{{ $t("Role") }}</label>
+            <label class="input-group-text" for="role">{{ $t("role") }}</label>
           </div>
           <select class="custom-select" v-model="filter.role" id="role">
             <option value="">{{ $t("All") }}</option>
@@ -65,71 +65,19 @@
         <thead>
           <tr>
             <th
+              v-for="i in field"
+              :key="i"
               class="sortable"
               :class="
-                sort.sort == 'username'
+                sort.sort == i
                   ? sort.order == 'desc'
                     ? 'desc'
                     : 'asc'
                   : 'default'
               "
-              @click="doSort('username')"
+              @click="doSort(i)"
             >
-              {{ $t("Username") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'realname'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="doSort('realname')"
-            >
-              {{ $t("Realname") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'deptname'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="doSort('deptname')"
-            >
-              {{ $t("Department") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'role'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="doSort('role')"
-              v-if="user.super"
-            >
-              {{ $t("Role") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'permission'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="doSort('permission')"
-              v-if="user.super"
-            >
-              {{ $t("Permission") }}
+              {{ $t(i) }}
             </th>
             <th v-if="user.super">{{ $t("Operation") }}</th>
           </tr>
@@ -174,6 +122,20 @@ export default {
     };
   },
   computed: {
+    field() {
+      const field = new Set([
+        "username",
+        "realname",
+        "deptname",
+        "role",
+        "permission",
+      ]);
+      if (!this.user.super) {
+        field.delete("role");
+        field.delete("permission");
+      }
+      return field;
+    },
     total() {
       return this.employees.length;
     },

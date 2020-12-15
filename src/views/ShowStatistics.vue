@@ -50,7 +50,7 @@
         <div class="input-group input-group-sm">
           <div class="input-group-prepend">
             <label class="input-group-text" for="period">
-              {{ $t("Period") }}
+              {{ $t("period") }}
             </label>
           </div>
           <select
@@ -135,84 +135,19 @@
         <thead>
           <tr>
             <th
+              v-for="i in field"
+              :key="i"
               class="sortable"
               :class="
-                sort.sort == 'period'
+                sort.sort == i
                   ? sort.order == 'desc'
                     ? 'desc'
                     : 'asc'
                   : 'default'
               "
-              @click="sortBy('period')"
+              @click="sortBy(i)"
             >
-              {{ $t("Period") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'deptname'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('deptname')"
-              v-if="!personal"
-            >
-              {{ $t("Department") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'realname'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('realname')"
-              v-if="!personal"
-            >
-              {{ $t("Realname") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'overtime'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('overtime')"
-            >
-              {{ $t("Overtime") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'leave'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('leave')"
-            >
-              {{ $t("Leave") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'summary'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('summary')"
-            >
-              {{ $t("Summary") }}
+              {{ $t(i) }}
             </th>
           </tr>
         </thead>
@@ -266,6 +201,21 @@ export default {
   computed: {
     personal() {
       return this.$store.state.personalStatistic;
+    },
+    field() {
+      const field = new Set([
+        "period",
+        "deptname",
+        "realname",
+        "overtime",
+        "leave",
+        "summary",
+      ]);
+      if (this.personal) {
+        field.delete("deptname");
+        field.delete("realname");
+      }
+      return field;
     },
     mode() {
       return this.personal

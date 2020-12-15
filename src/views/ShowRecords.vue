@@ -87,18 +87,18 @@
         </div>
         <div class="input-group input-group-sm">
           <div class="input-group-prepend">
-            <label class="input-group-text" for="type">{{ $t("Type") }}</label>
+            <label class="input-group-text" for="type">{{ $t("type") }}</label>
           </div>
           <select class="custom-select" v-model="filter.type" id="type">
             <option value="">{{ $t("All") }}</option>
-            <option value="1">{{ $t("Overtime") }}</option>
-            <option value="0">{{ $t("Leave") }}</option>
+            <option value="1">{{ $t("overtime") }}</option>
+            <option value="0">{{ $t("leave") }}</option>
           </select>
         </div>
         <div class="input-group input-group-sm">
           <div class="input-group-prepend">
             <label class="input-group-text" for="status">
-              {{ $t("Status") }}
+              {{ $t("status") }}
             </label>
           </div>
           <select class="custom-select" v-model="filter.status" id="status">
@@ -113,7 +113,7 @@
         <div class="input-group input-group-sm">
           <div class="input-group-prepend">
             <label class="input-group-text" for="describe">
-              {{ $t("Describe") }}
+              {{ $t("describe") }}
             </label>
           </div>
           <input class="form-control" v-model="filter.describe" id="describe" />
@@ -148,117 +148,21 @@
         <thead>
           <tr>
             <th
+              v-for="(v, k) in field"
+              :key="k"
               class="sortable"
-              :class="
-                sort.sort == 'deptname'
+              :class="[
+                sort.sort == k
                   ? sort.order == 'desc'
                     ? 'desc'
                     : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('deptname')"
-              style="width: 150px"
-              v-if="!personal"
+                  : 'default',
+                { describe: k == 'describe' },
+              ]"
+              @click="sortBy(k)"
+              :style="{ width: v.width }"
             >
-              {{ $t("Department") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'realname'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('realname')"
-              style="width: 100px"
-              v-if="!personal"
-            >
-              {{ $t("Realname") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'date'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('date')"
-              style="width: 150px"
-            >
-              {{ $t("Date") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'type'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('type')"
-              style="width: 80px"
-            >
-              {{ $t("Type") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'duration'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('duration')"
-              style="width: 100px"
-            >
-              {{ $t("Duration") }}
-            </th>
-            <th
-              class="describe sortable"
-              :class="
-                sort.sort == 'describe'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('describe')"
-            >
-              {{ $t("Describe") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'created'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('created')"
-              style="width: 100px"
-            >
-              {{ $t("Created") }}
-            </th>
-            <th
-              class="sortable"
-              :class="
-                sort.sort == 'status'
-                  ? sort.order == 'desc'
-                    ? 'desc'
-                    : 'asc'
-                  : 'default'
-              "
-              @click="sortBy('status')"
-              style="width: 100px"
-            >
-              {{ $t("Status") }}
+              {{ $t(k) }}
             </th>
             <th style="width: 100px">{{ $t("Operation") }}</th>
           </tr>
@@ -272,7 +176,7 @@
                 r.date.replace(":00Z", "").replace(/-/g, "/").replace("T", " ")
               }}
             </td>
-            <td>{{ r.type ? $t("Overtime") : $t("Leave") }}</td>
+            <td>{{ r.type ? $t("overtime") : $t("leave") }}</td>
             <td>
               {{ r.duration }} {{ r.duration == 1 ? $t("Hour") : $t("Hours") }}
             </td>
@@ -337,6 +241,23 @@ export default {
   computed: {
     personal() {
       return this.$store.state.personalRecord;
+    },
+    field() {
+      const field = {
+        deptname: { width: "150px", personal: false },
+        realname: { width: "100px", personal: false },
+        date: { width: "150px", personal: true },
+        type: { width: "80px", personal: true },
+        duration: { width: "100px", personal: true },
+        describe: { personal: true },
+        created: { width: "100px", personal: true },
+        status: { width: "100px", personal: true },
+      };
+      if (this.personal) {
+        delete field.deptname;
+        delete field.realname;
+      }
+      return field;
     },
     mode() {
       return this.personal

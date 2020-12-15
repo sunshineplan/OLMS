@@ -25,7 +25,7 @@
       </div>
     </div>
     <div class="form-group">
-      <label for="date">{{ $t("Date") }}</label>
+      <label for="date">{{ $t("date") }}</label>
       <input
         class="form-control"
         :value="record.date.replace(':00Z', '').replace('T', ' ')"
@@ -34,7 +34,7 @@
       />
     </div>
     <div class="form-group">
-      <label for="type">{{ $t("Type") }}</label>
+      <label for="type">{{ $t("type") }}</label>
       <input
         class="form-control"
         :value="record.type ? $t('Overtime') : $t('Leave')"
@@ -43,7 +43,7 @@
       />
     </div>
     <div class="form-group">
-      <label for="duration">{{ $t("Duration") }}</label>
+      <label for="duration">{{ $t("duration") }}</label>
       <input
         class="form-control"
         :value="record.duration"
@@ -52,7 +52,7 @@
       />
     </div>
     <div class="form-group">
-      <label for="describe">{{ $t("Describe") }}</label>
+      <label for="describe">{{ $t("describe") }}</label>
       <textarea
         class="form-control"
         v-text="record.describe"

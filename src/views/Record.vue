@@ -36,7 +36,7 @@
       </div>
     </div>
     <div class="form-group">
-      <label for="date">{{ $t("Date") }}</label>
+      <label for="date">{{ $t("date") }}</label>
       <input
         class="form-control"
         type="datetime-local"
@@ -47,14 +47,14 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label for="type">{{ $t("Type") }}</label>
+        <label for="type">{{ $t("type") }}</label>
         <select class="form-control" v-model="record.type" id="type">
-          <option :value="true">{{ $t("Overtime") }}</option>
-          <option :value="false">{{ $t("Leave") }}</option>
+          <option :value="true">{{ $t("overtime") }}</option>
+          <option :value="false">{{ $t("leave") }}</option>
         </select>
       </div>
       <div class="form-group">
-        <label for="duration">{{ $t("Duration") }}</label>
+        <label for="duration">{{ $t("duration") }}</label>
         <input
           class="form-control"
           type="number"
@@ -66,7 +66,7 @@
       </div>
     </div>
     <div class="form-group" v-if="user.super">
-      <label for="status">{{ $t("Status") }}</label>
+      <label for="status">{{ $t("status") }}</label>
       <select class="form-control" v-model.number="record.status" id="status">
         <option value="0">{{ $t("Unverified") }}</option>
         <option value="1">{{ $t("Verified") }}</option>
@@ -74,7 +74,7 @@
       </select>
     </div>
     <div class="form-group">
-      <label for="describe">{{ $t("Describe") }}</label>
+      <label for="describe">{{ $t("describe") }}</label>
       <textarea
         class="form-control"
         v-model="record.describe"
