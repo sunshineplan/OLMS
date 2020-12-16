@@ -41,14 +41,7 @@
           <option value="1">{{ $t("Administrator") }}</option>
         </select>
       </div>
-      <div class="input-group" v-if="mode == 'employees'">
-        <a class="btn btn-primary btn-sm" @click="$emit('filter')">
-          {{ $t("Filter") }}
-        </a>
-        <a class="btn btn-primary btn-sm" @click="$emit('reset')">
-          {{ $t("Reset") }}
-        </a>
-      </div>
+      <div class="input-group" id="employees" v-if="mode == 'employees'" />
       <div class="input-group input-group-sm" v-else>
         <div class="input-group-prepend">
           <label class="input-group-text" for="employee">
@@ -173,17 +166,7 @@
           <option value="2">{{ $t("Rejected") }}</option>
         </select>
       </div>
-      <div class="input-group" v-if="mode == 'statistics'">
-        <a class="btn btn-primary btn-sm" @click="$emit('filter')">
-          {{ $t("Filter") }}
-        </a>
-        <a class="btn btn-primary btn-sm" @click="$emit('reset')">
-          {{ $t("Reset") }}
-        </a>
-        <a class="btn btn-info btn-sm" @click="download(mode)">
-          {{ $t("Export") }}
-        </a>
-      </div>
+      <div class="input-group" id="statistics" v-if="mode == 'statistics'" />
     </div>
     <div class="form-inline" v-if="mode == 'records'">
       <div class="input-group input-group-sm">
@@ -199,19 +182,24 @@
           @input="$emit('update', 'describe', $event.target.value)"
         />
       </div>
-      <div class="input-group">
-        <a class="btn btn-primary btn-sm" @click="$emit('filter')">
-          {{ $t("Filter") }}
-        </a>
-        <a class="btn btn-primary btn-sm" @click="$emit('reset')">
-          {{ $t("Reset") }}
-        </a>
-        <a class="btn btn-info btn-sm" @click="download(mode)">
-          {{ $t("Export") }}
-        </a>
-      </div>
+      <div class="input-group" id="records" />
     </div>
   </div>
+  <teleport :to="`#${mode}`" v-if="isMounted">
+    <a class="btn btn-primary btn-sm" @click="$emit('filter')">
+      {{ $t("Filter") }}
+    </a>
+    <a class="btn btn-primary btn-sm" @click="$emit('reset')">
+      {{ $t("Reset") }}
+    </a>
+    <a
+      class="btn btn-info btn-sm"
+      @click="download(mode)"
+      v-if="mode != 'employees'"
+    >
+      {{ $t("Export") }}
+    </a>
+  </teleport>
 </template>
 
 <script>
@@ -225,6 +213,14 @@ export default {
     departments: Array,
     employees: Array,
     years: Array,
+  },
+  data() {
+    return {
+      isMounted: false,
+    };
+  },
+  mounted() {
+    this.isMounted = true;
   },
 };
 </script>
