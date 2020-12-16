@@ -25,6 +25,7 @@ CREATE TABLE record (
   duration INTEGER NOT NULL,
   describe TEXT NOT NULL DEFAULT '',
   status INTEGER NOT NULL DEFAULT 0,
+  comment TEXT NOT NULL DEFAULT '',
   created TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')),
   createdby TEXT,
   verifiedby TEXT

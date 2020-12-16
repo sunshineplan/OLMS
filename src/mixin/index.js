@@ -31,6 +31,7 @@ export default {
         text: this.$t('Delete' + type),
         icon: 'warning',
         confirmButtonText: this.$t('Delete'),
+        cancelButtonText: this.$t("Cancel"),
         showCancelButton: true,
         focusCancel: true,
         customClass: {

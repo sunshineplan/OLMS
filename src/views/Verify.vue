@@ -37,7 +37,7 @@
       <label for="type">{{ $t("type") }}</label>
       <input
         class="form-control"
-        :value="record.type ? $t('Overtime') : $t('Leave')"
+        :value="record.type ? $t('overtime') : $t('leave')"
         id="type"
         readonly
       />
@@ -74,6 +74,8 @@
 </template>
 
 <script>
+import Swal from "sweetalert2";
+
 export default {
   name: "Verify",
   data() {
@@ -90,9 +92,27 @@ export default {
   },
   methods: {
     async verify(status) {
+      const data = { status };
+      if (!status) {
+        const comment = await Swal.fire({
+          input: "textarea",
+          inputLabel: this.$t("comment"),
+          inputPlaceholder: this.$t("LeaveRejectedComment"),
+          confirmButtonText: this.$t("OK"),
+          cancelButtonText: this.$t("Cancel"),
+          showCancelButton: true,
+          customClass: {
+            confirmButton: "swal btn btn-primary",
+            cancelButton: "swal btn btn-primary",
+          },
+          buttonsStyling: false,
+        });
+        if (comment.isConfirmed) data.comment = comment.value;
+        else return;
+      }
       const resp = await this.post(
         `/record/verify/${this.record.id}`,
-        { status },
+        data,
         "verify"
       );
       await this.checkResp(resp, async () => {

@@ -24,6 +24,7 @@ type record struct {
 	Type     bool      `json:"type"`
 	Status   int       `json:"status"`
 	Describe string    `json:"describe"`
+	Comment  string    `json:"comment"`
 	Created  time.Time `json:"created"`
 }
 
@@ -86,7 +87,7 @@ func getRecords(db *sql.DB, id *idOptions, options *searchOptions) ([]record, in
 	}()
 
 	rows, err := db.Query(fmt.Sprintf(stmt+orderBy+limit,
-		"record.id, employee.dept_id, deptname, employee.id, realname, date, ABS(duration), type, status, describe, created"),
+		"record.id, employee.dept_id, deptname, employee.id, realname, date, ABS(duration), type, status, describe, comment, created"),
 		args...)
 	if err != nil {
 		log.Println("Failed to get records:", err)
@@ -98,7 +99,7 @@ func getRecords(db *sql.DB, id *idOptions, options *searchOptions) ([]record, in
 	for rows.Next() {
 		var r record
 		if err := rows.Scan(
-			&r.ID, &r.DeptID, &r.DeptName, &r.UserID, &r.Realname, &r.Date, &r.Duration, &r.Type, &r.Status, &r.Describe, &r.Created,
+			&r.ID, &r.DeptID, &r.DeptName, &r.UserID, &r.Realname, &r.Date, &r.Duration, &r.Type, &r.Status, &r.Describe, &r.Comment, &r.Created,
 		); err != nil {
 			log.Println("Failed to scan record:", err)
 			return nil, 0, err
@@ -297,6 +298,7 @@ func editRecord(c *gin.Context) {
 func verifyRecord(c *gin.Context) {
 	var r struct {
 		Status    bool
+		Comment   string
 		Recaptcha string
 	}
 	if err := c.BindJSON(&r); err != nil {
@@ -348,8 +350,8 @@ func verifyRecord(c *gin.Context) {
 		return
 	}
 	ip, _, _ := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
-	if _, err := db.Exec("UPDATE record SET status = ?, verifiedby = ? WHERE id = ?",
-		status, fmt.Sprintf("%d-%s-%s", user.ID, ip, c.ClientIP()), id); err != nil {
+	if _, err := db.Exec("UPDATE record SET status = ?, comment = ?, verifiedby = ? WHERE id = ?",
+		status, r.Comment, fmt.Sprintf("%d-%s-%s", user.ID, ip, c.ClientIP()), id); err != nil {
 		log.Println("Failed to verify record:", err)
 		c.String(500, "")
 		return
